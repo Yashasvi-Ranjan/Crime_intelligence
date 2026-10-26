@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-26T20:26:27Z",
+ "generated": "2026-10-26T20:39:41Z",
  "cases": 7,
  "summary": {
   "baseline_lightning_only": {
    "runs": 7,
    "failed_runs": 7,
    "failure_rate": 1.0,
-   "mean_latency_s": 0.186,
+   "mean_latency_s": 0.2,
    "mean_model_calls": null,
    "mean_sql_queries": null,
    "valid_link_recall_proposed(positive cases)": null,
@@ -27,7 +27,7 @@
    "runs": 7,
    "failed_runs": 7,
    "failure_rate": 1.0,
-   "mean_latency_s": 0.143,
+   "mean_latency_s": 0.157,
    "mean_model_calls": null,
    "mean_sql_queries": null,
    "valid_link_recall_proposed(positive cases)": null,
@@ -52,7 +52,7 @@
    "kind": "positive",
    "ok": false,
    "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.3
+   "latency_s": 0.2
   },
   {
    "system": "multi_agent",
@@ -76,7 +76,7 @@
    "kind": "positive",
    "ok": false,
    "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.2
+   "latency_s": 0.1
   },
   {
    "system": "baseline_lightning_only",
@@ -92,7 +92,7 @@
    "kind": "positive",
    "ok": false,
    "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.1
+   "latency_s": 0.2
   },
   {
    "system": "baseline_lightning_only",
@@ -100,7 +100,7 @@
    "kind": "positive",
    "ok": false,
    "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.1
+   "latency_s": 0.2
   },
   {
    "system": "multi_agent",
@@ -108,7 +108,7 @@
    "kind": "positive",
    "ok": false,
    "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.1
+   "latency_s": 0.2
   },
   {
    "system": "baseline_lightning_only",
@@ -116,7 +116,7 @@
    "kind": "positive",
    "ok": false,
    "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.1
+   "latency_s": 0.2
   },
   {
    "system": "multi_agent",
