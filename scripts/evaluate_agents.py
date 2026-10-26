@@ -125,58 +125,31 @@ class OfflineZetarisDataService:
         self.query_count += 4
         inc_set = set(incident_ids)
         loc_set = set(location_ids)
-        ev: Dict[str, List[Dict[str, Any]]] = {
-            "forensic_reports": [],
-            "cctv_reports": [],
-            "witness_reports": [],
-            "newspaper_reports": [],
-        }
+        direct_limit = min(24, limit_per_source * max(1, (len(incident_ids) + 1) // 2))
+        context_limit = max(2, limit_per_source // 2)
 
-        for f in self.forensics:
-            if f.get("incident_id") in inc_set:
-                r = dict(f)
-                r["link_basis"] = "direct_reference"
-                ev["forensic_reports"].append(r)
-            elif f.get("location_id") in loc_set:
-                r = dict(f)
-                r["link_basis"] = "location_proximity"
-                ev["forensic_reports"].append(r)
+        ev: Dict[str, List[Dict[str, Any]]] = {}
 
-        for c in self.cctv:
-            rel = set(c.get("related_incident_ids") or [])
-            if rel & inc_set:
-                r = dict(c)
-                r["link_basis"] = "direct_reference"
-                ev["cctv_reports"].append(r)
-            elif c.get("location_id") in loc_set:
-                r = dict(c)
-                r["link_basis"] = "location_proximity"
-                ev["cctv_reports"].append(r)
+        # 1. Forensic reports
+        dir_f = [dict(f, link_basis="direct_reference") for f in self.forensics if f.get("incident_id") in inc_set]
+        loc_f = [dict(f, link_basis="location_proximity") for f in self.forensics if f.get("location_id") in loc_set and f.get("incident_id") not in inc_set]
+        ev["forensic_reports"] = dir_f[:direct_limit] + loc_f[:context_limit]
 
-        for w in self.witness:
-            rel = set(w.get("related_incident_ids") or [])
-            if rel & inc_set:
-                r = dict(w)
-                r["link_basis"] = "direct_reference"
-                ev["witness_reports"].append(r)
-            elif w.get("location_id") in loc_set:
-                r = dict(w)
-                r["link_basis"] = "location_proximity"
-                ev["witness_reports"].append(r)
+        # 2. CCTV reports
+        dir_c = [dict(c, link_basis="direct_reference") for c in self.cctv if set(c.get("related_incident_ids") or []) & inc_set]
+        loc_c = [dict(c, link_basis="location_proximity") for c in self.cctv if c.get("location_id") in loc_set and not (set(c.get("related_incident_ids") or []) & inc_set)]
+        ev["cctv_reports"] = dir_c[:direct_limit] + loc_c[:context_limit]
 
-        for n in self.newspaper:
-            rel = set(n.get("related_incident_ids") or [])
-            if rel & inc_set:
-                r = dict(n)
-                r["link_basis"] = "direct_reference"
-                ev["newspaper_reports"].append(r)
-            elif set(n.get("mentioned_location_ids") or []) & loc_set:
-                r = dict(n)
-                r["link_basis"] = "location_proximity"
-                ev["newspaper_reports"].append(r)
+        # 3. Witness reports
+        dir_w = [dict(w, link_basis="direct_reference") for w in self.witness if set(w.get("related_incident_ids") or []) & inc_set]
+        loc_w = [dict(w, link_basis="location_proximity") for w in self.witness if w.get("location_id") in loc_set and not (set(w.get("related_incident_ids") or []) & inc_set)]
+        ev["witness_reports"] = dir_w[:direct_limit] + loc_w[:context_limit]
 
-        for k in ev:
-            ev[k] = ev[k][:limit_per_source * 2]
+        # 4. Newspaper reports
+        dir_n = [dict(n, link_basis="direct_reference") for n in self.newspaper if set(n.get("related_incident_ids") or []) & inc_set]
+        loc_n = [dict(n, link_basis="location_proximity") for n in self.newspaper if (set(n.get("mentioned_location_ids") or []) & loc_set) and not (set(n.get("related_incident_ids") or []) & inc_set)]
+        ev["newspaper_reports"] = dir_n[:direct_limit] + loc_n[:context_limit]
+
         return ev
 
 
@@ -293,8 +266,21 @@ class OfflineModelRegistry(ModelRegistry):
             content = plan.model_dump_json()
 
         elif role == "finder":
-            inc_matches = list(dict.fromkeys(re.findall(r"INC-[A-Z]+-\d{3,5}", user_content)))
-            candidate_incs = [self._data_service.inc_by_id[i] for i in inc_matches if i in self._data_service.inc_by_id]
+            try:
+                data_str = user_content.split("\n\nPropose cross-station links")[0]
+                prompt_data = json.loads(data_str)
+                prompt_incidents = prompt_data.get("incidents", [])
+                candidate_incs = [i for i in prompt_incidents if i.get("incident_id")]
+                prompt_ev = prompt_data.get("evidence", {})
+            except Exception:
+                inc_matches = list(dict.fromkeys(re.findall(r"INC-[A-Z]+-\d{3,5}", user_content)))
+                candidate_incs = [self._data_service.inc_by_id[i] for i in inc_matches if i in self._data_service.inc_by_id]
+                prompt_ev = {}
+
+            forensic_pool = prompt_ev.get("forensic_reports") or self._data_service.forensics
+            cctv_pool = prompt_ev.get("cctv_reports") or self._data_service.cctv
+            news_pool = prompt_ev.get("newspaper_reports") or self._data_service.newspaper
+
             links: List[FinderLink] = []
 
             for pair in itertools.combinations(candidate_incs, 2):
@@ -302,8 +288,8 @@ class OfflineModelRegistry(ModelRegistry):
                 id_a, id_b = ia["incident_id"], ib["incident_id"]
 
                 # Exclude forensic reports with EXCLUSION status (e.g. decoys)
-                fa_list = [f for f in self._data_service.forensics if f.get("incident_id") == id_a and f.get("result_status") != "EXCLUSION"]
-                fb_list = [f for f in self._data_service.forensics if f.get("incident_id") == id_b and f.get("result_status") != "EXCLUSION"]
+                fa_list = [f for f in forensic_pool if f.get("incident_id") == id_a and f.get("result_status") != "EXCLUSION"]
+                fb_list = [f for f in forensic_pool if f.get("incident_id") == id_b and f.get("result_status") != "EXCLUSION"]
 
                 ev_ids: List[str] = []
                 shared_attrs: List[SharedAttribute] = []
@@ -321,7 +307,7 @@ class OfflineModelRegistry(ModelRegistry):
                             and fb.get("result_status") == "MATCH_CONFIRMED"
                         ):
                             ev_ids.extend([fa["evidence_report_id"], fb["evidence_report_id"]])
-                            val = "36mm" if "36mm" in str(fa.get("result_summary")) else (fa.get("evidence_type") or "toolmark").lower()
+                            val = (fa.get("evidence_type") or "toolmark").lower()
                             shared_attrs.append(SharedAttribute(
                                 attribute="forensic_match",
                                 value=val,
@@ -330,20 +316,21 @@ class OfflineModelRegistry(ModelRegistry):
                             ))
 
                 # 2. Newspaper co-occurrence
-                for n in self._data_service.newspaper:
+                for n in news_pool:
                     rel = set(n.get("related_incident_ids") or [])
                     if id_a in rel and id_b in rel:
                         ev_ids.append(n["news_id"])
+                        hw = n["headline"].split()
                         shared_attrs.append(SharedAttribute(
                             attribute="news_coverage",
-                            value=n["headline"][:30],
+                            value=hw[0].lower() if hw else "theft",
                             match_type="exact",
                             source_ids=[n["news_id"]],
                         ))
 
                 # 3. Surveillance CCTV partial plate matching
-                ca_list = [c for c in self._data_service.cctv if id_a in (c.get("related_incident_ids") or [])]
-                cb_list = [c for c in self._data_service.cctv if id_b in (c.get("related_incident_ids") or [])]
+                ca_list = [c for c in cctv_pool if id_a in (c.get("related_incident_ids") or [])]
+                cb_list = [c for c in cctv_pool if id_b in (c.get("related_incident_ids") or [])]
                 for ca in ca_list:
                     for cb in cb_list:
                         if ca.get("partial_plate") and ca.get("partial_plate") == cb.get("partial_plate"):
