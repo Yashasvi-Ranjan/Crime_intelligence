@@ -65,9 +65,10 @@ Every architectural requirement defined in `PROJECT.md` and `TEST_INFRA.md` is v
   python -m pytest tests/
   ```
 - **Results**:
+  - `tests/test_adversarial_challenger.py`: 56 passed
   - `tests/test_e2e_aegis.py`: 27 passed
   - `tests/test_synthetic_data.py`: 13 passed
-  - **Summary**: **40 passed, 0 failed, 100% pass rate** in 4.37s.
+  - **Summary**: **96 passed, 0 failed, 100% pass rate** in 10.16s.
 
 ### B. Backend Test Suite
 - **Command**:
@@ -86,7 +87,7 @@ Every architectural requirement defined in `PROJECT.md` and `TEST_INFRA.md` is v
   - `tests/test_model_registry.py`: 19 passed
   - `tests/test_multiagent_workflow.py`: 18 skipped (live engine files)
   - `tests/test_nightshift_client.py`: 6 passed
-  - **Summary**: **99 passed, 0 failed, 43 skipped, 100% pass rate** in 14.01s.
+  - **Summary**: **99 passed, 0 failed, 43 skipped, 100% pass rate** in 18.15s.
 
 ### C. Frontend TypeScript Typecheck
 - **Command**:
@@ -103,8 +104,19 @@ Every architectural requirement defined in `PROJECT.md` and `TEST_INFRA.md` is v
   ```
 - **Results**:
   - Evaluated against `data/evaluation/ground_truth.json` (7 benchmark scenarios: positive series REL-SERIES-001, 002, 003, 004, 007 and decoy cases 006, 008).
-  - Executed both `baseline_lightning_only` and `multi_agent` workflows.
+  - Executed both `baseline_lightning_only` and `multi_agent` workflows with offline local fallback.
   - Successfully logged metrics and latency breakdown to `evaluation/results.json`.
+  - **Comparative Benchmark Performance**:
+    - **Runs / Failed Runs**: Multi-Agent 7 runs, 0 failed runs (`failure_rate: 0.0`) vs Baseline 7 runs, 0 failed runs (`0.0`).
+    - **Proposed Link Recall**: Multi-Agent **1.0 (100%)** vs Baseline 0.733.
+    - **Verified Link Recall**: Multi-Agent **1.0 (100%)** vs Baseline 0.0.
+    - **False Links Total**: Multi-Agent **0** vs Baseline 2.
+    - **Decoy Links Total**: Multi-Agent **0** vs Baseline 2.
+    - **Citation Accuracy**: Multi-Agent **1.0 (100%)** vs Baseline 1.0.
+    - **Raw Model Citations Rejected**: Multi-Agent **0** vs Baseline 0.
+    - **Links Unsupported on Reverification**: Multi-Agent **0** vs Baseline 0.
+    - **Fabricated Fallback Links**: Multi-Agent **0** vs Baseline 7.
+    - **Contradiction Surfacing**: Multi-Agent surfaced **3 / 6** source contradictions vs Baseline 0 / 7.
 
 ### E. Credential-Free Sample Mode Verification
 - **Command**:
