@@ -287,6 +287,75 @@ FORENSIC_METHODS = {
 }
 
 
+# -- De-correlation pools (background records only) ---------------------------
+# Without these, several background fields were deterministic functions of one
+# another (Cramer's V = 1.0), e.g. crime_type -> method/property,
+# result_status -> confidence_level, vehicle -> colour/plate,
+# publication -> reliability, evidence_type -> examination_method.
+
+# Generic modus operandi / property that can occur across many crime types
+SHARED_METHODS = [
+    "Offender fled scene before officers arrived; method not yet established",
+    "Entry gained through unsecured access point; no forced entry detected",
+    "Suspect used distraction technique on staff or occupants",
+    "Incident discovered after the fact during routine morning inspection",
+    "Two suspects acted in concert; one kept lookout near exit",
+    "Method undetermined pending CCTV and witness canvass",
+]
+SHARED_PROPERTIES = [
+    ["cash"],
+    ["smart phone", "leather wallet"],
+    ["personal belongings"],
+    ["business documents", "keys"],
+    ["consumer electronics"],
+]
+
+# Alternative (still scientifically valid) examination methods per discipline
+FORENSIC_ALT_METHODS = {
+    "TOOLMARK": [("3D_SURFACE_TOPOGRAPHY", "Confocal 3D surface topography toolmark comparison")],
+    "DNA": [
+        ("Y_STR_PROFILING", "Y-chromosome short tandem repeat profiling"),
+        ("MITOCHONDRIAL_SEQUENCING", "Mitochondrial DNA hypervariable region sequencing"),
+    ],
+    "FINGERPRINT": [("CYANOACRYLATE_FUMING", "Cyanoacrylate fuming and alternate light source latent development")],
+    "BALLISTICS": [("COMPARISON_MICROSCOPY", "Comparison microscopy of cartridge case and bullet striations")],
+    "DIGITAL_FOOTPRINT": [("DEVICE_IMAGING", "Forensic device imaging and metadata timeline reconstruction")],
+    "FIBER": [("FTIR_SPECTROSCOPY", "Fourier-transform infrared spectroscopy fibre polymer analysis")],
+    "CHEMICAL_RESIDUE": [("FTIR_SPECTROSCOPY", "Fourier-transform infrared spectroscopy residue analysis")],
+    "TIRE_IMPRESSION": [("CASTING_COMPARISON", "Dental-stone casting and side-by-side tread comparison")],
+}
+
+# Probabilistic confidence given a forensic result status (replaces 1:1 mapping)
+FORENSIC_CONFIDENCE_BY_STATUS = {
+    "MATCH_CONFIRMED": (["HIGH", "MEDIUM", "LOW"], [0.70, 0.25, 0.05]),
+    "EXCLUSION": (["HIGH", "MEDIUM", "LOW"], [0.60, 0.30, 0.10]),
+    "PARTIAL_MATCH": (["MEDIUM", "LOW", "HIGH"], [0.55, 0.30, 0.15]),
+    "PENDING_REFERENCE": (["LOW", "INCONCLUSIVE", "MEDIUM"], [0.50, 0.30, 0.20]),
+    "INCONCLUSIVE": (["INCONCLUSIVE", "LOW", "MEDIUM"], [0.60, 0.30, 0.10]),
+}
+
+FORENSIC_SUMMARY_TEMPLATES = [
+    "Laboratory examination conducted via {method}. Evaluation determined findings consistent with status {status}.",
+    "Examiner applied {method}. Reported outcome: {status}.",
+    "Analysis using {method} completed; result recorded as {status} subject to peer review.",
+    "{method} performed on submitted item. Preliminary conclusion: {status}.",
+]
+
+RELIABILITY_LEVELS = ["HIGH", "MEDIUM", "LOW", "UNVERIFIED"]
+VEHICLE_COLORS = ["grey", "silver", "white", "blue", "black", "red", "green"]
+LOW_LIGHT_QUALITIES = {"DEGRADED", "NIGHT_IR_LOW_RES", "PARTIAL_GLARE", "POOR"}
+PLATE_LETTERS = "ABCDEFGHJKLMNPRSTUVWXYZ"
+
+# Dedicated RNG for de-correlation draws so the main random stream (IDs,
+# stations, timestamps, links, ...) stays identical to the original dataset.
+DECORR_RNG = random.Random()
+
+
+def random_partial_plate() -> str:
+    """Random fictional partial plate for background vehicles (avoids reusing planted series plates)."""
+    return f"{DECORR_RNG.randint(1, 9)}{DECORR_RNG.choice(PLATE_LETTERS)}{DECORR_RNG.choice(PLATE_LETTERS)}***"
+
+
 def to_iso_utc(dt: Optional[datetime]) -> Optional[str]:
     if dt is None:
         return None
@@ -1691,9 +1760,13 @@ def generate_background_records(
 
         methods_list = METHODS.get(crime_type, ["Unspecified criminal methodology"])
         method = random.choice(methods_list)
+        if DECORR_RNG.random() < 0.35:
+            method = DECORR_RNG.choice(SHARED_METHODS)
 
         props_list = PROPERTIES.get(crime_type, [["personal belongings"]])
         prop = list(random.choice(props_list))
+        if DECORR_RNG.random() < 0.35:
+            prop = list(DECORR_RNG.choice(SHARED_PROPERTIES))
 
         has_loss = crime_type not in ["VANDALISM", "PROPERTY_DAMAGE"] or random.random() < 0.6
         loss = round(random.uniform(150.0, 45000.0), 2) if has_loss else None
@@ -1784,7 +1857,9 @@ def generate_background_records(
             "crime_labels": labels,
             "mentioned_property": prop,
             "related_incident_ids": related_ids,
-            "source_reliability": default_rel,
+            "source_reliability": (
+                default_rel if DECORR_RNG.random() < 0.6 else DECORR_RNG.choice(RELIABILITY_LEVELS)
+            ),
             "data_quality": quality,
         })
 
@@ -1920,7 +1995,7 @@ def generate_background_records(
             veh = random.choice(VEHICLES)
             v_desc = veh[0]
             v_color = veh[1]
-            plate = veh[2] if random.random() < 0.7 else null
+            plate = random_partial_plate() if random.random() < 0.7 else null
         else:
             v_desc = null
             v_color = null
@@ -1954,6 +2029,15 @@ def generate_background_records(
             "POOR": (0.20, 0.45),
         }[img_qual]
         obs_conf = round(random.uniform(base_conf[0], base_conf[1]), 2)
+        # Colour perception is unreliable in low-light / degraded footage
+        if v_desc is not None and img_qual in LOW_LIGHT_QUALITIES:
+            roll = DECORR_RNG.random()
+            if roll < 0.35:
+                v_color = null
+            elif roll < 0.65:
+                v_color = DECORR_RNG.choice(VEHICLE_COLORS)
+        elif v_desc is not None and DECORR_RNG.random() < 0.1:
+            v_color = DECORR_RNG.choice(VEHICLE_COLORS)
         quality = random.choices(["HIGH", "MEDIUM", "LOW"], weights=[0.45, 0.40, 0.15])[0]
 
         records["cctv_reports"].append({
@@ -2006,15 +2090,12 @@ def generate_background_records(
 
         ev_type = random.choice(EVIDENCE_TYPES)
         method_name, method_desc = FORENSIC_METHODS[ev_type]
+        if DECORR_RNG.random() < 0.35:
+            method_name, method_desc = DECORR_RNG.choice(FORENSIC_ALT_METHODS[ev_type])
 
         status = random.choices(RESULT_STATUSES, weights=[0.4, 0.25, 0.15, 0.15, 0.05])[0]
-        conf = {
-            "MATCH_CONFIRMED": "HIGH",
-            "INCONCLUSIVE": "INCONCLUSIVE",
-            "EXCLUSION": "HIGH",
-            "PENDING_REFERENCE": "LOW",
-            "PARTIAL_MATCH": "MEDIUM",
-        }[status]
+        conf_levels, conf_weights = FORENSIC_CONFIDENCE_BY_STATUS[status]
+        conf = DECORR_RNG.choices(conf_levels, weights=conf_weights)[0]
 
         has_limitations = status in ["INCONCLUSIVE", "PARTIAL_MATCH", "PENDING_REFERENCE"] or random.random() < 0.2
         limitations = (
@@ -2030,9 +2111,8 @@ def generate_background_records(
         )
 
         desc = f"Physical evidence item ({ev_type.lower().replace('_', ' ')}) collected from scene at {LOCATION_MAP[loc_id]}."
-        summary = (
-            f"Laboratory examination conducted via {method_desc}. "
-            f"Evaluation determined findings consistent with status {status.replace('_', ' ').lower()}."
+        summary = DECORR_RNG.choice(FORENSIC_SUMMARY_TEMPLATES).format(
+            method=method_desc, status=status.replace("_", " ").lower()
         )
 
         quality = random.choices(["HIGH", "MEDIUM", "LOW"], weights=[0.55, 0.35, 0.10])[0]
@@ -2068,6 +2148,7 @@ def write_json_file(file_path: str, data: Any) -> None:
 def generate_all(seed: int = RANDOM_SEED) -> Dict[str, Any]:
     print(f"[*] Initializing random generator with seed {seed}...")
     random.seed(seed)
+    DECORR_RNG.seed(seed + 1)
 
     print("[*] Generating planted scenarios and offline ground truth...")
     ground_truth, planted_records = create_planted_scenarios()

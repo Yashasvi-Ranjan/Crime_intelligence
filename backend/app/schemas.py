@@ -322,6 +322,7 @@ class InvestigationResponse(BaseModel):
     budget: Optional[dict] = None
     resume_hint: Optional[str] = None
     clarification: Optional[str] = None
+    sentinels: Optional[dict[str, Any]] = None
 
 
 class AIDiagnosticResponse(BaseModel):

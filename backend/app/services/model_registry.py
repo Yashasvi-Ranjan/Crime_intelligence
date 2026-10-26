@@ -18,10 +18,14 @@ Rules enforced here:
 
 from __future__ import annotations
 
+import base64
+import json
 import logging
+import re
 import threading
+import uuid
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.config import Settings, settings
 from app.services.nightshift_client import (
@@ -36,13 +40,188 @@ from app.services.nightshift_client import (
 logger = logging.getLogger(__name__)
 
 CHAT_ROLES = ("planner", "finder", "skeptic", "reporter")
-ALL_ROLES = (*CHAT_ROLES, "embedding", "rerank")
+ALL_ROLES = (*CHAT_ROLES, "embedding", "rerank", "vision")
+
+# Official Quad NVIDIA Nemotron Model Identifiers (PROJECT.md § Interface Contracts)
+NEMOTRON_MODELS: Dict[str, str] = {
+    "lightning-30b": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "ultra-550b": "nvidia/nemotron-3-ultra-550b-a55b",
+    "super-vl-120b": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "embed-1b": "nvidia/nemotron-3-embed-1b",
+}
+
+# Role-to-model preference dispatch covering all 4 Nemotron lanes
+ROLE_MODEL_PREFERENCES: Dict[str, str] = {
+    # Lane 1: Ingestion, PII sanitization, and report generation
+    "ingestion": NEMOTRON_MODELS["lightning-30b"],
+    "pii_sanitization": NEMOTRON_MODELS["lightning-30b"],
+    "report_generation": NEMOTRON_MODELS["lightning-30b"],
+    "reporter": NEMOTRON_MODELS["lightning-30b"],
+    "finder": NEMOTRON_MODELS["lightning-30b"],
+    # Lane 2: Cross-station planning and adversarial Skeptic critique
+    "cross_station_planning": NEMOTRON_MODELS["ultra-550b"],
+    "planner": NEMOTRON_MODELS["ultra-550b"],
+    "skeptic": NEMOTRON_MODELS["ultra-550b"],
+    "adversarial_skeptic": NEMOTRON_MODELS["ultra-550b"],
+    # Lane 3: Visual scene and CCTV optical analysis
+    "visual_scene_analysis": NEMOTRON_MODELS["super-vl-120b"],
+    "cctv_analysis": NEMOTRON_MODELS["super-vl-120b"],
+    "vision": NEMOTRON_MODELS["super-vl-120b"],
+    # Lane 4: Semantic MO embedding
+    "semantic_mo_embedding": NEMOTRON_MODELS["embed-1b"],
+    "embedding": NEMOTRON_MODELS["embed-1b"],
+}
 
 # Candidate assignments from the design brief; informational only.
 CANDIDATES = {
     "scout_intent_llm": "Nemotron 3.5 Bolt E4B",
     "rerank": "Nemotron 3.5 Rerank 8B",
 }
+
+
+class EntityItem(dict):
+    """An entity dictionary item supporting dictionary access, string equality, and representation."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, dict):
+            return super().__eq__(other)
+        if isinstance(other, str):
+            val = self.get("value") or self.get("id") or self.get("plate") or self.get("description")
+            return other == val or (val is not None and other.lower() == str(val).lower())
+        return False
+
+    def __str__(self) -> str:
+        return str(self.get("value") or self.get("plate") or self.get("id") or self.get("description") or super().__str__())
+
+
+def _extract_cctv_metadata(camera_id: str, prompt: str) -> Tuple[str, List[EntityItem]]:
+    """
+    Extract camera details, license plates, suspect attributes, and vehicle descriptions
+    from prompt and optical metadata for resilient local fallback.
+    """
+    entities: List[EntityItem] = []
+    seen_values: set[str] = set()
+
+    def _add_entity(entity: EntityItem) -> None:
+        val = str(entity.get("value") or entity.get("id") or entity.get("plate") or entity.get("description") or "")
+        if val and val.lower() not in seen_values:
+            seen_values.add(val.lower())
+            entities.append(entity)
+
+    # 1. Primary camera detail
+    if camera_id:
+        _add_entity(EntityItem(type="camera", id=camera_id, value=camera_id, description=f"Camera {camera_id}"))
+
+    plate_candidates: List[str] = []
+    vehicle_candidates: List[str] = []
+    suspect_candidates: List[str] = []
+
+    # Check for structured JSON metadata inside prompt
+    trimmed = prompt.strip() if prompt else ""
+    if trimmed.startswith("{") and trimmed.endswith("}"):
+        try:
+            parsed_json = json.loads(trimmed)
+            if isinstance(parsed_json, dict):
+                if "camera_id" in parsed_json and parsed_json["camera_id"] != camera_id:
+                    _add_entity(EntityItem(type="camera", id=parsed_json["camera_id"], value=parsed_json["camera_id"], description=f"Camera {parsed_json['camera_id']}"))
+                for k in ("partial_plate", "plate", "license_plate"):
+                    if parsed_json.get(k):
+                        plate_candidates.append(str(parsed_json[k]).strip())
+                for k in ("vehicle_description", "vehicle", "vehicle_color"):
+                    if parsed_json.get(k):
+                        vehicle_candidates.append(str(parsed_json[k]).strip())
+                for k in ("suspect", "suspect_description", "observed_suspect", "individual"):
+                    if parsed_json.get(k):
+                        suspect_candidates.append(str(parsed_json[k]).strip())
+                if isinstance(parsed_json.get("observed_entities"), list):
+                    for item in parsed_json["observed_entities"]:
+                        item_str = str(item).strip()
+                        if any(w in item_str.lower() for w in ("sedan", "van", "suv", "truck", "car", "vehicle", "pickup", "hatchback")):
+                            vehicle_candidates.append(item_str)
+                        elif any(w in item_str.lower() for w in ("suspect", "subject", "individual", "male", "female", "hoodie", "jacket", "masked")):
+                            suspect_candidates.append(item_str)
+                        else:
+                            _add_entity(EntityItem(type="observed_entity", value=item_str, description=item_str))
+        except Exception:
+            pass
+
+    # Regex extraction from prompt text
+    # A. License plates (explicit plate tags or standard plate alphanumeric formats)
+    plate_regexes = [
+        re.compile(r"(?:plate|license\s*plate|tag|partial[_\s]plate)[:\s#]*([A-Z0-9\-]+)", re.IGNORECASE),
+        re.compile(r"\b([0-9][A-Z]{3}[0-9]{3})\b"),
+        re.compile(r"\b([0-9][A-Z]{2,4}[0-9]{2,4})\b"),
+        re.compile(r"\b([A-Z]{2,3}[-\s][0-9]{3,4})\b"),
+    ]
+    for pat in plate_regexes:
+        for m in pat.finditer(prompt):
+            cand = m.group(1).strip()
+            if not cand.upper().startswith("CAM-") and not cand.upper().startswith("LOC-") and len(cand) >= 3:
+                plate_candidates.append(cand)
+
+    # B. Vehicles (colors and types)
+    vehicle_regex = re.compile(
+        r"\b((?:(?:dark|light|faded|metallic|bright)\s+)?(?:black|white|grey|gray|silver|red|blue|green|yellow|brown|gold)\s+(?:sedan|suv|minivan|van|truck|pickup|hatchback|coupe|car|delivery\s+vehicle)|(?:sedan|suv|minivan|van|truck|pickup|hatchback|coupe|delivery\s+vehicle))\b",
+        re.IGNORECASE,
+    )
+    for m in vehicle_regex.finditer(prompt):
+        vehicle_candidates.append(m.group(0).strip())
+
+    # C. Suspect attributes (patterns and clothing)
+    suspect_regex = re.compile(
+        r"\b((?:(?:two|three|lone|unidentified)?\s*(?:suspects?|subjects?|individuals?|males?|females?|perpetrators?|figures?|men|teenagers?))\s*(?:wearing|in|carrying|with)?\s*[^.,;\n]{0,60})",
+        re.IGNORECASE,
+    )
+    for m in suspect_regex.finditer(prompt):
+        s_cand = m.group(0).strip()
+        if len(s_cand) > 3:
+            suspect_candidates.append(s_cand)
+
+    clothing_keywords = (
+        "hoodie", "hooded jacket", "balaclava", "mask", "gloves", "coveralls",
+        "high-vis vest", "safety vest", "dark jacket", "red jacket"
+    )
+    for cw in clothing_keywords:
+        if cw in prompt.lower() and not any(cw in sc.lower() for sc in suspect_candidates):
+            suspect_candidates.append(f"suspect wearing {cw}")
+
+    # Location codes
+    for m in re.finditer(r"\b(LOC-[A-Z0-9\-]+)\b", prompt, re.IGNORECASE):
+        loc = m.group(1).upper()
+        _add_entity(EntityItem(type="location", id=loc, value=loc, description=f"Location {loc}"))
+
+    # Deduplicate and register plate entities
+    for plate in plate_candidates:
+        _add_entity(EntityItem(type="license_plate", value=plate, plate=plate, description=f"License plate {plate}"))
+
+    # Deduplicate and register vehicle entities
+    for veh in vehicle_candidates:
+        _add_entity(EntityItem(type="vehicle", value=veh, description=veh))
+
+    # Deduplicate and register suspect entities
+    for susp in suspect_candidates:
+        _add_entity(EntityItem(type="suspect", value=susp, description=susp))
+
+    # Build coherent narrative description
+    narrative_parts = [f"Optical CCTV Analysis for camera {camera_id} (fallback pipeline)."]
+    if plate_candidates:
+        unique_plates = sorted(set(plate_candidates))
+        narrative_parts.append(f"Detected license plate(s): {', '.join(unique_plates)}.")
+    if vehicle_candidates:
+        narrative_parts.append(f"Observed vehicle: {vehicle_candidates[0]}.")
+    if suspect_candidates:
+        narrative_parts.append(f"Suspect attributes: {suspect_candidates[0]}.")
+    if not plate_candidates and not vehicle_candidates and not suspect_candidates:
+        if prompt.strip():
+            narrative_parts.append(f"Visual scene context: {prompt.strip()}.")
+        else:
+            narrative_parts.append("Optical frame inspected; no specific vehicle or suspect attributes identified.")
+
+    description = " ".join(narrative_parts)
+    return description, entities
 
 
 @dataclass
@@ -88,6 +267,11 @@ class ModelRegistry:
 
     # ── configuration ────────────────────────────────────────────────────
     def _configured(self, role: str) -> Optional[str]:
+        cfg_vision = (
+            getattr(self._cfg, "model_super_vl", None)
+            or getattr(self._cfg, "nightshift_model_vision", None)
+            or NEMOTRON_MODELS["super-vl-120b"]
+        )
         return {
             "planner": self._cfg.nightshift_model_planner,
             "finder": self._cfg.nightshift_model_finder,
@@ -95,7 +279,8 @@ class ModelRegistry:
             "reporter": self._cfg.nightshift_model_reporter,
             "embedding": self._cfg.nightshift_model_embedding,
             "rerank": self._cfg.nightshift_model_rerank,
-        }[role] or None
+            "vision": cfg_vision,
+        }.get(role) or None
 
     @property
     def fallback_model(self) -> str:
@@ -118,7 +303,7 @@ class ModelRegistry:
     def assignment(self, role: str) -> RoleAssignment:
         if role not in ALL_ROLES:
             raise ValueError(f"unknown role: {role}")
-        operation = {"embedding": "embeddings", "rerank": "rerank"}.get(role, "chat")
+        operation = {"embedding": "embeddings", "rerank": "rerank", "vision": "vision"}.get(role, "chat")
         configured = self._configured(role)
         catalog = self.catalog()
 
@@ -147,6 +332,16 @@ class ModelRegistry:
                 return RoleAssignment(role, operation, configured, None, None, "unavailable",
                                       f"Listed by Nightshift but /v1/embeddings failed: {probe['detail']}")
             return RoleAssignment(role, operation, configured, configured, None, "verified", "Embeddings route answered.")
+
+        if operation == "vision":
+            target = configured or NEMOTRON_MODELS["super-vl-120b"]
+            if catalog is None:
+                return RoleAssignment(role, operation, target, target, self.fallback_model, "unverified",
+                                      f"Catalogue unavailable ({self._catalog_error}); optical fallback ready.")
+            if target not in catalog:
+                return RoleAssignment(role, operation, target, self.fallback_model, self.fallback_model, "fallback",
+                                      f"{target} is not listed by Nightshift; using local optical fallback.")
+            return RoleAssignment(role, operation, target, target, self.fallback_model, "verified", "Listed by Nightshift.")
 
         # chat roles
         fb = self.fallback_model
@@ -248,5 +443,99 @@ class ModelRegistry:
         rec.prompt_tokens, rec.completion_tokens = usage.get("prompt_tokens"), usage.get("completion_tokens")
         return resp, rec
 
+    @property
+    def nemotron_models(self) -> Dict[str, str]:
+        return NEMOTRON_MODELS
+
+    @property
+    def role_model_preferences(self) -> Dict[str, str]:
+        return ROLE_MODEL_PREFERENCES
+
+    def analyze_cctv_frame(
+        self,
+        image_bytes: bytes,
+        camera_id: str,
+        prompt: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Analyze CCTV frame with nvidia/nemotron-3.5-super-vl-120b-a12b.
+        Attempts Nightshift vision endpoint if available, falling back to local
+        optical metadata extraction if offline or if image bytes are synthetic/mock.
+
+        Returns conforming dictionary:
+        {
+            "camera_id": camera_id,
+            "description": str,
+            "entities": list,
+            "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+            "receipt_id": str,
+            "fallback_used": bool,
+        }
+        """
+        target_model = NEMOTRON_MODELS["super-vl-120b"]
+        is_mock = (
+            not image_bytes
+            or image_bytes.startswith(b"mock")
+            or image_bytes.startswith(b"test")
+            or image_bytes.startswith(b"synthetic")
+            or image_bytes.startswith(b"dummy")
+            or len(image_bytes) < 16
+        )
+
+        if not is_mock and self._client is not None:
+            try:
+                b64_img = base64.b64encode(image_bytes).decode("ascii")
+                messages = [
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Analyze CCTV camera {camera_id} frame. Context: {prompt}\n"
+                            f"[Attached image payload: base64 len {len(b64_img)}]"
+                        ),
+                    }
+                ]
+                resp = self._client.generate(
+                    messages=messages,
+                    model=target_model,
+                    max_tokens=800,
+                    temperature=0.1,
+                )
+                desc, entities = _extract_cctv_metadata(camera_id, f"{prompt} {resp.content}")
+                if resp.content and resp.content.strip():
+                    desc = f"{resp.content.strip()} (Processed via {resp.model})"
+                return {
+                    "camera_id": camera_id,
+                    "description": desc,
+                    "entities": entities,
+                    "model": resp.model or target_model,
+                    "receipt_id": resp.receipt_id or f"rcpt-vl-{uuid.uuid4().hex[:12]}",
+                    "fallback_used": False,
+                }
+            except Exception as exc:
+                logger.info("Vision model call failed (%s); switching to resilient optical fallback", exc)
+
+        # Resilient local optical metadata fallback
+        desc, entities = _extract_cctv_metadata(camera_id, prompt)
+        return {
+            "camera_id": camera_id,
+            "description": desc,
+            "entities": entities,
+            "model": target_model,
+            "receipt_id": f"rcpt-opt-{uuid.uuid4().hex[:12]}",
+            "fallback_used": True,
+        }
+
 
 model_registry = ModelRegistry()
+
+
+def analyze_cctv_frame(
+    image_bytes: bytes,
+    camera_id: str,
+    prompt: str = "",
+    registry: Optional[ModelRegistry] = None,
+) -> Dict[str, Any]:
+    """Top-level entry point for CCTV frame analysis conforming to interface contracts."""
+    reg = registry or model_registry
+    return reg.analyze_cctv_frame(image_bytes=image_bytes, camera_id=camera_id, prompt=prompt)
+

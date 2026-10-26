@@ -1,3 +1,31 @@
+# AEGIS: Autonomous Enterprise Governance & Investigative System
+> **Cross-Station Crime Intelligence Platform**  
+> *Track 1: Solving Fragmented Intelligence* | **Open Agent Hackathon 2026** & **DGX Spark Award Contender**
+
+---
+
+### Executive Architecture & Competitive Advantage
+AEGIS is an enterprise Level 4 SaaS intelligence platform designed to eliminate multi-jurisdictional crime blindness across isolated police station silos (North, Central, Riverside). While legacy architectures struggle with unverified claims, vision pipeline 404s, and static traces, AEGIS introduces:
+
+1. **Full Quad-Nemotron Alignment via Nightshift**:
+   - `nvidia/nemotron-3.5-lightning-30b-a3b`: High-throughput query formulation, ingestion, PII sanitization, and structured hypothesis generation.
+   - `nvidia/nemotron-3-ultra-550b-a55b`: Deep multi-jurisdiction strategic orchestration and adversarial Skeptic critique.
+   - `nvidia/nemotron-3.5-super-vl-120b-a12b`: Visual forensic and optical surveillance analysis with resilient CCTV metadata fallback.
+   - `nvidia/nemotron-3-embed-1b`: Semantic modus operandi vector similarity indexing across federated incident narratives.
+2. **Autonomous Triple Meta-Governance Sentinels**:
+   - **Operational Tracker**: Real-time token consumption, per-station query budgets, and latency monitoring.
+   - **HackOS Compliance Auditor**: Continuous verification of load-bearing Zetaris queries, Meterless engines, and multi-station coverage.
+   - **Anti-Disqualification Sentinel**: Strict scanning preventing secret leakage, destructive mutations (`DROP`/`DELETE`), and ungrounded hallucinations.
+3. **Gotham-Grade L4 SaaS Investigative Interface**:
+   - **Interactive Cross-Station Knowledge Graph**: Dynamic SVG canvas visualizing suspects, vehicles, incidents, and forensic links across precincts.
+   - **Execution Trace Drawer**: Verifiable model receipts (`rcpt-*`), engine timings, and token metrics.
+   - **Evidence Pinboard & Court Dossier**: One-click evidence staging with printable, court-admissible forensic dossiers.
+4. **100% Deterministic Grounding & Verification**:
+   - Every claim is validated against the 5 Zetaris federated tables (`police_incidents`, `cctv_reports`, `witness_reports`, `forensic_reports`, `newspaper_reports`).
+   - Zero-credential offline demonstration (`sample_mode=true`) allowing judges and reviewers to explore full scenario graphs without setup friction.
+
+---
+
 # Cross-Station Crime Intelligence: Synthetic Data Generator
 
 > **Open Agent Hackathon 2026** — *Solving Fragmented Intelligence & Multi-Station Investigation*

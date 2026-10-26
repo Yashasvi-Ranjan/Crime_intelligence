@@ -268,6 +268,7 @@ export interface InvestigationResponse {
   budget?: Record<string, any> | null;
   resume_hint?: string | null;
   clarification?: string | null;
+  sentinels?: Record<string, any> | null;
 }
 
 export interface InvestigationRequest {

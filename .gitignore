@@ -2,6 +2,8 @@
 .env
 backend/.env
 *.env
+.env*
+.vercel
 
 # Python
 __pycache__/

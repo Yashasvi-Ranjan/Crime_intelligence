@@ -39,6 +39,11 @@ from app.services.meterless_engines import (
     WorkingState,
 )
 from app.services.meterless_service import MeterlessWorldModelService, meterless_service
+from app.services.meta_sentinels import (
+    operational_tracker,
+    hackos_auditor,
+    disqualification_sentinel,
+)
 from app.services.model_registry import CallRecord, ModelRegistry
 from app.services.nightshift_client import NightshiftClient
 from app.services.trace_logger import TraceLogger
@@ -821,6 +826,13 @@ class _Run:
         win = [c for c in self.calls if c.reported_model]
         provider = win[-1].provider if win else None
         links = self._link_models()
+        integration = self._integration_status(world, win, provider)
+        elapsed = round(time.time() - t_start, 2)
+        sentinels_audit = {
+            "tracker": operational_tracker.evaluate(self.run_id, elapsed, st.iteration, [c.as_dict() for c in self.calls], st.sql_queries, self.engine_ops).to_dict(),
+            "compliance": hackos_auditor.evaluate(integration, [c.as_dict() for c in self.calls], links, stations).to_dict(),
+            "anti_disqualification": disqualification_sentinel.evaluate(json.dumps(report, default=str), links, set(self.incidents.keys()), self._evidence_ids()).to_dict(),
+        }
         return {
             "investigation_id": self.run_id, "is_sample": False, "data_mode": "zetaris_live", "scenario_id": None,
             "title": report["title"], "query": self.query, "stations_involved": stations,
@@ -830,7 +842,8 @@ class _Run:
             "unresolved_questions": list(dict.fromkeys([*report.get("unresolved_questions", []), *self.unresolved]))[:15],
             "follow_up_actions": report.get("follow_up_actions", []),
             "executive_summary": report["executive_summary"],
-            "integration_status": self._integration_status(world, win, provider),
+            "integration_status": integration,
+            "sentinels": sentinels_audit,
             "retrieval_and_analysis_status": "completed_live" if status == "completed" else status,
             "trace_file": str(self.tracer.log_file.name), "timestamp": time.time(),
             "elapsed_seconds": round(time.time() - t_start, 2),

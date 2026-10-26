@@ -215,3 +215,177 @@ def test_ground_truth_never_leaked():
     import sys
     for mod_name in sys.modules:
         assert "ground_truth" not in mod_name, f"ground_truth was imported as module: {mod_name}"
+
+
+# ── Milestone 2: Sample Mode Sentinels & Investigation Trace ─────────────────
+
+
+def test_sample_scenarios_list():
+    response = client.get("/api/investigations/samples")
+    assert response.status_code == 200
+    samples = response.json()
+    assert len(samples) == 3
+    scenario_ids = {s["scenario_id"] for s in samples}
+    assert scenario_ids == {"crowbar_safe_cracking", "catalytic_converter", "keyless_suv_relay"}
+    for s in samples:
+        assert "title" in s
+        assert "query" in s
+        assert len(s["target_stations"]) >= 2
+
+
+def test_investigations_analyze_sample_mode_crowbar():
+    payload = {
+        "query": "Investigate safe burglaries involving crowbars",
+        "sample_mode": True,
+        "scenario_id": "crowbar_safe_cracking",
+    }
+    response = client.post("/api/investigations/analyze", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+
+    # Core sample mode flags
+    assert data["is_sample"] is True
+    assert data["data_mode"] == "sample_mode"
+    assert data["scenario_id"] == "crowbar_safe_cracking"
+
+    # Sentinels verification (Milestone 2 requirement)
+    assert data["sentinels"] is not None
+    sentinels = data["sentinels"]
+
+    # Operational Tracker
+    tracker = sentinels["operational_tracker"]
+    assert tracker["status"] == "PASS"
+    assert tracker["passed"] is True
+    assert tracker["latency_ms"] > 0
+    assert "token_usage" in tracker
+    assert tracker["token_usage"]["total_tokens"] > 0
+    assert len(tracker["query_milestones"]) >= 3
+
+    # HackOS Compliance Auditor
+    compliance = sentinels["hackos_auditor"]
+    assert compliance["status"] == "COMPLIANT"
+    assert compliance["passed"] is True
+    assert compliance["zetaris_verified"] is True
+    assert compliance["meterless_engines_verified"] is True
+    assert compliance["nightshift_verified"] is True
+    assert compliance["multi_station_coverage"] is True
+
+    # Disqualification Sentinel
+    anti_disqual = sentinels["disqualification_sentinel"]
+    assert anti_disqual["status"] == "CLEAN"
+    assert anti_disqual["passed"] is True
+    assert anti_disqual["zero_secrets_leakage"] is True
+    assert anti_disqual["ungrounded_ids_detected"] == 0
+    assert anti_disqual["synthetic_data_valid"] is True
+
+    # Frontend UI compatibility aliases
+    assert sentinels["tracker"]["status"] == "VERIFIED"
+    assert sentinels["tracker"]["score"] == 100.0
+    assert sentinels["compliance"]["status"] == "VERIFIED"
+    assert sentinels["compliance"]["score"] == 100.0
+    assert sentinels["anti_disqualification"]["status"] == "VERIFIED"
+    assert sentinels["anti_disqualification"]["score"] == 100.0
+
+    # Report verification (Milestone 2 requirement)
+    assert data["report"] is not None
+    report = data["report"]
+    assert isinstance(report["synthesis"], str)
+    assert len(report["synthesis"]) > 0
+    assert isinstance(report["facts"], list)
+    assert len(report["facts"]) >= 3
+    assert report["unsupported_claims"] == []
+    assert report["confidence"] > 0.8
+    assert report["dossier_ready"] is True
+
+    # Check that facts contain cited evidence IDs matching the sample scenario
+    all_cited_sources = [src for f in report["facts"] for src in f.get("source_ids", [])]
+    assert "FOR-0089" in all_cited_sources
+    assert "FOR-0142" in all_cited_sources
+
+
+def test_investigations_analyze_sample_mode_all_scenarios():
+    for sc_id in ["catalytic_converter", "keyless_suv_relay"]:
+        payload = {"query": f"test query for {sc_id}", "sample_mode": True, "scenario_id": sc_id}
+        resp = client.post("/api/investigations/analyze", json=payload)
+        assert resp.status_code == 200
+        res = resp.json()
+        assert res["sentinels"] is not None
+        assert res["sentinels"]["operational_tracker"]["status"] == "PASS"
+        assert res["sentinels"]["hackos_auditor"]["status"] == "COMPLIANT"
+        assert res["sentinels"]["disqualification_sentinel"]["status"] == "CLEAN"
+        assert res["report"] is not None
+        assert res["report"]["dossier_ready"] is True
+        assert len(res["report"]["facts"]) >= 2
+
+
+def test_get_investigation_trace_sample_mode():
+    run_id = "sample-crowbar_safe_cracking"
+    response = client.get(f"/api/investigations/{run_id}/trace")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["run_id"] == run_id
+    assert isinstance(data["events"], list)
+    assert data["total_events"] == len(data["events"])
+    assert data["total_events"] >= 4
+
+    agents = {e["agent"] for e in data["events"]}
+    assert "planner" in agents
+    assert "finder" in agents
+    assert "skeptic" in agents
+    assert "reporter" in agents
+
+    for ev in data["events"]:
+        assert "timestamp" in ev
+        assert "T" in ev["timestamp"]
+        assert "phase" in ev
+        assert "agent" in ev
+        assert "model" in ev
+        assert "receipt_id" in ev
+        assert ev["receipt_id"].startswith("rcpt-")
+        assert "details" in ev
+        assert isinstance(ev["details"], dict)
+
+
+def test_get_investigation_trace_live_logger_roundtrip(tmp_path):
+    from app.services.trace_logger import TraceLogger
+
+    test_run_id = "inv_test_m2_roundtrip_12345"
+    logger = TraceLogger(test_run_id)
+
+    # Log two distinct events
+    logger.log_event(
+        step="planning",
+        agent="planner",
+        action="formulate_retrieval_plan",
+        details={"target": "NORTH"},
+        provider_meta={"reported_model": "nvidia/nemotron-3-ultra-550b-a55b", "receipt_id": "rcpt-ultra-test-01"},
+    )
+    logger.log_event(
+        step="verification",
+        agent="skeptic",
+        action="adversarial_critique",
+        details={"result": "grounded"},
+        provider_meta={"reported_model": "nvidia/nemotron-3-ultra-550b-a55b", "receipt_id": "rcpt-ultra-test-02"},
+    )
+
+    response = client.get(f"/api/investigations/{test_run_id}/trace")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["run_id"] == test_run_id
+    assert data["total_events"] >= 2
+
+    # Clean up test trace file
+    if logger.log_file.exists():
+        logger.log_file.unlink()
+
+
+def test_get_investigation_trace_unflushed_or_unknown_fallback():
+    # An unknown or unflushed run_id should safely fall back to synthetic events
+    response = client.get("/api/investigations/inv_unknown_fallback_99999/trace")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["run_id"] == "inv_unknown_fallback_99999"
+    assert data["total_events"] >= 4
+    assert all("receipt_id" in ev for ev in data["events"])
+

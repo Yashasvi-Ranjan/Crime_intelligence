@@ -1,0 +1,162 @@
+{
+ "generated": "2026-10-26T20:26:27Z",
+ "cases": 7,
+ "summary": {
+  "baseline_lightning_only": {
+   "runs": 7,
+   "failed_runs": 7,
+   "failure_rate": 1.0,
+   "mean_latency_s": 0.186,
+   "mean_model_calls": null,
+   "mean_sql_queries": null,
+   "valid_link_recall_proposed(positive cases)": null,
+   "valid_link_recall_verified(positive cases)": null,
+   "false_links_total": 0,
+   "decoy_links_total": 0,
+   "citation_accuracy_final_output": null,
+   "raw_model_citations_rejected_total": 0,
+   "links_total": 0,
+   "links_not_supported_on_reverification": 0,
+   "links_unsupported_on_reverification": 0,
+   "fabricated_fallback_links": 0,
+   "links_citing_duplicate_reports": 0,
+   "cases_with_source_contradictions": 0,
+   "of_which_surfaced_in_output": 0
+  },
+  "multi_agent": {
+   "runs": 7,
+   "failed_runs": 7,
+   "failure_rate": 1.0,
+   "mean_latency_s": 0.143,
+   "mean_model_calls": null,
+   "mean_sql_queries": null,
+   "valid_link_recall_proposed(positive cases)": null,
+   "valid_link_recall_verified(positive cases)": null,
+   "false_links_total": 0,
+   "decoy_links_total": 0,
+   "citation_accuracy_final_output": null,
+   "raw_model_citations_rejected_total": 0,
+   "links_total": 0,
+   "links_not_supported_on_reverification": 0,
+   "links_unsupported_on_reverification": 0,
+   "fabricated_fallback_links": 0,
+   "links_citing_duplicate_reports": 0,
+   "cases_with_source_contradictions": 0,
+   "of_which_surfaced_in_output": 0
+  }
+ },
+ "rows": [
+  {
+   "system": "baseline_lightning_only",
+   "case": "001",
+   "kind": "positive",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.3
+  },
+  {
+   "system": "multi_agent",
+   "case": "001",
+   "kind": "positive",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.2
+  },
+  {
+   "system": "baseline_lightning_only",
+   "case": "002",
+   "kind": "positive",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.2
+  },
+  {
+   "system": "multi_agent",
+   "case": "002",
+   "kind": "positive",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.2
+  },
+  {
+   "system": "baseline_lightning_only",
+   "case": "003",
+   "kind": "positive",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.2
+  },
+  {
+   "system": "multi_agent",
+   "case": "003",
+   "kind": "positive",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.1
+  },
+  {
+   "system": "baseline_lightning_only",
+   "case": "004",
+   "kind": "positive",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.1
+  },
+  {
+   "system": "multi_agent",
+   "case": "004",
+   "kind": "positive",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.1
+  },
+  {
+   "system": "baseline_lightning_only",
+   "case": "007",
+   "kind": "positive",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.1
+  },
+  {
+   "system": "multi_agent",
+   "case": "007",
+   "kind": "positive",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.2
+  },
+  {
+   "system": "baseline_lightning_only",
+   "case": "006",
+   "kind": "decoy",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.2
+  },
+  {
+   "system": "multi_agent",
+   "case": "006",
+   "kind": "decoy",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.1
+  },
+  {
+   "system": "baseline_lightning_only",
+   "case": "008",
+   "kind": "decoy",
+   "ok": false,
+   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
+   "latency_s": 0.2
+  },
+  {
+   "system": "multi_agent",
+   "case": "008",
+   "kind": "decoy",
+   "ok": false,
+   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
+   "latency_s": 0.1
+  }
+ ]
+}

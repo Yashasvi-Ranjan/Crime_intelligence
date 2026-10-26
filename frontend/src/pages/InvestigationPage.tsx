@@ -15,15 +15,27 @@ import {
   Newspaper,
   RefreshCw,
   ShieldCheck,
+  Terminal,
+  Pin,
+  Share2,
+  Layers,
+  FileText,
 } from 'lucide-react';
 import {
   AIDiagnosticResponse,
   EngineHealthResponse,
   InvestigationResponse,
   SampleScenarioMeta,
+  PoliceIncident,
 } from '../types';
 import { api } from '../services/api';
 import { AgentRunPanel } from '../components/AgentRunPanel';
+import { AegisSentinelsPanel } from '../components/AegisSentinelsPanel';
+import { InteractiveGraphCanvas } from '../components/InteractiveGraphCanvas';
+import { ExecutionTraceDrawer } from '../components/ExecutionTraceDrawer';
+import { EvidencePinboard } from '../components/EvidencePinboard';
+import { EvidencePinboardModal } from '../components/EvidencePinboardModal';
+import { IncidentDetailModal } from '../components/IncidentDetailModal';
 
 export const InvestigationPage: React.FC = () => {
   const [query, setQuery] = useState<string>(
@@ -38,6 +50,10 @@ export const InvestigationPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<InvestigationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showDossierModal, setShowDossierModal] = useState<boolean>(false);
+  const [showTraceDrawer, setShowTraceDrawer] = useState<boolean>(false);
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'both' | 'graph' | 'pinboard'>('both');
+  const [selectedIncidentForModal, setSelectedIncidentForModal] = useState<PoliceIncident | null>(null);
 
   // Diagnostics state
   const [showDiagnostics, setShowDiagnostics] = useState<boolean>(false);
@@ -168,8 +184,28 @@ export const InvestigationPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Integration Status Badges */}
+        {/* Integration Status Badges & Execution Trace */}
         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowTraceDrawer(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+              border: 'none',
+              color: '#fff',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
+            }}
+          >
+            <Terminal size={14} />
+            Inspect Execution Trace
+          </button>
           <button
             onClick={() => setShowDiagnostics(!showDiagnostics)}
             style={{
@@ -497,6 +533,147 @@ export const InvestigationPage: React.FC = () => {
       {/* ── Investigation Results ─────────────────────────────────────────── */}
       {result && !loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* L4 Sentinels Supervisory Panel */}
+          <AegisSentinelsPanel sentinels={result.sentinels} />
+
+          {/* Workspace View Controls Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(15, 23, 42, 0.75)',
+              padding: '0.6rem 1rem',
+              borderRadius: '10px',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              flexWrap: 'wrap',
+              gap: '10px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>L4 WORKSPACE VIEW:</span>
+              <button
+                onClick={() => setActiveWorkspaceTab('graph')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: activeWorkspaceTab === 'graph' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  color: activeWorkspaceTab === 'graph' ? '#818cf8' : '#94a3b8',
+                  border: `1px solid ${activeWorkspaceTab === 'graph' ? '#6366f1' : 'rgba(148, 163, 184, 0.2)'}`,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Share2 size={13} /> Knowledge Graph
+              </button>
+              <button
+                onClick={() => setActiveWorkspaceTab('pinboard')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: activeWorkspaceTab === 'pinboard' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  color: activeWorkspaceTab === 'pinboard' ? '#fbbf24' : '#94a3b8',
+                  border: `1px solid ${activeWorkspaceTab === 'pinboard' ? '#f59e0b' : 'rgba(148, 163, 184, 0.2)'}`,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Pin size={13} /> Evidence Pinboard
+              </button>
+              <button
+                onClick={() => setActiveWorkspaceTab('both')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: activeWorkspaceTab === 'both' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  color: activeWorkspaceTab === 'both' ? '#34d399' : '#94a3b8',
+                  border: `1px solid ${activeWorkspaceTab === 'both' ? '#10b981' : 'rgba(148, 163, 184, 0.2)'}`,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Layers size={13} /> Unified Gotham Workspace (Both)
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => setShowTraceDrawer(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                  color: '#fff',
+                  border: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                <Terminal size={14} /> Inspect Execution Trace
+              </button>
+            </div>
+          </div>
+
+          {/* L4 Interactive Knowledge Graph Canvas */}
+          {(activeWorkspaceTab === 'graph' || activeWorkspaceTab === 'both') && (
+            <InteractiveGraphCanvas
+              links={result.candidate_links}
+              candidateIncidents={result.candidate_incidents}
+              supportingEvidence={result.supporting_evidence}
+              onSelectIncident={(id) => {
+                const inc = result.candidate_incidents.find((i) => i.incident_id === id);
+                if (inc) setSelectedIncidentForModal(inc as PoliceIncident);
+              }}
+            />
+          )}
+
+          {/* L4 Interactive Evidence Pinboard */}
+          {(activeWorkspaceTab === 'pinboard' || activeWorkspaceTab === 'both') && (
+            <EvidencePinboard
+              supportingEvidence={result.supporting_evidence}
+              candidateIncidents={result.candidate_incidents}
+              candidateLinks={result.candidate_links}
+              onOpenDossier={() => setShowDossierModal(true)}
+              onSelectIncident={(id) => {
+                const inc = result.candidate_incidents.find((i) => i.incident_id === id);
+                if (inc) setSelectedIncidentForModal(inc as PoliceIncident);
+              }}
+            />
+          )}
+
+
+          {/* Dossier Modal */}
+          <EvidencePinboardModal
+            isOpen={showDossierModal}
+            onClose={() => setShowDossierModal(false)}
+            result={result}
+          />
+
+          {/* Incident Detail Modal */}
+          {selectedIncidentForModal && (
+            <IncidentDetailModal
+              incident={selectedIncidentForModal}
+              onClose={() => setSelectedIncidentForModal(null)}
+            />
+          )}
+
           {/* Executive Summary Card */}
           <div
             style={{
@@ -509,7 +686,47 @@ export const InvestigationPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.3rem' }}>
-                  <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>{result.title}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0 }}>{result.title}</h2>
+                    <button
+                      onClick={() => setShowDossierModal(true)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                        color: '#fff',
+                        border: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(14, 165, 233, 0.3)',
+                      }}
+                    >
+                      <FileText size={13} /> Export Court Dossier
+                    </button>
+                    <button
+                      onClick={() => setShowTraceDrawer(true)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                        color: '#fff',
+                        border: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                      }}
+                    >
+                      <Terminal size={13} /> Inspect Execution Trace
+                    </button>
+                  </div>
                   <span
                     style={{
                       fontSize: '0.75rem',
@@ -524,10 +741,27 @@ export const InvestigationPage: React.FC = () => {
                     {result.is_sample ? 'SAMPLE MODE' : 'LIVE INTEGRATION EXECUTION'}
                   </span>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Run ID: <code style={{ color: 'var(--text-secondary)' }}>{result.investigation_id}</code>
-                  {result.elapsed_seconds && ` • Elapsed: ${result.elapsed_seconds}s`}
-                  {result.trace_file && ` • Trace: ${result.trace_file}`}
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>Run ID: <code style={{ color: 'var(--text-secondary)' }}>{result.investigation_id}</code></span>
+                  {result.elapsed_seconds && <span>• Elapsed: {result.elapsed_seconds}s</span>}
+                  {result.trace_file && <span>• Trace: {result.trace_file}</span>}
+                  <button
+                    onClick={() => setShowTraceDrawer(true)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--accent-cyan)',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      textDecoration: 'underline',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: 0,
+                    }}
+                  >
+                    <Terminal size={12} /> View Execution Trace
+                  </button>
                 </div>
               </div>
 
@@ -823,6 +1057,13 @@ export const InvestigationPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Execution Trace Slide-over Drawer (Accessible from header toolbar or workspace controls) */}
+      <ExecutionTraceDrawer
+        runId={result?.investigation_id || (useSampleMode ? `sample-${selectedScenarioId}` : 'sample-crowbar_safe_cracking')}
+        isOpen={showTraceDrawer}
+        onClose={() => setShowTraceDrawer(false)}
+      />
     </div>
   );
 };

@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     nightshift_model_skeptic: str = "nvidia/nemotron-3-ultra-550b-a55b"
     nightshift_model_reporter: str = ""
     nightshift_model_embedding: str = "nvidia/nemotron-3-embed-1b"
+    model_super_vl: str = "nvidia/nemotron-3.5-super-vl-120b-a12b"
+    nightshift_model_vision: str = "nvidia/nemotron-3.5-super-vl-120b-a12b"
     nightshift_model_rerank: str = ""                # no rerank model is served by this Nightshift build
     nightshift_model_fallback: str = ""              # defaults to nightshift_model
     nightshift_skeptic_timeout_seconds: int = 180
