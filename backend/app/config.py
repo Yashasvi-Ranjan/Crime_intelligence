@@ -55,7 +55,57 @@ class Settings(BaseSettings):
     # ── Local fallback ───────────────────────────────────────────────────────
     local_data_dir: str = "../data/generated"
 
+    # ── Nightshift / AI Provider (OpenAI-compatible) ─────────────────────────
+    nightshift_base_url: str = "http://127.0.0.1:8088/v1"
+    nightshift_api_key: str = ""          # token/key; never logged
+    nightshift_model: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
+    nightshift_app_name: str = "crime-intel"
+    nightshift_timeout_seconds: int = 60
+    nightshift_max_retries: int = 3
+
+    # ── Role → model registry (verified against Nightshift /v1/models at runtime)
+    # Empty string = use nightshift_model (Lightning). Never an invented ID.
+    nightshift_model_planner: str = ""
+    nightshift_model_finder: str = ""
+    nightshift_model_skeptic: str = "nvidia/nemotron-3-ultra-550b-a55b"
+    nightshift_model_reporter: str = ""
+    nightshift_model_embedding: str = "nvidia/nemotron-3-embed-1b"
+    nightshift_model_rerank: str = ""                # no rerank model is served by this Nightshift build
+    nightshift_model_fallback: str = ""              # defaults to nightshift_model
+    nightshift_skeptic_timeout_seconds: int = 180
+
+    # ── Investigation workflow budgets ──────────────────────────────────────
+    workflow_max_iterations: int = 3
+    workflow_max_model_calls: int = 24
+    workflow_time_budget_seconds: int = 900
+    workflow_retrieval_limit: int = 10
+    workflow_evidence_limit_per_source: int = 8
+    state_dir: str = "../.state"          # Markovian run state + H-MEM store (gitignored)
+
+    # ── Meterless Engines: H-MEM / Scout Intent / Markovian ─────────────────
+    meterless_engine_dir: str = "/Applications/Nightshift.app/Contents/Resources/engine/js/engine"
+    hmem_enabled: bool = True
+    hmem_scope: str = "crime-intel"
+
+    # ── Meterless Engine / World Model ──────────────────────────────────────
+    meterless_world_model_path: str = "/Applications/Nightshift.app/Contents/Resources/engine/js/engine/worldmodel.js"
+    meterless_world_dir: str = ""         # Defaults to ~/Library/Application Support/ai.meterless.runtime/world
+
+    # ── Sample Mode Toggle ──────────────────────────────────────────────────
+    sample_mode: bool = False
+
     # ── Derived helpers ──────────────────────────────────────────────────────
+    @property
+    def state_path(self) -> Path:
+        base = Path(__file__).parent.parent
+        p = (base / self.state_dir).resolve()
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def fallback_model(self) -> str:
+        return self.nightshift_model_fallback or self.nightshift_model
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
@@ -89,6 +139,24 @@ class Settings(BaseSettings):
             and self.zetaris_base_url != "https://YOUR_ZETARIS_INSTANCE_URL_HERE"
             and has_creds
         )
+
+    @property
+    def resolved_nightshift_token(self) -> str:
+        """Retrieve Nightshift token from environment or local proxy-token file."""
+        if self.nightshift_api_key:
+            return self.nightshift_api_key
+        token_path = Path.home() / "Library/Application Support/ai.meterless.runtime/proxy-token"
+        if token_path.exists():
+            try:
+                return token_path.read_text(encoding="utf-8").strip()
+            except Exception:
+                pass
+        return ""
+
+    @property
+    def nightshift_configured(self) -> bool:
+        """True if Nightshift base URL is set and auth token is available."""
+        return bool(self.nightshift_base_url) and bool(self.resolved_nightshift_token)
 
 
 settings = Settings()

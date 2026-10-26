@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { OverviewPage } from './pages/OverviewPage';
+import { InvestigationPage } from './pages/InvestigationPage';
 import { IncidentsPage } from './pages/IncidentsPage';
 import { SourcesPage } from './pages/SourcesPage';
 import { ZetarisStatusPage } from './pages/ZetarisStatusPage';
@@ -8,7 +9,7 @@ import { DataSource, ZetarisHealthResponse } from './types';
 import { api } from './services/api';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'incidents' | 'sources' | 'zetaris'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'investigation' | 'incidents' | 'sources' | 'zetaris'>('investigation');
   const [stationFilter, setStationFilter] = useState<string>('ALL');
   const [selectedSource, setSelectedSource] = useState<DataSource>('cctv_reports');
   const [zetarisHealth, setZetarisHealth] = useState<ZetarisHealthResponse | null>(null);
@@ -22,7 +23,7 @@ export const App: React.FC = () => {
     // Listen to hash changes for deep linking
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['overview', 'incidents', 'sources', 'zetaris'].includes(hash)) {
+      if (['overview', 'investigation', 'incidents', 'sources', 'zetaris'].includes(hash)) {
         setActiveTab(hash as any);
       }
     };
@@ -51,7 +52,7 @@ export const App: React.FC = () => {
     window.location.hash = '#incidents';
   };
 
-  const handleTabChange = (tab: 'overview' | 'incidents' | 'sources' | 'zetaris') => {
+  const handleTabChange = (tab: 'overview' | 'investigation' | 'incidents' | 'sources' | 'zetaris') => {
     setActiveTab(tab);
     window.location.hash = `#${tab}`;
   };
@@ -72,6 +73,8 @@ export const App: React.FC = () => {
             onNavigateToIncidents={handleNavigateToIncidents}
           />
         )}
+
+        {activeTab === 'investigation' && <InvestigationPage />}
 
         {activeTab === 'incidents' && (
           <IncidentsPage initialStation={stationFilter} />

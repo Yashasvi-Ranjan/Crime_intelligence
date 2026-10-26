@@ -22,3 +22,31 @@ frontend/.next/
 # IDE
 .DS_Store
 .idea/
+
+# Investigation run state + H-MEM store (local, may contain investigation summaries)
+.state/
+
+# Runtime traces and evaluation run output (generated; may contain investigation content)
+logs/
+evaluation/eval_run.log
+nohup.out
+
+# Python / test tooling
+.pytest_cache/
+backend/.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Frontend build artefacts
+*.tsbuildinfo
+frontend/dist/
+.vite/
+
+# IDE
+.vscode/
+
+# Proprietary Meterless engine copy (licence forbids redistribution; the app uses the installed Nightshift.app engine)
+backend/app/services/meterless_world/worldmodel.js

@@ -195,7 +195,7 @@ cd frontend && npm install && cd ..
 # Run synthetic data generator tests (13 tests)
 pytest -v tests/test_synthetic_data.py
 
-# Run backend API and integration tests (16 tests)
+# Run backend API and integration tests (unit + mocked + local-engine; live tests are skipped unless RUN_LIVE_TESTS=1)
 pytest -v backend/tests/
 ```
 
@@ -237,7 +237,7 @@ The Python backend is built with **FastAPI** and **Pydantic**, providing typed r
 
 The integration layer (`backend/app/services/zetaris_adapter.py`) isolates all Zetaris-specific connectivity:
 - **Connection Status**: Transparently reports whether Zetaris is connected. When unconfigured, reports `NOT CONFIGURED` with active mode `local_fallback`.
-- **Query Safety**: Uses parameterized queries and sanitized column filters to prevent injection.
+- **Query Safety**: Search terms and IDs are sanitized (allow-list of characters) before being interpolated into SQL; all SQL is read-only `SELECT`. (They are not bound parameters.)
 - **Fail-Safe Policy**: Never silently substitutes synthetic data when live Zetaris queries fail; explicitly tags responses with `data_mode`.
 - **Ground Truth Isolation**: `data/evaluation/ground_truth.json` is completely isolated from all API routers and Zetaris queries.
 
@@ -258,3 +258,185 @@ To switch from `local_fallback` to live Zetaris execution:
    ZETARIS_DATABASE=default
    ```
 3. Restart the FastAPI backend. Test connectivity via `GET /api/health/zetaris` or the **Zetaris Layer** tab in the dashboard.
+
+
+---
+
+# Multi-Agent Investigation System
+
+Everything below describes what is implemented and was verified on the development machine (macOS, Nightshift.app with the
+Meterless engines installed, Zetaris running in Docker). Anything not verified is listed under **Known limitations**.
+
+## 9. Architecture and data flow
+
+```
+Request ─► Scout Intent ─► (validate args, refuse/clarify/route)
+              │
+              ├─► H-MEM retrieve (prior vetted summaries: context only, never evidence)
+              ├─► Markovian validate chunk config; World Model init
+              ▼
+        ┌──────────────────────── iteration (bounded) ────────────────────────┐
+        │ Planner ──► retrieval requests                                       │
+        │ Zetaris SQL (code, not a model) ──► incidents + supporting evidence  │
+        │ Finder  ──► candidate links ──► World Model (new observation/rev)    │
+        │ Deterministic verifier (Python) ──► SUPPORTED / WEAK / UNSUPPORTED   │
+        │ Skeptic ──► objections / review status ──► World Model               │
+        │ Markovian checkpoint (compact carryover, saved to disk)              │
+        └── Skeptic or verifier asks for more? ──► next iteration (Planner) ───┘
+              ▼
+        Reporter (validated state only) ─► deterministic citation check
+              ▼
+        H-MEM store (only deterministic-verified, Skeptic-reviewed leads) ─► World Model run status
+```
+
+Stopping reasons: `evidence_sufficient`, `planner_concluded`, `no_new_evidence`, `no_supportable_links_found`,
+`iteration_limit_reached`, `budget_exhausted` (model-call or time budget), `planner_blocked`, `finder_failed`,
+`no_records_found`, `interrupted` (e.g. Zetaris went away; resumable). Defaults: 3 iterations, 24 model calls, 900 s.
+
+| Agent | Role | Default model | Output contract |
+|---|---|---|---|
+| Planner | Plans retrieval; decides retrieve / conclude / blocked. Never claims records were found. | Lightning 30B A3B | `PlannerDecision` |
+| Finder | Analyses records retrieved from Zetaris; proposes links with shared attributes, differences, missing evidence. Exact vs semantic match is labelled. | Lightning 30B A3B | `FinderOutput` |
+| Skeptic | Attacks the links (not shown the Finder's score); contradictions, timelines, circularity, alternatives, missing-vs-contrary evidence; can request retrieval. | Nemotron 3 Ultra 550B A55B (falls back to Lightning and says so) | `SkepticReview` |
+| Reporter | Writes from validated state only; cites IDs; separates facts from hypotheses. | Lightning 30B A3B | `ReportOutput` |
+
+The deterministic verifier (`backend/app/services/evidence_verifier.py`) is not an agent. It checks that every cited incident/evidence ID exists
+in the retrieved Zetaris records and matches its source type, that evidence is actually tied to the link's incidents, quotations appear
+verbatim, claimed shared attributes appear in records tied to **both** incidents, stations match, timelines are compatible (missing times
+are "indeterminate"), and that duplicate/derivative reports (same camera window, same witness observation, newspaper articles about a
+police-recorded incident, repeat reports of one forensic item) are not counted as independent corroboration. Forensic `EXCLUSION`, witness
+contradiction flags and CCTV-vs-witness vehicle colour conflicts are surfaced, never merged away. The Reporter's citations are re-checked
+afterwards, and open Skeptic objections and contradictions are appended to the report even if the Reporter omitted them.
+
+Scores such as `confidence_score` are **uncalibrated model heuristics**; the API and UI label them as such. No determination of guilt is made.
+
+## 10. Meterless Engines: what is actually used
+
+The engines are the real JavaScript modules shipped in `Nightshift.app/Contents/Resources/engine/js/engine/`, executed through Node
+(`backend/app/services/meterless_world/runner.cjs` for World Model, `engine_runner.cjs` for the others). No SDK ships with them; the adapters call
+their public `window.RT.*` functions.
+
+| Engine | Module | Operations used in the live path | Where |
+|---|---|---|---|
+| World Model (shared state) | `worldmodel.js` | `init`/`stats`, `upsertEntity`, `appendObservation` (planner decisions, finder findings per revision, skeptic objections + review status, verifier results, reporter synthesis, run status), `snapshot` | `meterless_service.py` |
+| H-MEM (persistent memory) | `hmem.js` | `retrieve` at start (context only); `mineAnswer` at end for deterministic-verified, Skeptic-reviewed SUPPORTED links with no open high-severity objection. H-MEM's own secret gate and confidence floor (0.6) apply; scope-isolated | `meterless_engines.py` (`HMemService`) |
+| Scout Intent (routing) | `scout-intents.js` | `detectIntent` on every request; result recorded and used as a safety signal. The app maps requests to investigation intents with deterministic rules and validates every argument first | `ScoutIntentService` |
+| Markovian (bounded runs) | `markovian.js` | `validateForRun`/`clampConfig` (chunk config from the iteration budget), `extractCarryover` (compact state through its marker rung, 800-token budget), `buildPrompt` (continuation frame, so later Planner calls get goal + carryover, not history), `computeRunEfficiency` | `MarkovianService` |
+
+Design notes and honest limits:
+- Markovian's `run()` loop is not used: it drives a single generator, whereas each iteration here spans several agents and SQL calls. The
+  Python orchestrator runs the loop and uses Markovian's validated config, carryover cascade, continuation prompt and efficiency formula.
+  Run state (`WorkingState`: objective, completed steps, retrieval requests, evidence references, validated findings, objections, outstanding
+  tasks, next action, iteration, stopping reason) is saved to `.state/runs/<run_id>.json` and resumed with `continue_from`; evidence is
+  rebuilt from Zetaris, not stored.
+- Scout Intent's shipped registry (142 entries) targets software-development tasks and has no crime-investigation intents, so its label
+  (e.g. `RESEARCH`) is a recorded signal, not the routing decision. Routing intents: `CROSS_STATION_SEARCH`, `COMPARE_INCIDENTS`,
+  `INVESTIGATE_RELATIONSHIP`, `REVIEW_CONTRADICTIONS`, `CONTINUE_INVESTIGATION`, `CLARIFY`, `REFUSE`. Routing never executes anything and never bypasses Zetaris or the verifier.
+- No official Meterless conformance/evaluation suites are present in the installed app bundle (the engine source files name
+  `tests/*-conformance.test.mjs`, which are not shipped). The only engine-provided check run is Scout's built-in `scoutSelfTest` (<16 ms budget).
+  Our own tests exercise the real engine modules; they are not Meterless's conformance suites.
+
+## 11. Models verified through Nightshift
+
+Verified on 2026-10-26 against `GET http://127.0.0.1:8088/v1/models` and real calls:
+
+| Role / operation | Requested model | Result |
+|---|---|---|
+| Planner, Finder, Reporter (and fallback) | `nvidia/nemotron-3.5-lightning-30b-a3b` | Listed; real chat calls succeed (reported model = requested) |
+| Skeptic | `nvidia/nemotron-3-ultra-550b-a55b` | Listed; real chat calls succeed (reported model = requested, ~20-40 s per Skeptic call). Needs Nightshift's per-request first-token limit raised: the client sends `meterless-ttfb-ms` (found in Nightshift's proxy source); without it larger prompts returned HTTP 504 and the registry fell back to Lightning |
+| Semantic retrieval | `nvidia/nemotron-3-embed-1b` | Listed in `/v1/models`, **but `POST /v1/embeddings` returns HTTP 404 on the running Nightshift process**. Not enabled; not used in retrieval |
+| Evidence reranking | Nemotron 3.5 Rerank 8B | **Not listed**, no rerank route found. Not enabled |
+| Scout / lightweight planning | Nemotron 3.5 Bolt E4B | **Not listed.** Scout Intent runs as the deterministic JS engine; no LLM is used for routing |
+
+Every model call records requested model, the model the response reports, provider, Nightshift receipt id, latency, token usage, whether a
+fallback was used and why. `GET /api/models/registry?probe=true` shows the current verified assignment per role. Reports show per-agent
+"answered by" models taken from responses, never from configuration. The API key stays in Nightshift's Providers configuration; the app only holds the local
+Nightshift proxy token (read from the Nightshift runtime directory or `NIGHTSHIFT_API_KEY`) and never exposes it to the frontend or logs.
+
+## 12. Zetaris tables and SQL retrieval
+
+Tables (default namespace `lightning.ndp_filestore`, from `.env`): `police_incidents`, `cctv_reports`, `witness_reports`,
+`forensic_reports`, `newspaper_reports`. Retrieval is executed by code in `zetaris_investigation_service.py` through the existing
+`ZetarisAdapter`: per-station candidate search (`LIKE` on `method_description` / `property_involved`, optional crime type and date range, bounded `LIMIT`),
+`get_incidents_by_ids`, `get_incidents_by_locations`, and supporting-evidence queries linked by incident ID or `location_id` (bounded per source).
+Models only see a bounded, compacted subset (<= 14 incidents, <= 8 records per source); records are never invented by a model and every ID a model cites is re-checked.
+Zetaris outages raise explicit errors (HTTP 502/503) when nothing was retrieved yet, or produce a resumable `interrupted` partial result.
+Live mode never falls back to sample or local data.
+
+## 13. Configuration reference (`backend/.env`, see `.env.example`)
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `ZETARIS_*` | see `.env.example` | Zetaris connection and table names |
+| `NIGHTSHIFT_BASE_URL`, `NIGHTSHIFT_API_KEY`, `NIGHTSHIFT_APP_NAME` | `http://127.0.0.1:8088/v1`, auto-read proxy token | Nightshift endpoint/auth |
+| `NIGHTSHIFT_MODEL` | `nvidia/nemotron-3.5-lightning-30b-a3b` | Default text model and fallback |
+| `NIGHTSHIFT_MODEL_PLANNER` / `_FINDER` / `_REPORTER` | blank = Lightning | Per-role chat model |
+| `NIGHTSHIFT_MODEL_SKEPTIC` | `nvidia/nemotron-3-ultra-550b-a55b` | Skeptic model (falls back to Lightning if unlisted/failing) |
+| `NIGHTSHIFT_MODEL_EMBEDDING` / `_RERANK` | embed-1b / blank | Probed only; not used in retrieval |
+| `NIGHTSHIFT_MODEL_FALLBACK`, `NIGHTSHIFT_SKEPTIC_TIMEOUT_SECONDS` | blank (= `NIGHTSHIFT_MODEL`), 180 | |
+| `WORKFLOW_MAX_ITERATIONS` / `_MAX_MODEL_CALLS` / `_TIME_BUDGET_SECONDS` | 3 / 24 / 900 | Hard bounds (model-call budget is checked before each agent call; one agent call may use up to 3 requests for repair/fallback) |
+| `WORKFLOW_RETRIEVAL_LIMIT`, `WORKFLOW_EVIDENCE_LIMIT_PER_SOURCE` | 10 / 8 | SQL result bounds |
+| `METERLESS_ENGINE_DIR`, `METERLESS_WORLD_MODEL_PATH`, `METERLESS_WORLD_DIR` | Nightshift.app paths | Engine locations |
+| `HMEM_ENABLED`, `HMEM_SCOPE`, `STATE_DIR` | true, `crime-intel`, `../.state` | Persistent memory scope and state dir (gitignored) |
+| `SAMPLE_MODE` | false | Explicit offline sample mode |
+
+## 14. Run, test, verify
+
+```bash
+# Backend (needs Node on PATH and Nightshift.app installed)
+cd backend && pip install -r requirements.txt && uvicorn app.main:app --port 8000
+# Frontend
+cd frontend && npm install && npm run dev
+
+# Tests: unit + mocked + local-engine (live tests skipped)
+cd backend && python -m pytest -q
+# LIVE integration tests (real Zetaris SQL, Nightshift calls, engines); the full-investigation test takes minutes
+cd backend && RUN_LIVE_TESTS=1 python -m pytest -m live -v
+# Baseline-vs-multi-agent evaluation (live; writes evaluation/results.json)
+python scripts/evaluate_agents.py
+
+# Verify integrations by hand
+curl -s localhost:8000/api/models/registry?probe=true | jq .roles
+curl -s localhost:8000/api/engines/health | jq .
+curl -s localhost:8000/api/ai/diagnostic | jq .
+curl -s -XPOST localhost:8000/api/investigations/analyze -H 'content-type: application/json' \
+  -d '{"query":"Are INC-NORTH-0042 and INC-CEN-0118 related?"}' | jq '.run_status,.stopping_reason,.agents,.candidate_links'
+```
+
+Test taxonomy: `test_model_registry.py`, `test_evidence_verifier.py`, `test_nightshift_client.py` are unit tests with mocks or pure Python;
+`test_engine_adapters.py` runs the real engine modules locally (no network); `test_multiagent_workflow.py` uses **mocked model outputs and a mocked Zetaris** with the
+**real** World Model/Scout/H-MEM/Markovian engines; `test_investigation_workflow.py` covers the legacy baseline pipeline and the API with mocked Nightshift;
+`test_live_integration.py` is the only live suite.
+
+## 15. Sample mode
+
+`SAMPLE_MODE=true` (or `"sample_mode": true` per request) returns one of three labelled, pre-built scenarios - `crowbar_safe_cracking`,
+`catalytic_converter`, `keyless_suv_relay` - with `is_sample: true` and `data_mode: sample_mode`. No agent, model, Zetaris query or engine runs, and the UI says so.
+Live mode never substitutes sample data; if Zetaris or Nightshift is unconfigured it returns HTTP 503.
+
+## 16. Known limitations
+
+- Embedding retrieval and reranking are **not enabled**: `/v1/embeddings` is 404 on this Nightshift build and no rerank model/route exists. No specialist-retrieval comparison was possible.
+- Bolt E4B is not available; Scout Intent's registry has no crime intents (see section 10).
+- The Skeptic on Ultra is slow (tens of seconds per call); a full investigation takes roughly 3-6 minutes. The API call is synchronous (no streaming progress); the UI shows the per-iteration trace when the run ends.
+- Model outputs are non-deterministic; the evaluation uses one run per case on 7 synthetic cases and is not statistically meaningful.
+- The verifier's contradiction/duplicate heuristics cover the data's known patterns (vehicle colour, witness flags, forensic exclusion, repeat CCTV/witness reports); they are not exhaustive.
+- H-MEM retrieval is its built-in lexical/hybrid scorer (no vectors, since embeddings are unavailable).
+- Zetaris per-source retrieval failures are tolerated and reported in `partial_failures`; SQL is sanitized string interpolation, not bound parameters.
+- Meterless engines run only where Nightshift.app is installed.
+
+## 17. AI and Model Usage
+
+All model calls go through Meterless Nightshift to NVIDIA Nemotron models (Lightning 30B A3B; Ultra 550B A55B for the Skeptic). Models plan,
+analyse retrieved records, critique, and write the report. They do not access the database directly, and every ID, quotation and attribute they cite is
+checked by deterministic code against Zetaris records. Model-generated hypotheses are labelled as hypotheses; scores are uncalibrated.
+The data is fully synthetic (fictional stations, people and places). Claude Code (Anthropic) was used to help write this code.
+
+## 18. Third-Party Code and Licences
+
+- Python: FastAPI, Pydantic / pydantic-settings, Starlette, Uvicorn, httpx, python-dotenv, pytest (all permissive open-source licences).
+- Frontend: React, Vite, TypeScript, lucide-react (MIT/ISC/Apache-style open-source licences).
+- Zetaris NDP (Docker images, used under the licence supplied with them) and Meterless Nightshift + engine modules (proprietary: "Meterless Runtime - Proprietary Software License").
+  The engines are **executed from the user's own Nightshift installation**.
+- **Action needed before publishing this repository:** `backend/app/services/meterless_world/worldmodel.js` is a byte-for-byte copy of Meterless's proprietary
+  `worldmodel.js`, kept as a fallback when Nightshift.app is absent. The Meterless licence grants no right to redistribute it without a written agreement; remove the copy (the adapter uses the installed engine first) or obtain permission.

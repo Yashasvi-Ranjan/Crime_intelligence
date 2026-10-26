@@ -1,10 +1,10 @@
 import React from 'react';
-import { Shield, Database, LayoutDashboard, FileSearch, Layers } from 'lucide-react';
+import { Shield, Database, LayoutDashboard, FileSearch, Layers, BrainCircuit } from 'lucide-react';
 import { ZetarisHealthResponse } from '../types';
 
 interface NavbarProps {
-  activeTab: 'overview' | 'incidents' | 'sources' | 'zetaris';
-  setActiveTab: (tab: 'overview' | 'incidents' | 'sources' | 'zetaris') => void;
+  activeTab: 'overview' | 'investigation' | 'incidents' | 'sources' | 'zetaris';
+  setActiveTab: (tab: 'overview' | 'investigation' | 'incidents' | 'sources' | 'zetaris') => void;
   zetarisHealth: ZetarisHealthResponse | null;
 }
 
@@ -36,6 +36,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <LayoutDashboard size={15} />
           Overview
+        </button>
+        <button
+          className={`nav-btn ${activeTab === 'investigation' ? 'active' : ''}`}
+          onClick={() => setActiveTab('investigation')}
+          style={activeTab === 'investigation' ? { borderColor: 'var(--accent-purple)', color: '#fff' } : {}}
+        >
+          <BrainCircuit size={15} color={activeTab === 'investigation' ? 'var(--accent-purple)' : undefined} />
+          Investigation Hub
         </button>
         <button
           className={`nav-btn ${activeTab === 'incidents' ? 'active' : ''}`}

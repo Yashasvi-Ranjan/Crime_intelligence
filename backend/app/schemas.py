@@ -244,3 +244,102 @@ class IncidentEvidenceResponse(BaseModel):
     inferred_links: list[EvidenceLink]
     data_mode: str
     caveat: str
+
+
+# ── Investigations & Agents ──────────────────────────────────────────────────
+
+
+class InvestigationRequest(BaseModel):
+    query: str
+    incident_ids: Optional[list[str]] = None
+    station_ids: Optional[list[str]] = None
+    crime_type: Optional[str] = None
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    scenario_id: Optional[str] = None
+    sample_mode: Optional[bool] = None
+    continue_from: Optional[str] = None   # resume a saved, unfinished investigation
+
+
+class CandidateLink(BaseModel):
+    link_id: str
+    source_incident_id: str
+    target_incident_id: str
+    stations_involved: list[str]
+    similarity_basis: str
+    confidence_score: float
+    confidence_rationale: str
+    supporting_evidence_ids: list[str] = []
+    contradictions: list[dict] = []
+    differences_or_inconsistencies: Optional[str] = None
+    # Multi-agent additions (all optional so sample/legacy results stay valid)
+    withdrawn: bool = False
+    validation_status: Optional[str] = None            # SUPPORTED | WEAK | UNSUPPORTED (deterministic verifier)
+    validation_explanation: Optional[str] = None
+    independent_source_count: Optional[int] = None
+    shared_attributes: list[dict] = []
+    missing_evidence: list[str] = []
+    revision: Optional[int] = None
+    rejected_ids: list[str] = []
+
+
+class InvestigationResponse(BaseModel):
+    investigation_id: str
+    is_sample: bool
+    data_mode: str
+    scenario_id: Optional[str] = None
+    title: str
+    query: str
+    stations_involved: list[str]
+    candidate_incidents: list[dict]
+    supporting_evidence: dict[str, list[dict]]
+    candidate_links: list[CandidateLink]
+    contradictions_and_limitations: list[str]
+    unresolved_questions: list[str]
+    follow_up_actions: list[str]
+    executive_summary: str
+    integration_status: dict[str, Any]
+    retrieval_and_analysis_status: str
+    trace_file: Optional[str] = None
+    timestamp: float
+    elapsed_seconds: Optional[float] = None
+    # Multi-agent additions (None for sample scenarios, which never ran live services)
+    intent: Optional[str] = None
+    route: Optional[dict] = None
+    run_status: Optional[str] = None
+    stopping_reason: Optional[str] = None
+    iterations: Optional[list[dict]] = None
+    iterations_used: Optional[int] = None
+    agents: Optional[list[dict]] = None
+    model_calls: Optional[list[dict]] = None
+    engine_operations: Optional[list[dict]] = None
+    skeptic: Optional[dict] = None
+    validation_results: Optional[list[dict]] = None
+    report: Optional[dict] = None
+    memory: Optional[dict] = None
+    partial_failures: Optional[list[dict]] = None
+    counts: Optional[dict] = None
+    budget: Optional[dict] = None
+    resume_hint: Optional[str] = None
+    clarification: Optional[str] = None
+
+
+class AIDiagnosticResponse(BaseModel):
+    status: str
+    configured: bool
+    message: str
+    provider: Optional[str] = None
+    model: Optional[str] = None
+    winning_route: Optional[dict] = None
+    latency_ms: Optional[float] = None
+    error_detail: Optional[str] = None
+
+
+class EngineHealthResponse(BaseModel):
+    status: str
+    engine: str
+    schema_version: Optional[int] = None
+    configured: bool
+    engine_path: str
+    world_dir: str
+    message: str

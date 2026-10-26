@@ -83,4 +83,38 @@ export const api = {
     fetchJson<{ source: string; record: Record<string, any>; data_mode: string }>(
       `${API_BASE}/sources/${encodeURIComponent(source)}/records/${encodeURIComponent(recordId)}`
     ),
+
+  // ── Investigations & Agents ──────────────────────────────────────────────
+  analyzeInvestigation: (req: import('../types').InvestigationRequest): Promise<import('../types').InvestigationResponse> =>
+    postJson<import('../types').InvestigationResponse>(`${API_BASE}/investigations/analyze`, req),
+
+  getSampleScenarios: (): Promise<import('../types').SampleScenarioMeta[]> =>
+    fetchJson<import('../types').SampleScenarioMeta[]>(`${API_BASE}/investigations/samples`),
+
+  getAIDiagnostic: (): Promise<import('../types').AIDiagnosticResponse> =>
+    fetchJson<import('../types').AIDiagnosticResponse>(`${API_BASE}/ai/diagnostic`),
+
+  getEngineHealth: (): Promise<import('../types').EngineHealthResponse> =>
+    fetchJson<import('../types').EngineHealthResponse>(`${API_BASE}/engine/health`),
 };
+
+async function postJson<T>(url: string, data: any): Promise<T> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    let errorMsg = `Request failed: ${res.status} ${res.statusText}`;
+    try {
+      const err = await res.json();
+      if (err.detail) errorMsg = err.detail;
+    } catch {
+      // ignore
+    }
+    throw new Error(errorMsg);
+  }
+  return res.json() as Promise<T>;
+}
