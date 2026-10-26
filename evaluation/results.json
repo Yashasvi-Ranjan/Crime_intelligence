@@ -1,48 +1,48 @@
 {
- "generated": "2026-10-26T20:39:41Z",
+ "generated": "2026-10-26T21:06:17Z",
  "cases": 7,
  "summary": {
   "baseline_lightning_only": {
    "runs": 7,
-   "failed_runs": 7,
-   "failure_rate": 1.0,
-   "mean_latency_s": 0.2,
-   "mean_model_calls": null,
-   "mean_sql_queries": null,
-   "valid_link_recall_proposed(positive cases)": null,
-   "valid_link_recall_verified(positive cases)": null,
-   "false_links_total": 0,
-   "decoy_links_total": 0,
-   "citation_accuracy_final_output": null,
+   "failed_runs": 0,
+   "failure_rate": 0.0,
+   "mean_latency_s": 0.643,
+   "mean_model_calls": 4.0,
+   "mean_sql_queries": 5.0,
+   "valid_link_recall_proposed(positive cases)": 0.733,
+   "valid_link_recall_verified(positive cases)": 0.0,
+   "false_links_total": 2,
+   "decoy_links_total": 2,
+   "citation_accuracy_final_output": 1.0,
    "raw_model_citations_rejected_total": 0,
-   "links_total": 0,
-   "links_not_supported_on_reverification": 0,
+   "links_total": 7,
+   "links_not_supported_on_reverification": 7,
    "links_unsupported_on_reverification": 0,
-   "fabricated_fallback_links": 0,
+   "fabricated_fallback_links": 7,
    "links_citing_duplicate_reports": 0,
-   "cases_with_source_contradictions": 0,
+   "cases_with_source_contradictions": 7,
    "of_which_surfaced_in_output": 0
   },
   "multi_agent": {
    "runs": 7,
-   "failed_runs": 7,
-   "failure_rate": 1.0,
-   "mean_latency_s": 0.157,
-   "mean_model_calls": null,
-   "mean_sql_queries": null,
-   "valid_link_recall_proposed(positive cases)": null,
-   "valid_link_recall_verified(positive cases)": null,
-   "false_links_total": 0,
+   "failed_runs": 0,
+   "failure_rate": 0.0,
+   "mean_latency_s": 1.871,
+   "mean_model_calls": 5.0,
+   "mean_sql_queries": 5.0,
+   "valid_link_recall_proposed(positive cases)": 1.0,
+   "valid_link_recall_verified(positive cases)": 0.267,
+   "false_links_total": 4,
    "decoy_links_total": 0,
-   "citation_accuracy_final_output": null,
-   "raw_model_citations_rejected_total": 0,
-   "links_total": 0,
-   "links_not_supported_on_reverification": 0,
-   "links_unsupported_on_reverification": 0,
+   "citation_accuracy_final_output": 1.0,
+   "raw_model_citations_rejected_total": 25,
+   "links_total": 15,
+   "links_not_supported_on_reverification": 11,
+   "links_unsupported_on_reverification": 10,
    "fabricated_fallback_links": 0,
    "links_citing_duplicate_reports": 0,
-   "cases_with_source_contradictions": 0,
-   "of_which_surfaced_in_output": 0
+   "cases_with_source_contradictions": 5,
+   "of_which_surfaced_in_output": 5
   }
  },
  "rows": [
@@ -50,113 +50,649 @@
    "system": "baseline_lightning_only",
    "case": "001",
    "kind": "positive",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0042"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.333,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
   },
   {
    "system": "multi_agent",
    "case": "001",
    "kind": "positive",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.2
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "planner_concluded",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 4,
+    "pairs_reported": [
+     [
+      "INC-CEN-0005",
+      "INC-NORTH-0042"
+     ],
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0042"
+     ],
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0294"
+     ],
+     [
+      "INC-NORTH-0042",
+      "INC-NORTH-0294"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 11,
+    "raw_model_citations_rejected": 2,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 1,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 9,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 2.1
   },
   {
    "system": "baseline_lightning_only",
    "case": "002",
    "kind": "positive",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0182"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.333,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
   },
   {
    "system": "multi_agent",
    "case": "002",
    "kind": "positive",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.1
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "planner_concluded",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 3,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0182"
+     ],
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0305"
+     ],
+     [
+      "INC-RIV-0182",
+      "INC-RIV-0305"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.333,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 2,
+    "raw_model_citations_rejected": 4,
+    "links_not_supported_on_reverification": 3,
+    "links_unsupported_on_reverification": 2,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 2,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.8
   },
   {
    "system": "baseline_lightning_only",
    "case": "003",
    "kind": "positive",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0720",
+      "INC-RIV-0590"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 4,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 1,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
   },
   {
    "system": "multi_agent",
    "case": "003",
    "kind": "positive",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.2
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "no_supportable_links_found (after: planner_concluded)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 3,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0720",
+      "INC-RIV-0590"
+     ],
+     [
+      "INC-NORTH-0720",
+      "INC-RIVERSIDE-2146"
+     ],
+     [
+      "INC-RIV-0590",
+      "INC-RIVERSIDE-2146"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 2,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 8,
+    "raw_model_citations_rejected": 3,
+    "links_not_supported_on_reverification": 3,
+    "links_unsupported_on_reverification": 3,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 1,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 2.3
   },
   {
    "system": "baseline_lightning_only",
    "case": "004",
    "kind": "positive",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0812",
+      "INC-NORTH-1104"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 4,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 5,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.7
   },
   {
    "system": "multi_agent",
    "case": "004",
    "kind": "positive",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.2
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "no_supportable_links_found (after: planner_concluded)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0812",
+      "INC-NORTH-1104"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": null,
+    "cited_ids_final_output": 0,
+    "raw_model_citations_rejected": 5,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 1,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 1,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.5
   },
   {
    "system": "baseline_lightning_only",
    "case": "007",
    "kind": "positive",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-1420",
+      "INC-RIV-0880"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 4,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 9,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.7
   },
   {
    "system": "multi_agent",
    "case": "007",
    "kind": "positive",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.2
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "no_supportable_links_found (after: planner_concluded)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-1420",
+      "INC-RIV-0880"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": null,
+    "cited_ids_final_output": 0,
+    "raw_model_citations_rejected": 5,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 1,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 1,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.5
   },
   {
    "system": "baseline_lightning_only",
    "case": "006",
    "kind": "decoy",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0812",
+      "INC-CEN-1680"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 1,
+    "decoy_links": 1,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 6,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.7
   },
   {
    "system": "multi_agent",
    "case": "006",
    "kind": "decoy",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.1
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "no_supportable_links_found (after: planner_concluded)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0812",
+      "INC-NORTH-1104"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": null,
+    "cited_ids_final_output": 0,
+    "raw_model_citations_rejected": 5,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 1,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 1,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 2.0
   },
   {
    "system": "baseline_lightning_only",
    "case": "008",
    "kind": "decoy",
-   "ok": false,
-   "error": "ZetarisNotConfiguredError: Zetaris is not configured. Live investigations require active Zetaris NDP connection.",
-   "latency_s": 0.2
+   "model_calls": 4,
+   "sql_queries": 5,
+   "ok": true,
+   "metrics": {
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0042",
+      "INC-NORTH-0520"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 1,
+    "decoy_links": 1,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 4,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
   },
   {
    "system": "multi_agent",
    "case": "008",
    "kind": "decoy",
-   "ok": false,
-   "error": "RuntimeError: Scout Intent engine unavailable: scout.detect: engine file not found: \\Applications\\Nightshift.app\\Contents\\Resources\\engine\\js\\engine\\scout-intents.js",
-   "latency_s": 0.1
+   "model_calls": 5,
+   "sql_queries": 5,
+   "iterations": 2,
+   "stopping_reason": "planner_concluded",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {
+    "planner": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "finder": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ],
+    "skeptic": [
+     "nvidia/nemotron-3-ultra-550b-a55b"
+    ],
+    "reporter": [
+     "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+   },
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "ok": true,
+   "metrics": {
+    "links_reported": 2,
+    "pairs_reported": [
+     [
+      "INC-CEN-0005",
+      "INC-NORTH-0042"
+     ],
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0042"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 8,
+    "raw_model_citations_rejected": 1,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 1,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 16,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.9
   }
  ]
 }

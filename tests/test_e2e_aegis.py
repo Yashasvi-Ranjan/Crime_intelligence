@@ -524,7 +524,8 @@ class TestTier4RealWorldWorkloads:
                 assert len(matches) == 0, f"Secret pattern matched in trace for {run_id}: {matches}"
 
     def test_workload_zero_hallucinated_ids_audit(self, api_client: TestClient):
-        """Workload 3: Verify 0% hallucinated IDs (100% evidentiary grounding in scenario records)."""
+        """Workload 3: Verify 0% hallucinated IDs (100% evidentiary grounding in Zetaris generated records)."""
+        grounded_ids = load_all_grounded_ids()
         scenarios = ["crowbar_safe_cracking", "catalytic_converter", "keyless_suv_relay"]
         for sc in scenarios:
             res = api_client.post(
@@ -532,13 +533,18 @@ class TestTier4RealWorldWorkloads:
                 json={"scenario_id": sc, "query": "audit grounding", "sample_mode": True},
             ).json()
 
-            # The scenario defines its grounded domain of incidents and evidence
+            # Verify all candidate incident IDs strictly exist in generated dataset
             scenario_incidents = {i["incident_id"] for i in res.get("candidate_incidents", [])}
+            ungrounded_incidents = scenario_incidents - grounded_ids
+            assert len(ungrounded_incidents) == 0, f"Ungrounded incident IDs in scenario {sc}: {ungrounded_incidents}"
+
             scenario_evidence: Set[str] = set()
             ev_dict = res.get("supporting_evidence", {})
             for r in ev_dict.get("forensic_reports", []):
                 if r.get("evidence_report_id"):
                     scenario_evidence.add(r["evidence_report_id"])
+                if r.get("evidence_item_id"):
+                    scenario_evidence.add(r["evidence_item_id"])
             for r in ev_dict.get("cctv_reports", []):
                 if r.get("cctv_report_id"):
                     scenario_evidence.add(r["cctv_report_id"])
@@ -549,7 +555,9 @@ class TestTier4RealWorldWorkloads:
                 if r.get("news_id"):
                     scenario_evidence.add(r["news_id"])
 
-            allowed_ids = scenario_incidents | scenario_evidence
+            # Verify all evidence IDs strictly exist in generated dataset
+            ungrounded_evidence = scenario_evidence - grounded_ids
+            assert len(ungrounded_evidence) == 0, f"Ungrounded evidence IDs in scenario {sc}: {ungrounded_evidence}"
 
             # Collect all cited IDs from candidate links and report facts
             cited_ids: Set[str] = set()
@@ -562,9 +570,14 @@ class TestTier4RealWorldWorkloads:
                 cited_ids.update(fact.get("source_ids", []))
                 cited_ids.update(fact.get("evidence_ids", []))
 
-            # Verify 0% hallucination rate within scenario
-            ungrounded = cited_ids - allowed_ids
-            assert len(ungrounded) == 0, f"Hallucinated IDs detected in scenario {sc}: {ungrounded}"
+            # Verify 0% hallucination rate against the authoritative database
+            ungrounded_cited = cited_ids - grounded_ids
+            assert len(ungrounded_cited) == 0, f"Hallucinated cited IDs in scenario {sc}: {ungrounded_cited}"
+
+            # Also verify cited IDs are grounded within the scenario records
+            allowed_ids = scenario_incidents | scenario_evidence
+            ungrounded_scenario = cited_ids - allowed_ids
+            assert len(ungrounded_scenario) == 0, f"Scenario-ungrounded cited IDs in {sc}: {ungrounded_scenario}"
 
     def test_workload_offline_evaluation_benchmark_integrity(self):
         """Workload 4: Validate ground truth benchmark dataset and scoring methodology."""

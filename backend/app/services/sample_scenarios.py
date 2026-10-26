@@ -65,12 +65,12 @@ SAMPLE_SCENARIOS = {
                     "result_summary": "Comparison microscopy revealed distinctive 36mm curved chisel-tip striations with microscopic nick on left edge.",
                     "result_status": "MATCH_CONFIRMED",
                     "confidence_level": "HIGH",
-                    "compared_evidence_ids": ["EVD-2025-0142"],
+                    "compared_evidence_ids": ["EVD-0142"],
                 },
                 {
                     "evidence_report_id": "FOR-0142",
                     "incident_id": "INC-CENTRAL-0118",
-                    "evidence_item_id": "EVD-2025-0142",
+                    "evidence_item_id": "EVD-0142",
                     "location_id": "LOC-CEN-04",
                     "evidence_type": "TOOLMARK",
                     "description": "Tool impressions on pried vault locking pins",
@@ -191,20 +191,20 @@ SAMPLE_SCENARIOS = {
                 {
                     "evidence_report_id": "FOR-0322",
                     "incident_id": "INC-CENTRAL-0455",
-                    "evidence_item_id": "EVD-2025-0322",
+                    "evidence_item_id": "EVD-0322",
                     "evidence_type": "CHEMICAL_RESIDUE",
                     "result_summary": "GC-MS analysis of kerf cut shavings revealed titanium carbonitride blade coating residue matching Diablo Steel Demon series.",
                     "result_status": "MATCH_CONFIRMED",
-                    "compared_evidence_ids": ["EVD-2025-0589"],
+                    "compared_evidence_ids": ["EVD-0589"],
                 },
                 {
                     "evidence_report_id": "FOR-0589",
                     "incident_id": "INC-RIVERSIDE-0812",
-                    "evidence_item_id": "EVD-2025-0589",
+                    "evidence_item_id": "EVD-0589",
                     "evidence_type": "CHEMICAL_RESIDUE",
                     "result_summary": "Identical titanium carbonitride metallurgical fingerprint identified on severed exhaust piping.",
                     "result_status": "MATCH_CONFIRMED",
-                    "compared_evidence_ids": ["EVD-2025-0322"],
+                    "compared_evidence_ids": ["EVD-0322"],
                 },
             ],
             "cctv_reports": [
@@ -264,7 +264,7 @@ SAMPLE_SCENARIOS = {
         "crime_type": "VEHICLE_THEFT",
         "candidate_incidents": [
             {
-                "incident_id": "INC-NORTH-0610",
+                "incident_id": "INC-NORTH-0720",
                 "station_id": "NORTH",
                 "reported_at": "2025-05-10T02:30:00Z",
                 "crime_type": "VEHICLE_THEFT",
@@ -278,7 +278,7 @@ SAMPLE_SCENARIOS = {
                 "data_quality": "HIGH",
             },
             {
-                "incident_id": "INC-RIVERSIDE-1120",
+                "incident_id": "INC-RIV-0590",
                 "station_id": "RIVERSIDE",
                 "reported_at": "2025-05-16T03:15:00Z",
                 "crime_type": "VEHICLE_THEFT",
@@ -296,21 +296,21 @@ SAMPLE_SCENARIOS = {
             "forensic_reports": [
                 {
                     "evidence_report_id": "FOR-0740",
-                    "incident_id": "INC-NORTH-0610",
-                    "evidence_item_id": "EVD-2025-0740",
+                    "incident_id": "INC-NORTH-0720",
+                    "evidence_item_id": "EVD-0740",
                     "evidence_type": "DIGITAL_FOOTPRINT",
                     "result_summary": "Extracted telematics ECU log recorded 315MHz/433MHz dual-frequency amplifier handshake spoof with 14ms latency signature.",
                     "result_status": "MATCH_CONFIRMED",
-                    "compared_evidence_ids": ["EVD-2025-0911"],
+                    "compared_evidence_ids": ["EVD-0911"],
                 },
                 {
                     "evidence_report_id": "FOR-0911",
-                    "incident_id": "INC-RIVERSIDE-1120",
-                    "evidence_item_id": "EVD-2025-0911",
+                    "incident_id": "INC-RIV-0590",
+                    "evidence_item_id": "EVD-0911",
                     "evidence_type": "DIGITAL_FOOTPRINT",
                     "result_summary": "CAN-bus gateway log recorded identical 14ms amplification latency and transceiver signature.",
                     "result_status": "MATCH_CONFIRMED",
-                    "compared_evidence_ids": ["EVD-2025-0740"],
+                    "compared_evidence_ids": ["EVD-0740"],
                 },
             ],
             "cctv_reports": [
@@ -328,8 +328,8 @@ SAMPLE_SCENARIOS = {
         "candidate_links": [
             {
                 "link_id": "LINK-SAMPLE-03",
-                "source_incident_id": "INC-NORTH-0610",
-                "target_incident_id": "INC-RIVERSIDE-1120",
+                "source_incident_id": "INC-NORTH-0720",
+                "target_incident_id": "INC-RIV-0590",
                 "stations_involved": ["NORTH", "RIVERSIDE"],
                 "similarity_basis": "Identical RF digital relay signature (14ms response delay) and dual-frequency 315/433MHz amplifier footprint on onboard ECU logs.",
                 "confidence_score": 0.91,
