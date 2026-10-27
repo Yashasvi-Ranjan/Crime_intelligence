@@ -11,6 +11,7 @@ Meterless Nightshift, a **deterministic verifier** re-checks every ID, quotation
 |---|---|
 | **Website** | https://crime-intelligence-six.vercel.app/ (see [Live website](#live-website): live Zetaris and Nemotron while the developer's backend is up, otherwise a clearly labelled offline demo) |
 | **Docker image** | [`yashasvir171/oah-submission`](https://hub.docker.com/r/yashasvir171/oah-submission) on Docker Hub (`linux/amd64` and `linux/arm64`) |
+| **Deployment details** | [`DEPLOYMENT.md`](DEPLOYMENT.md) |
 | **Demo video, slides, documents** | [`submission/`](submission/README.md) |
 
 **Try it with only Docker (no credentials, no network, no clone needed for the image):**
@@ -60,6 +61,7 @@ cross_station_crime_intelligence/
 ├── .dockerignore, .gitignore
 ├── requirements.txt                    # pinned Python dependencies
 ├── metadata.json                       # project / track / sponsor technology / entry point
+├── DEPLOYMENT.md                       # live website, Docker Hub and source links; how the site is deployed and its limits
 ├── vercel.json                         # website: /api -> tunnel to the live backend, /offline-api -> offline fallback
 ├── api/index.py                        # Vercel function serving the OFFLINE fallback (forced sample mode)
 ├── .github/workflows/ci.yml            # pytest, docker build, judge path (SAMPLE_MODE), offline (--network none), secret scan
