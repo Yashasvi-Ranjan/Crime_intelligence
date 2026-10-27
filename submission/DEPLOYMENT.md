@@ -4,34 +4,36 @@
 
 | What | Link |
 |---|---|
-| **Live website** | https://crime-intelligence-six.vercel.app/ |
-| **Docker image** | https://hub.docker.com/r/yashasvir171/oah-submission (`yashasvir171/oah-submission:latest`, `linux/amd64` and `linux/arm64`) |
+| **Website (optional)** | https://crime-intelligence-six.vercel.app/ |
+| **Docker image** | https://hub.docker.com/r/yashasvir171/oah-submission (`yashasvir171/oah-submission:latest`; architectures as stated by the authors, not verified from the repo) |
 | **Source code** | https://github.com/Yashasvi-Ranjan/Crime_intelligence |
 | **API health (through the site)** | https://crime-intelligence-six.vercel.app/api/health |
 | **API docs (when the live backend is up)** | https://crime-intelligence-six.vercel.app/api/docs |
 
 There are no logins: the website and API need no account or password.
 
-## How it is deployed
+## How it is deployed (as configured in this repo)
+
+**Judges should use the offline path (below); it needs nothing outside the repo.** The website is optional.
 
 ```
-Browser -> Vercel (static React site) -> /api/... -> Cloudflare tunnel -> Docker container on the developer's machine
-                                                                        -> Zetaris + Nightshift (NVIDIA Nemotron) + mounted Meterless engines
-                                      -> /offline-api/... -> Vercel function (offline demo)
+Browser -> Vercel (static React site; vercel.json)
+             /api/...         -> the backend hostname written in vercel.json (currently https://aegis-backend-1ino.onrender.com)
+             /offline-api/... -> Vercel function api/index.py (same API, forced offline sample mode)
 ```
 
-- **Website:** the React build is served by Vercel. `vercel.json` rewrites `/api/...` to the live backend and `/offline-api/...` to a Vercel function (`api/index.py`) that runs the same API in offline sample mode.
-- **Live backend:** the Docker image runs on the developer's machine next to Zetaris and Nightshift and is exposed through a Cloudflare tunnel. No secrets are stored in Vercel; configuration is the local `.env` read by the container.
-- **Offline fallback:** if the live backend cannot be reached, the page automatically retries against `/offline-api` and shows an amber banner. That mode uses the bundled synthetic data and **recorded** Nemotron responses (labelled `replayed`), not live Zetaris or live models.
+- **Durable option:** `render.yaml` (Render Blueprint) builds the backend from `Dockerfile` in offline sample mode (`SAMPLE_MODE=true`, `ZETARIS_ENABLED=false`, `METERLESS_ENGINE_BACKEND=reference`); no secrets, no developer machine. It replays recorded Nemotron responses (labelled `replayed`) and is **not** live Zetaris/Nemotron. Whether the Render service named in `vercel.json` is up cannot be checked from the repo; free-plan services typically sleep when idle.
+- **Offline fallback:** if the backend cannot be reached, the page retries against `/offline-api` and shows an amber banner (bundled synthetic data, recorded Nemotron responses labelled `replayed`).
+- **Live Zetaris + Nemotron (optional, developer-hosted):** needs the sponsor stack on the machine running the container. A Cloudflare quick tunnel (`scripts/restart_tunnel.sh`) can expose it temporarily, but it is ephemeral (URL changes on restart, can expire, dies with the laptop), has no access control, and rewrites `vercel.json`'s `/api` target; it is a developer convenience, not part of the durable deployment, and no judge check depends on it.
 
 ## What to expect
 
 | Situation | What you get |
 |---|---|
-| Developer's backend is up | Live Zetaris SQL and live Nemotron through Nightshift. A full investigation takes about 70 to 120 seconds. |
-| Backend or tunnel is down | The offline demo, with a banner saying so. The example questions replay recorded Nemotron answers; other questions use a weaker, labelled code-only fallback. |
+| Backend named in `vercel.json` is up | Offline sample mode (Render Blueprint), or live mode only if the developer has pointed `/api` at a live host. `GET /health` says which. |
+| Backend is down | The offline demo, with a banner saying so. The example questions replay recorded Nemotron answers; other questions use a weaker, labelled code-only fallback. |
 
-Checking which one you are seeing: `GET /api/health/zetaris` says `zetaris_live` when live; the amber banner at the top of the page appears only in offline mode; and every model call in an investigation's trace is marked `live`, `replayed` or `code_fallback`.
+Checking which one you are seeing: `GET /health` reports `live`, `sample` or `down` for Zetaris and Nightshift; the amber banner appears only in offline fallback; and every model call in an investigation's trace is marked `live`, `replayed` or `code_fallback`.
 
 ## Run it yourself (no dependence on the live site)
 
@@ -39,11 +41,9 @@ Checking which one you are seeing: `GET /api/health/zetaris` says `zetaris_live`
 docker run --rm -p 8000:8000 -e SAMPLE_MODE=true yashasvir171/oah-submission:latest
 curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_1.json   # input_examples/ is in the repo
 ```
-For a full local stack (API on :8000 and dashboard on :3001): `docker compose build && docker compose up`. See the README ("Run with Docker") for live mode and the Meterless engines.
+Or build it yourself (`docker build -t oah-submission .`) or use the host venv path (needs `sh scripts/build_reference_engines.sh`). Verification steps: `docs/DOCKER_VERIFY.md` (audited by reading, not run by its authors). Full local stack: `docker compose build && docker compose up`. See the README for live mode and the Meterless engines. A live run can be captured and redacted with `docs/LIVE_RUN_RUNBOOK.md`.
 
 ## Known limits of the hosted site
-- It depends on the developer's machine, Docker, Zetaris, Nightshift and the tunnel being on. The tunnel is a Cloudflare quick tunnel: its URL changes when restarted, and it can expire after a few hours while the process keeps running (`Tunnel not found`), which makes the site fall back to the offline demo.
-  `sh scripts/restart_tunnel.sh` starts a new tunnel and repoints `vercel.json`; `sh scripts/restart_tunnel.sh --watch` does that automatically when the tunnel stops answering. A named tunnel on a domain would give a permanent URL.
-- Live runs take close to the tunnel's timeout, so an occasional long run can be cut off.
-- There is no access control on the live path: anyone with the site URL can start an investigation that uses the developer's model quota.
-- For a deterministic result that does not depend on any of this, use the Docker command above.
+- It is a convenience, not evidence. Live-mode behaviour on it is not independently checkable from the repo (no live trace committed).
+- A quick-tunnel live setup, if used, is ephemeral and has no access control: anyone with the URL could start an investigation using the developer's model quota.
+- For a deterministic result use the Docker or venv offline path.

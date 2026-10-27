@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-# Cross-Station Crime Intelligence API  (docker build -t oah-submission . && docker run -p 8000:8000 oah-submission)
+# Cross-Station Crime Intelligence API  (docker build -t oah-submission . && docker run -p 8000:8000 -e SAMPLE_MODE=true oah-submission)
+# Judge path: the build needs network (base images + npx esbuild@0.24.2 in stage 1); the container needs none. Entrypoint: CMD below.
+# Verification steps: docs/DOCKER_VERIFY.md
 
 # ── stage 1: bundle the vendored Apache-2.0 Meterless reference engines (H-MEM, Markovian) ──
 FROM node:20-slim AS engines

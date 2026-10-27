@@ -124,7 +124,7 @@ Screens to capture, all synthetic, on the 1536 px desktop layout:
 ## Slide 11 · Results
 **No model benchmark is claimed.** `evaluation/results.json` (7 planted cases) was produced with a scripted offline stand-in for the models (hand-written planner/finder logic over `data/generated`), not Nemotron. It tests the pipeline, the verifier and the scoring mechanics, so its "100% recall" must not appear on a slide as a model result. Seven cases at one run each is also too small to be significant.
 
-**What was measured with real Nemotron:**
+**Reported by the team from live runs (not independently checkable: no live trace is committed):**
 - Live run through Docker (real Zetaris and Nightshift): full loop, Nemotron on all four agents, zero partial failures.
 - A live safe-burglary run retrieved the planted pair, but the verifier and Skeptic refused an ungrounded link: "no supportable link" is the correct output for a link the evidence does not support.
 
