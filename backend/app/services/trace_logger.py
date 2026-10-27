@@ -15,14 +15,27 @@ Contains safe, non-secret telemetry for auditability and reproducibility:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+_SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$")
+
+
+def safe_trace_name(run_id: str) -> str:
+    """File-name-safe form of a run id. Ordinary ids are unchanged; hostile/oversized ids (path separators, dots,
+    NULs, > 64 chars) map to a short sanitised prefix plus a hash, so a request can never address another path."""
+    if _SAFE_ID.match(run_id):
+        return run_id
+    return re.sub(r"[^A-Za-z0-9_\-]", "_", run_id)[:32] + "-" + hashlib.sha1(run_id.encode("utf-8", "replace")).hexdigest()[:10]
 
 
 class TraceLogger:
@@ -36,7 +49,7 @@ class TraceLogger:
             # cross_station_crime_intelligence/logs
             self.logs_dir = Path(__file__).resolve().parent.parent.parent.parent / "logs"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
-        self.log_file = self.logs_dir / f"trace-{self.run_id}.jsonl"
+        self.log_file = self.logs_dir / f"trace-{safe_trace_name(self.run_id)}.jsonl"
 
     def log_event(
         self,

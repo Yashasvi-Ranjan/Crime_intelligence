@@ -351,8 +351,11 @@ def test_cross_station_planted_scenarios(loaded_data):
     )
 
 
-def test_generator_reproducibility(tmp_path):
+def test_generator_reproducibility(tmp_path, monkeypatch):
     """Ensures rerunning generator with seed 42 produces identical output."""
+    # generate_all() rewrites data/generated/*.json; the comparison below needs only its return value, so do not
+    # touch the tracked dataset (also read-only for the non-root user in the Docker image).
+    monkeypatch.setattr("scripts.generate_synthetic_data.write_json_file", lambda *a, **k: None)
     res1 = generate_all(seed=42)
     res2 = generate_all(seed=42)
     assert res1["total_records"] == res2["total_records"]

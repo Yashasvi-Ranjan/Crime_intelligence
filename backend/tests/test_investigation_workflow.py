@@ -28,6 +28,15 @@ from app.services.investigation_workflow import _extract_json_block
 # These workflow tests cover the LEGACY single-pass pipeline (kept as the evaluation baseline).
 # The iterative multi-agent workflow is covered in test_multiagent_workflow.py.
 from app.services.legacy_pipeline_workflow import LegacyInvestigationWorkflow as InvestigationWorkflow
+
+import shutil
+from pathlib import Path
+
+# These drive the legacy pipeline through the real World Model engine (proprietary worldmodel.js, never in the repo/image).
+requires_world_model = pytest.mark.skipif(
+    not shutil.which("node") or not (Path(Settings().meterless_world_model_path).exists()
+                                     or (Path(__file__).resolve().parents[1] / "app/services/meterless_world/worldmodel.js").exists()),
+    reason="Node or the Meterless World Model engine (worldmodel.js) is not available")
 from app.services.nightshift_client import NightshiftClient, NightshiftResponse
 from app.services.sample_scenarios import SAMPLE_SCENARIOS, get_sample_investigation
 
@@ -272,6 +281,7 @@ MOCK_REPORTER = json.dumps({
 })
 
 
+@requires_world_model
 def test_workflow_evaluator_rejects_hallucinated_incident_ids():
     """
     Analyst proposes links with fabricated incident IDs.
@@ -317,6 +327,7 @@ def test_workflow_evaluator_rejects_hallucinated_incident_ids():
     assert result["data_mode"] == "zetaris_live"  # workflow always marks live mode
 
 
+@requires_world_model
 def test_workflow_evaluator_filters_hallucinated_evidence_ids():
     """
     Analyst cites a valid incident link but includes hallucinated evidence IDs.
@@ -374,6 +385,7 @@ def test_workflow_evaluator_filters_hallucinated_evidence_ids():
             assert eid != "FOR-FAKE-99999", "Hallucinated evidence ID must be stripped"
 
 
+@requires_world_model
 def test_workflow_returns_complete_integration_status():
     """
     Final result must include integration_status with all 3 components
@@ -420,6 +432,7 @@ def test_workflow_returns_complete_integration_status():
     assert status["zetaris"]["status"] == "connected"
 
 
+@requires_world_model
 def test_workflow_required_response_fields():
     """
     All required InvestigationResponse fields must be present in the final result.
