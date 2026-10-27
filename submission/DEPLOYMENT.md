@@ -42,7 +42,8 @@ curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @i
 For a full local stack (API on :8000 and dashboard on :3001): `docker compose build && docker compose up`. See the README ("Run with Docker") for live mode and the Meterless engines.
 
 ## Known limits of the hosted site
-- It depends on the developer's machine, Docker, Zetaris, Nightshift and the tunnel being on. The tunnel is a Cloudflare quick tunnel; its URL changes when restarted, and `vercel.json` must then be updated.
+- It depends on the developer's machine, Docker, Zetaris, Nightshift and the tunnel being on. The tunnel is a Cloudflare quick tunnel: its URL changes when restarted, and it can expire after a few hours while the process keeps running (`Tunnel not found`), which makes the site fall back to the offline demo.
+  `sh scripts/restart_tunnel.sh` starts a new tunnel and repoints `vercel.json`; `sh scripts/restart_tunnel.sh --watch` does that automatically when the tunnel stops answering. A named tunnel on a domain would give a permanent URL.
 - Live runs take close to the tunnel's timeout, so an occasional long run can be cut off.
 - There is no access control on the live path: anyone with the site URL can start an investigation that uses the developer's model quota.
 - For a deterministic result that does not depend on any of this, use the Docker command above.
