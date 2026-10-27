@@ -1,0 +1,21 @@
+# Render Blueprint: deploys the backend from the repo Dockerfile in offline sample mode.
+# Render cannot reach Zetaris / Nightshift on the owner's machine, so this instance replays recorded responses
+# (labelled "replayed") and uses the labelled code-only fallback for everything else. No secrets are needed.
+services:
+  - type: web
+    name: aegis-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: SAMPLE_MODE
+        value: "true"
+      - key: ZETARIS_ENABLED
+        value: "false"
+      - key: METERLESS_ENGINE_BACKEND
+        value: reference
+      - key: APP_ENVIRONMENT
+        value: production
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://crime-intelligence-six.vercel.app
