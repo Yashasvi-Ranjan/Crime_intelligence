@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from app.config import Settings, settings
 from app.services import agents as ag
+from app.services.decision_memory import DecisionMemory
 from app.services.evidence_verifier import (
     EvidenceIndex,
     ClaimValidation,
@@ -159,6 +160,7 @@ class _Run:
         self.state: Optional[WorkingState] = None
         self.sql_start = wf._data.query_count
         self._evidence_fetched: Set[str] = set()
+        self.memory_influence: Dict[str, Any] = {"applied": False}   # decision-memory effect (see decision_memory.py)
 
     def close(self) -> None:
         pass
@@ -253,6 +255,11 @@ class _Run:
             except EngineUnavailableError as exc:
                 self._engine(EngineOp.unavailable("hmem", "retrieve", str(exc)), "memory", "h-mem")
                 self._fail("h-mem.retrieve", str(exc))
+
+        if self.cfg.hmem_enabled and resumed is None:
+            self.memory_influence = DecisionMemory(self.cfg.state_path, self.cfg.hmem_scope).influence(self.query, route.incident_ids)
+            if self.memory_influence["applied"]:
+                tracer.log_event("memory", "system", "memory_influence", details=self.memory_influence)
 
         # 4. Rebuild evidence for a resumed run from Zetaris (source of truth).
         if resumed is not None:
@@ -411,6 +418,8 @@ class _Run:
                 "prior_memory": mem, "iterations_available": self.budget.max_iterations,
                 "task": "Plan the first retrieval. Use specific method/property keywords (e.g. tool, vehicle, entry method).",
             }, default=str)
+            if self.memory_influence["applied"]:   # prompt is byte-identical to before when memory is empty
+                prompt = json.dumps({**json.loads(prompt), "memory_influence": self.memory_influence}, default=str)
         else:
             try:
                 frame, op = self.wf._markov.continuation_prompt(self.query, carryover)
@@ -455,6 +464,10 @@ class _Run:
                 kws = [w for w in re.findall(r"[A-Za-z\-]{4,}", self.query)][:5]
                 reqs.append(ag.RetrievalRequest(kind="keyword_search", keywords=kws, station_ids=stations, crime_types=[route.crime_type] if route.crime_type else [],
                                                 reason="deterministic fallback keywords from the question"))
+        pri = [x for x in self.memory_influence.get("priority_incident_ids", []) if x not in {y for r in reqs for y in r.incident_ids}]
+        if i == 1 and pri:   # deterministic memory-derived starting hypothesis; fetched first, still Skeptic-challenged
+            reqs.insert(0, ag.RetrievalRequest(kind="by_incident_ids", incident_ids=pri,
+                                               reason="decision memory: prior verified lead " + ",".join(self.memory_influence["source_memory_ids"])))
         out = []
         for r in reqs[:3]:
             r = r.model_copy(update={
@@ -804,6 +817,8 @@ class _Run:
     def _store_memory(self, route: Route) -> Dict[str, Any]:
         if not self.cfg.hmem_enabled:
             return {"attempted": False, "reason": "disabled"}
+        dm = DecisionMemory(self.cfg.state_path, self.cfg.hmem_scope)
+        dm.write_rejected(self.run_id, [{**l, "status": getattr(self.last_validation.get(k), "status", None)} for k, l in self.links.items()])
         if self._active_links() and not self._skeptic_completed():
             return {"attempted": False, "reason": "no completed Skeptic review; unchallenged links are never promoted to memory"}
         good = [(k, v) for k, v in self.validations.items() if v.status == "SUPPORTED"]
@@ -819,6 +834,8 @@ class _Run:
             parts.append(f"Lead (unadjudicated, not a finding of guilt): {l['source_incident_id']} and {l['target_incident_id']} "
                          f"({'/'.join(l['stations_involved'])}) share [{attrs}], corroborated by independent records "
                          f"{', '.join(v.corroborating_ids[:5])}.")
+        dm.write_verified(self.run_id, [{**self.links[k], "status": v.status, "corroborating_ids": v.corroborating_ids,
+                                         "open_high_objection": bool(high_open)} for k, v in good])
         summary = " ".join(parts) + f" (run {self.run_id}; source IDs verified against Zetaris records at that time.)"
         conf = 0.6 + 0.1 * min(3, min(v.independent_source_count for _, v in good) - 2 + 1) if good else 0.0
         model = next((c.reported_model for c in reversed(self.calls) if c.role == "reporter" and c.reported_model), "none")
@@ -917,6 +934,7 @@ class _Run:
                        "model_generated": model_generated},
             "memory": {"retrieved": [{"id": m["id"], "content": m["content"][:300], "stored_confidence": m["confidence"],
                                       "note": "prior context, not evidence"} for m in memory], "write": stored},
+            "memory_influence": self.memory_influence,
             "partial_failures": self.partial_failures,
             "counts": {"model_calls": len(self.calls), "sql_queries": st.sql_queries, "iterations": st.iteration},
             "budget": {"max_iterations": self.budget.max_iterations, "max_model_calls": self.budget.max_calls,
