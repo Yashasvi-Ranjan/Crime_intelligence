@@ -69,9 +69,9 @@ def run(req: RunRequest) -> RunResponse:
 
 
 def _probe(url: str, headers: Optional[Dict[str, str]] = None) -> Optional[str]:
-    """None if the endpoint answered with any HTTP response within 2 s, else why not."""
+    """None if the endpoint answered with any HTTP response within 1 s, else why not."""
     try:
-        httpx.get(url, headers=headers, timeout=2.0)
+        httpx.get(url, headers=headers, timeout=1.0)
         return None
     except httpx.HTTPError as exc:
         return type(exc).__name__

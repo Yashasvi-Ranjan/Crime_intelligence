@@ -1,0 +1,36 @@
+{
+  "project": "Cross-Station Crime Intelligence",
+  "event": "Open Agent Hackathon 2026",
+  "track": "Solving Fragmented Intelligence",
+  "summary": "Multi-agent (Planner, Finder, Skeptic, Reporter) investigation that links incidents across three police stations, with a deterministic evidence verifier that re-checks every ID, quotation and attribute the models cite.",
+  "sponsor_technology": [
+    {"name": "Zetaris NDP", "role": "Federated SQL retrieval over five tables (live mode). In sample mode the same retrieval functions run over data/generated and are traced as local_sample, not Zetaris."},
+    {"name": "Meterless Nightshift + NVIDIA Nemotron", "role": "All model calls: Nemotron 3.5 Lightning 30B A3B (Planner, Finder, Reporter) and Nemotron 3 Ultra 550B A55B (Skeptic). In sample mode recorded live responses are replayed and labelled 'replayed'."},
+    {"name": "Meterless engines", "role": "H-MEM and Markovian run in the container from the open Apache-2.0 reference implementations (commit 1742dec, vendored unmodified in third_party/meterless). Scout Intent and World Model run only from a mounted Nightshift engine directory; otherwise they are traced engine_unavailable."}
+  ],
+  "entry_point": {
+    "docker_build": "docker build -t crime-intel .",
+    "docker_run": "docker run -p 8000:8000 crime-intel",
+    "compose": "docker compose build && docker compose up",
+    "api": "http://localhost:8000",
+    "web": "http://localhost:3001",
+    "run": "POST /run  (body: {\"input\": {\"query\": ...}, \"options\": {\"sample_mode\": true|false}})",
+    "health": "GET /health",
+    "local": "python run.py"
+  },
+  "sample_mode": {
+    "enable": "SAMPLE_MODE=true  (or options.sample_mode in the request)",
+    "behaviour": "Runs the real Planner/Finder/Skeptic/verifier/Reporter loop over data/generated with model responses replayed from data/sample/model_fixtures by prompt hash; a missing fixture runs a documented code-only fallback traced as code_fallback. Needs no network, credentials, Zetaris or Nightshift.",
+    "offline_check": "docker run --network none -e SAMPLE_MODE=true crime-intel"
+  },
+  "examples": {"inputs": "input_examples/", "outputs": "output_examples/", "compare": "python scripts/judge_compare.py"},
+  "trace": "logs/trace-<run_id>.jsonl",
+  "test_command": "python -m pytest -q backend/tests && python -m pytest -q tests",
+  "secret_scan": "sh scripts/secret_scan.sh",
+  "data": "Fully synthetic (fictional stations, people, places).",
+  "limitations": [
+    "Engines other than H-MEM/Markovian need the proprietary Nightshift engine directory mounted read-only (docker-compose.engine.yml).",
+    "Sample-mode answers are only as good as the recorded fixtures; prompts without a fixture use the weaker code-only fallback and are labelled.",
+    "Links are investigative leads, not findings of fact; scores are uncalibrated heuristics."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+ "content": "{\n  \"links\": [\n    {\n      \"link_id\": \"LINK-01\",\n      \"source_incident_id\": \"INC-NORTH-1686\",\n      \"target_incident_id\": \"INC-RIVERSIDE-1478\",\n      \"stations_involved\": [\"NORTH\", \"RIVERSIDE\"],\n      \"similarity_basis\": \"Both incidents involve keyless relay attacks using RF signal amplifiers on key fobs, targeting Toyota Prius exhaust catalytic assemblies. The method and property are identical.\",\n      \"shared_attributes\": [\n        {\n          \"attribute\": \"method\",\n          \"value\": \"Keyless relay attack using RF signal amplifier on key fob\",\n          \"match_type\": \"exact\",\n          \"source_ids\": [\"INC-NORTH-1686\", \"INC-RIVERSIDE-1478\"]\n        },\n        {\n          \"attribute\": \"property\",\n          \"value\": \"Toyota Prius exhaust catalytic assembly\",\n          \"match_type\": \"exact\",\n          \"source_ids\": [\"INC-NORTH-1686\", \"INC-RIVERSIDE-1478\"]\n        }\n      ],\n      \"differences\": [\n        \"Location: LOC-NORTH-20 vs LOC-RIV-05\",\n        \"Timeline: occurred_from 2026-05-28 vs 2026-06-24 (26 days apart)\",\n        \"Data quality: MEDIUM vs HIGH\"\n      ],\n      \"missing_evidence\": [\n        \"No forensic evidence (toolmark, DNA, fingerprint) links the two incidents.\",\n        \"No CCTV or witness evidence places the same individuals or vehicles at both locations.\",\n        \"No shared property items (e.g., same catalytic converter, same keys) have been reported.\"\n      ],\n      \"supporting_evidence_ids\": [],\n      \"quotes\": [],\n      \"heuristic_score\": 0.65,\n      \"score_note\": \"Score reflects exact method and property match, but large temporal gap and lack of connecting evidence lower confidence in a single series.\"\n    }\n  ],\n  \"withdrawn_link_ids\": [],\n  \"notes\": \"No forensic, CCTV, or witness evidence connects INC-NORTH-1686 and INC-RIVERSIDE-1478. The similarity is limited to the method description and target property, which are common keyless relay patterns. The 26-day gap and different locations suggest these may be independent incidents using the same technique rather than a linked series.\"\n}",
+ "fallback_reason": null,
+ "fallback_used": false,
+ "finish_reason": "stop",
+ "latency_ms": 6402.735874999962,
+ "provider": "nvidia",
+ "receipt_id": "rcpt_req_982s8iha",
+ "recorded_at": "2026-10-27",
+ "recorded_from": "live Nightshift /v1/chat/completions",
+ "reported_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "requested_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "role": "finder",
+ "routed_as_requested": true,
+ "usage": {
+  "completion_tokens": 553,
+  "prompt_tokens": 7259,
+  "total_tokens": 7812
+ }
+}

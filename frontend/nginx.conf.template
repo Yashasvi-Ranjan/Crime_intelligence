@@ -1,0 +1,14 @@
+# Rendered by the nginx image's envsubst at start-up. API_UPSTREAM is the only variable (default http://api:8000).
+# The bundle calls same-origin /api, so nothing about the API or any secret is compiled into it.
+server {
+  listen 3001;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location /api/ { proxy_pass ${API_UPSTREAM}; proxy_read_timeout 1800s; proxy_send_timeout 1800s; proxy_set_header Host $host; }
+  location = /run    { proxy_pass ${API_UPSTREAM}; proxy_read_timeout 1800s; }
+  location = /health { proxy_pass ${API_UPSTREAM}; }
+
+  location / { try_files $uri /index.html; }
+}

@@ -1,0 +1,10 @@
+{
+  "input": {
+    "query": "Are the commercial safe burglaries across NORTH and CENTRAL linked by the same heavy pry bar or crowbar?",
+    "station_ids": [
+      "NORTH",
+      "CENTRAL"
+    ],
+    "crime_type": "BURGLARY"
+  }
+}

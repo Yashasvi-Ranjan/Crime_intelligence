@@ -1,0 +1,20 @@
+{
+ "content": "{\n  \"links\": [\n    {\n      \"link_id\": \"LINK-01\",\n      \"source_incident_id\": \"INC-NORTH-0880\",\n      \"target_incident_id\": \"INC-CENTRAL-0549\",\n      \"stations_involved\": [\"NORTH\", \"CENTRAL\"],\n      \"similarity_basis\": \"Both incidents share the identical method description of forced rear door entry using a heavy 36mm pry bar, and both involve the same set of property items (unlocked laptops, high-end tablets, server drives). The incidents occurred at the same location_id (LOC-CEN-16) and are linked by direct-reference forensic and witness evidence.\",\n      \"shared_attributes\": [\n        {\n          \"attribute\": \"method\",\n          \"value\": \"Forced rear door entry using heavy 36mm pry bar\",\n          \"match_type\": \"exact\",\n          \"source_ids\": [\"INC-NORTH-0880\", \"INC-CENTRAL-0549\"]\n        },\n        {\n          \"attribute\": \"property_involved\",\n          \"value\": \"unlocked laptops, high-end tablets, server drives\",\n          \"match_type\": \"exact\",\n          \"source_ids\": [\"INC-NORTH-0880\", \"INC-CENTRAL-0549\"]\n        }\n      ],\n      \"differences\": [\n        \"INC-NORTH-0880 occurred on 2026-05-18; INC-CENTRAL-0549 occurred on 2026-04-26.\",\n        \"INC-NORTH-0880 data_quality is HIGH; INC-CENTRAL-0549 data_quality is MEDIUM.\",\n        \"INC-NORTH-0880 involved a commercial safe, cash, and payroll vouchers (not listed in INC-CENTRAL-0549).\"\n      ],\n      \"missing_evidence\": [\n        \"No forensic toolmark comparison reported for INC-NORTH-0880.\",\n        \"No CCTV or witness reports directly linking the two incidents beyond shared location and method.\"\n      ],\n      \"supporting_evidence_ids\": [\n        \"FOR-1305\",\n        \"CCTV-1620\",\n        \"WIT-1165\"\n      ],\n      \"quotes\": [\n        {\n          \"source_id\": \"WIT-1165\",\n          \"text\": \"Witness observed activity near Grand Hotel Valet Station. Vehicle noted: cream-colored box delivery truck.\"\n        }\n      ],\n      \"heuristic_score\": 0.78,\n      \"score_note\": \"Score reflects exact method and property match plus location and forensic linkage; does not prove a common offender.\"\n    }\n  ],\n  \"withdrawn_link_ids\": [],\n  \"notes\": \"The shared method (heavy 36mm pry bar) and identical property items (unlocked laptops, tablets, server drives) at the same location (LOC-CEN-16) create a strong semantic similarity. However, temporal gap (April vs May 2026), differing data quality ratings, and the North incident's inclusion of safe/cash items mean the link is based on pattern similarity rather than definitive corroboration. No direct forensic toolmark comparison exists for the North incident.\"\n}",
+ "fallback_reason": null,
+ "fallback_used": false,
+ "finish_reason": "stop",
+ "latency_ms": 15446.699374999753,
+ "provider": "nvidia",
+ "receipt_id": "rcpt_req_2z2ns5vj",
+ "recorded_at": "2026-10-27",
+ "recorded_from": "live Nightshift /v1/chat/completions",
+ "reported_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "requested_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "role": "finder",
+ "routed_as_requested": true,
+ "usage": {
+  "completion_tokens": 742,
+  "prompt_tokens": 6144,
+  "total_tokens": 6886
+ }
+}

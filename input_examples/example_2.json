@@ -1,0 +1,10 @@
+{
+  "input": {
+    "query": "Do the catalytic converter thefts in CENTRAL and RIVERSIDE share a method, and could they be one series?",
+    "station_ids": [
+      "CENTRAL",
+      "RIVERSIDE"
+    ],
+    "crime_type": "VEHICLE_THEFT"
+  }
+}

@@ -1,0 +1,9 @@
+# Give the api the Nightshift proxy token as a mounted file instead of NIGHTSHIFT_API_KEY:
+#   NIGHTSHIFT_TOKEN_FILE="$HOME/Library/Application Support/ai.meterless.runtime/proxy-token" \
+#   docker compose -f docker-compose.yml -f docker-compose.token-file.yml up
+services:
+  api:
+    volumes:
+      - ${NIGHTSHIFT_TOKEN_FILE:?set NIGHTSHIFT_TOKEN_FILE to the token file}:/run/secrets/nightshift_token:ro
+    environment:
+      NIGHTSHIFT_API_KEY_FILE: /run/secrets/nightshift_token

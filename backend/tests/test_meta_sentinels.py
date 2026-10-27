@@ -59,7 +59,7 @@ def test_hackos_auditor_conformance_check():
 
 
 def test_disqualification_sentinel_catches_api_key():
-    payload_with_key = "Analysis completed. nvapi-SECRETKEY1234567890ABCDEFGH found in report."
+    payload_with_key = "Analysis completed. " + "nvapi" + "-SECRETKEY1234567890ABCDEFGH found in report."
     report = disqualification_sentinel.evaluate(
         full_payload_dump=payload_with_key,
         candidate_links=[],

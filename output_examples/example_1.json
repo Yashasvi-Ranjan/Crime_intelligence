@@ -1,0 +1,300 @@
+{
+  "agents": [
+    {
+      "agent": "planner",
+      "avg_latency_ms": 3819.8,
+      "calls": 2,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ]
+    },
+    {
+      "agent": "finder",
+      "avg_latency_ms": 8428.2,
+      "calls": 2,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ]
+    },
+    {
+      "agent": "skeptic",
+      "avg_latency_ms": 14660.1,
+      "calls": 1,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ]
+    },
+    {
+      "agent": "reporter",
+      "avg_latency_ms": 14951.8,
+      "calls": 1,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ]
+    }
+  ],
+  "engines": [
+    {
+      "backend": [
+        "mounted"
+      ],
+      "calls": 1,
+      "engine": "scout_intent",
+      "operations": [
+        "detect"
+      ],
+      "status": "connected"
+    },
+    {
+      "backend": [
+        "reference"
+      ],
+      "calls": 1,
+      "engine": "h_mem",
+      "operations": [
+        "retrieve"
+      ],
+      "status": "connected"
+    },
+    {
+      "backend": [
+        "reference"
+      ],
+      "calls": 5,
+      "engine": "markovian",
+      "operations": [
+        "build_prompt",
+        "efficiency",
+        "extract_carryover",
+        "validate"
+      ],
+      "status": "connected"
+    },
+    {
+      "backend": [],
+      "calls": 0,
+      "engine": "world_model",
+      "operations": [],
+      "status": "connected"
+    }
+  ],
+  "execution_time_seconds": 1.694,
+  "log_file": "logs/trace-inv_1793071948_820eb4.jsonl",
+  "output": {
+    "candidate_incident_ids": [
+      "INC-NORTH-2598",
+      "INC-NORTH-2203",
+      "INC-NORTH-0880",
+      "INC-NORTH-2096",
+      "INC-NORTH-2045",
+      "INC-CENTRAL-1226",
+      "INC-CENTRAL-0549",
+      "INC-CENTRAL-0265",
+      "INC-CENTRAL-2120",
+      "INC-CENTRAL-0896"
+    ],
+    "clarification": null,
+    "counts": {
+      "iterations": 2,
+      "model_calls": 6,
+      "sql_queries": 19
+    },
+    "data_mode": "local_sample",
+    "intent": "CROSS_STATION_SEARCH",
+    "is_sample": true,
+    "links": [
+      {
+        "confidence_rationale": "Uncalibrated Finder heuristic; not a probability. Score reflects exact method and property match plus location and forensic linkage; does not prove a common offender.",
+        "confidence_score": 0.78,
+        "contradictions": [],
+        "differences_or_inconsistencies": "INC-NORTH-0880 occurred on 2026-05-18; INC-CENTRAL-0549 occurred on 2026-04-26.; INC-NORTH-0880 data_quality is HIGH; INC-CENTRAL-0549 data_quality is MEDIUM.; INC-NORTH-0880 involved a commercial safe, cash, and payroll vouchers (not listed in INC-CENTRAL-0549).",
+        "independent_source_count": 3,
+        "link_id": "LINK-01",
+        "missing_evidence": [
+          "No forensic toolmark comparison reported for INC-NORTH-0880.",
+          "No CCTV or witness reports directly linking the two incidents beyond shared location and method."
+        ],
+        "rejected_ids": [],
+        "revision": 1,
+        "shared_attributes": [
+          {
+            "attribute": "method",
+            "match_type": "exact",
+            "source_ids": [
+              "INC-NORTH-0880",
+              "INC-CENTRAL-0549"
+            ],
+            "value": "Forced rear door entry using heavy 36mm pry bar"
+          },
+          {
+            "attribute": "property_involved",
+            "match_type": "exact",
+            "source_ids": [
+              "INC-NORTH-0880",
+              "INC-CENTRAL-0549"
+            ],
+            "value": "unlocked laptops, high-end tablets, server drives"
+          }
+        ],
+        "similarity_basis": "Both incidents share the identical method description of forced rear door entry using a heavy 36mm pry bar, and both involve the same set of property items (unlocked laptops, high-end tablets, server drives). The incidents occurred at the same location_id (LOC-CEN-16) and are linked by direct-reference forensic and witness evidence.",
+        "source_incident_id": "INC-NORTH-0880",
+        "stations_involved": [
+          "NORTH",
+          "CENTRAL"
+        ],
+        "supporting_evidence_ids": [
+          "FOR-1305",
+          "CCTV-1620",
+          "WIT-1165"
+        ],
+        "target_incident_id": "INC-CENTRAL-0549",
+        "validation_explanation": "Claimed shared attribute(s) absent from cited records: ['property_involved=unlocked laptops, high-end tablets, server drives']",
+        "validation_status": "UNSUPPORTED",
+        "withdrawn": true
+      }
+    ],
+    "partial_failures": [],
+    "report": {
+      "contradictions_and_limitations": [
+        "Skeptic objection: INC-NORTH-0880 location_id is LOC-NORTH-12, not LOC-CEN-16 as claimed in the link. The two incidents occurred at different locations.",
+        "Skeptic objection: INC-NORTH-0880 property_involved lists commercial safe, cash, payroll vouchers; it does not include unlocked laptops, high-end tablets, or server drives. The claimed exact match on property is false.",
+        "Skeptic objection: Supporting evidence FOR-1305, CCTV-1620, and WIT-1165 are all linked only to INC-CENTRAL-0549 (location LOC-CEN-16). None reference INC-NORTH-0880 or LOC-NORTH-12, so they do not directly link the two incidents.",
+        "Skeptic objection: The method 'Forced rear door entry using heavy 36mm pry bar' appears in at least 9 incidents across both stations, indicating it is a common MO rather than a unique signature linking these two specific incidents.",
+        "Skeptic objection: No forensic toolmark comparison is reported for INC-NORTH-0880 (the link notes this as missing). Without toolmark or other physical evidence tying the same tool to both scenes, the method similarity alone is insufficient."
+      ],
+      "differences": [
+        "INC-NORTH-0880 occurred at LOC-NORTH-12; INC-CENTRAL-0549 occurred at LOC-CEN-16.",
+        "INC-NORTH-0880 involved a commercial safe, cash, and payroll vouchers; INC-CENTRAL-0549 property inventory differs and does not list an exact match for the items taken from INC-NORTH-0880.",
+        "Forensic toolmark comparison is missing for INC-NORTH-0880."
+      ],
+      "executive_summary": "Analysis of LINK-01 connecting INC-NORTH-0880 and INC-CENTRAL-0549 is currently rejected due to location and property discrepancies, plus the existence of a common modus operandi across multiple incidents. No forensic toolmark comparison has been reported to confirm a shared heavy pry bar or crowbar.",
+      "facts": [
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-NORTH-0880"
+          ],
+          "statement": "INC-NORTH-0880 occurred at location LOC-NORTH-12."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-CENTRAL-0549"
+          ],
+          "statement": "INC-CENTRAL-0549 occurred at location LOC-CEN-16."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-NORTH-0880"
+          ],
+          "statement": "INC-NORTH-0880 property involved: commercial safe, cash, payroll vouchers."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-NORTH-0880",
+            "INC-CENTRAL-0549"
+          ],
+          "statement": "INC-CENTRAL-0549 property involved does not match INC-NORTH-0880's listed items (no unlocked laptops, high-end tablets, or server drives listed as exact match)."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-NORTH-2598",
+            "INC-NORTH-2203",
+            "INC-NORTH-0880",
+            "INC-NORTH-2096",
+            "INC-NORTH-2045",
+            "INC-CENTRAL-1226",
+            "INC-CENTRAL-0549",
+            "INC-CENTRAL-0265",
+            "INC-CENTRAL-2120",
+            "INC-CENTRAL-0896"
+          ],
+          "statement": "Method 'Forced rear door entry using heavy 36mm pry bar' appears in at least 9 incidents across NORTH and CENTRAL stations."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-NORTH-0880"
+          ],
+          "statement": "No forensic toolmark comparison is reported for INC-NORTH-0880."
+        }
+      ],
+      "follow_up_actions": [
+        "Request forensic toolmark comparison report for INC-NORTH-0880 and INC-CENTRAL-0549 to determine if the same heavy pry bar or crowbar was used.",
+        "Verify location IDs for INC-NORTH-0880 (LOC-NORTH-12) and INC-CENTRAL-0549 (LOC-CEN-16) to confirm geographic linkage.",
+        "Review property inventories for INC-NORTH-0880 and INC-CENTRAL-0549 to resolve discrepancies in stolen items."
+      ],
+      "hypotheses": [
+        {
+          "link_id": "LINK-01",
+          "statement": "The same heavy pry bar or crowbar may have been used in both INC-NORTH-0880 and INC-CENTRAL-0549, but this remains unconfirmed without forensic toolmark comparison."
+        }
+      ],
+      "model_generated": true,
+      "similarities": [
+        "Both incidents involve forced rear door entry.",
+        "Both incidents involve the use of a heavy pry bar (36mm) as part of the entry method."
+      ],
+      "title": "Reporter: Commercial Safe Burglaries - NORTH vs CENTRAL Link Analysis",
+      "unresolved_questions": [
+        "Does a forensic toolmark report exist for INC-NORTH-0880 or LOC-NORTH-12 that identifies the same heavy pry bar/crowbar?",
+        "None"
+      ],
+      "unverified_statements": []
+    },
+    "skeptic": {
+      "history": [
+        "rejected"
+      ],
+      "review_status": "rejected"
+    },
+    "stations_involved": [
+      "CENTRAL",
+      "NORTH"
+    ],
+    "stopping_reason": "no_supportable_links_found (after: evidence_sufficient)",
+    "summary": "Analysis of LINK-01 connecting INC-NORTH-0880 and INC-CENTRAL-0549 is currently rejected due to location and property discrepancies, plus the existence of a common modus operandi across multiple incidents. No forensic toolmark comparison has been reported to confirm a shared heavy pry bar or crowbar."
+  },
+  "run_id": "inv_1793071948_820eb4",
+  "status": "completed",
+  "trace_id": "inv_1793071948_820eb4"
+}

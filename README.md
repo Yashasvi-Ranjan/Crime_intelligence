@@ -205,6 +205,86 @@ This file is strictly for **offline evaluation** to measure precision, recall, a
 
 ---
 
+## Run with Docker
+
+Everything below runs from a fresh clone. Config lives in **one place: `<repo root>/.env`** (copied from `.env.example`; gitignored and
+excluded from every image). It is optional: with no `.env` the stack starts and `SAMPLE_MODE=true` needs no credentials at all.
+
+```bash
+cp .env.example .env            # then fill in the <-- FILL IN values (live mode only)
+
+# API only
+docker build -t crime-intel .
+docker run -p 8000:8000 crime-intel
+
+# API + dashboard:  API http://localhost:8000   web http://localhost:3001
+docker compose build && docker compose up
+
+# One investigation (also example_2.json, example_3.json); the trace is logs/trace-<run_id>.jsonl, the response names it in "log_file"
+curl -X POST localhost:8000/run -H 'content-type: application/json' -d @input_examples/example_1.json
+curl localhost:8000/health      # zetaris / nightshift / engines: each "live", "sample" or "down"
+
+# Offline, no Zetaris, no Nightshift, no .env, no network
+docker run -p 8000:8000 -e SAMPLE_MODE=true crime-intel
+SAMPLE_MODE=true docker compose up
+docker run -d --name offline --network none -e SAMPLE_MODE=true crime-intel      # no published port on --network none:
+docker exec offline python scripts/judge_compare.py --url http://127.0.0.1:8000  # answers all three examples from inside
+
+# Compare any running server's answers with output_examples/ (ignores timings, run ids and query ids)
+python scripts/judge_compare.py --url http://localhost:8000
+python scripts/trace_check.py        # (inside the container) checks every trace against the judge checklist
+python run.py --once input_examples/example_1.json    # host alternative to curl
+```
+
+`POST /run` takes `{"run_id"?, "input": {"query", "incident_ids"?, "station_ids"?, "crime_type"?, "date_from"?, "date_to"?}, "options": {"sample_mode"?}}`
+and returns exactly `run_id, status, output {links, report, stopping_reason, summary, ...}, agents, engines, trace_id, log_file, execution_time_seconds`
+(an invalid body is HTTP 422).
+
+**Live mode** reaches Zetaris (:8888/:8889) and Nightshift (:8088) running on the *host* through `host.docker.internal` (compose adds
+`extra_hosts: host.docker.internal:host-gateway`, so this works on Linux too). Inside Docker these URLs are set for you; override with
+`DOCKER_NIGHTSHIFT_BASE_URL`, `DOCKER_ZETARIS_BASE_URL`, `DOCKER_ZETARIS_AUTH_URL`. Every Zetaris and Nightshift call is bounded by its timeout
+(`ZETARIS_TIMEOUT_SECONDS`, `NIGHTSHIFT_TIMEOUT_SECONDS`, `NIGHTSHIFT_SKEPTIC_TIMEOUT_SECONDS`) and the run by `WORKFLOW_MAX_ITERATIONS`,
+`WORKFLOW_MAX_MODEL_CALLS`, `WORKFLOW_TIME_BUDGET_SECONDS`. If a service is down, `POST /run` continues that integration on the offline sample path and the
+trace says so (`zetaris_fallback`, `source: local_sample`, `source: replayed` / `code_fallback`, `fallback_reason`).
+
+**Nightshift token** - a container cannot read `~/Library/Application Support/ai.meterless.runtime/proxy-token`. Provide it either way:
+
+| Option | How |
+|---|---|
+| Env var | `NIGHTSHIFT_API_KEY=<token>` in `.env` (or `docker run -e NIGHTSHIFT_API_KEY=...`) |
+| Mounted file | `NIGHTSHIFT_API_KEY_FILE=<path in the container>`; with compose: `NIGHTSHIFT_TOKEN_FILE=<host file> docker compose -f docker-compose.yml -f docker-compose.token-file.yml up` |
+
+**Meterless engines - what runs inside the container, and what does not**
+
+| Engine | In the image | With the host engine directory mounted |
+|---|---|---|
+| H-MEM | open reference implementation (Apache-2.0, `third_party/meterless`, commit `1742dec`, unmodified) | Nightshift's `hmem.js` |
+| Markovian | open reference implementation (same) | Nightshift's `markovian.js` |
+| Scout Intent | **not available** - traced `engine_unavailable`; routing continues on deterministic rules | Nightshift's `scout-intents.js` |
+| World Model | **not available** - traced `engine_unavailable`; shared state is skipped | Nightshift's `worldmodel.js` |
+
+The Nightshift engine modules are proprietary and are **never copied into the repo or an image** (`worldmodel.js` is gitignored and in `.dockerignore`). To
+run all four engines, mount the host directory read-only:
+
+```bash
+METERLESS_ENGINE_DIR_HOST=/Applications/Nightshift.app/Contents/Resources/engine/js/engine \
+  docker compose -f docker-compose.yml -f docker-compose.engine.yml up
+```
+
+An engine that cannot run is recorded as `engine_unavailable` in the trace and in `engines[]`; the application never emits an engine event it did not execute.
+
+**Sample mode** (`SAMPLE_MODE=true` or `options.sample_mode`) runs the *real* Planner -> retrieval -> Finder -> verifier -> Skeptic -> Reporter loop: retrieval is the
+same four functions over `data/generated` (trace `source: local_sample`, generated query ids), and each model call is answered by a **recorded live Nemotron response**
+matched by `sha256(role, model, prompt)` from `data/sample/model_fixtures/` (trace `source: replayed`; fixtures are never keyed to an example and never contain a
+final answer). A prompt with no fixture runs a documented, clearly weaker code-only fallback (`source: code_fallback`, `reported_model: null`). Regenerate fixtures
+and `output_examples/` with `python scripts/record_fixtures.py` (needs live Zetaris + Nightshift; `--local-retrieval` records live models over local data). The old
+pre-built scenarios survive only as `POST /api/investigations/analyze` with `"demo_content": true` (labelled `[DEMO CONTENT]`, no agent runs).
+
+**Tests and scan**: `python -m pytest -q backend/tests && python -m pytest -q tests` (engine and live tests skip, not fail, when unavailable);
+`sh scripts/secret_scan.sh [--image crime-intel]`.
+
+---
+
 ## 7. How to Run & Validate
 
 ### 7.1 Setup Environment
@@ -438,9 +518,10 @@ Test taxonomy: `test_model_registry.py`, `test_evidence_verifier.py`, `test_nigh
 
 ## 15. Sample mode
 
-`SAMPLE_MODE=true` (or `"sample_mode": true` per request) returns one of three labelled, pre-built scenarios - `crowbar_safe_cracking`,
-`catalytic_converter`, `keyless_suv_relay` - with `is_sample: true` and `data_mode: sample_mode`. No agent, model, Zetaris query or engine runs, and the UI says so.
-Live mode never substitutes sample data; if Zetaris or Nightshift is unconfigured it returns HTTP 503.
+`SAMPLE_MODE=true` (or `"sample_mode": true` per request) runs the real agent loop offline: local retrieval over `data/generated`, recorded Nemotron responses replayed by
+prompt hash, code-only fallback (labelled) for any prompt without a fixture, `data_mode: local_sample`. See **Run with Docker** above. The earlier pre-built scenarios
+(`crowbar_safe_cracking`, `catalytic_converter`, `keyless_suv_relay`) are demo content only: `"demo_content": true`, `data_mode: demo_content`, no agent, model,
+query or engine runs. `POST /api/investigations/analyze` in live mode still returns HTTP 503 when Zetaris or Nightshift is unconfigured; `POST /run` instead falls back, traced.
 
 ## 16. Known limitations
 
@@ -466,5 +547,7 @@ The data is fully synthetic (fictional stations, people and places). Claude Code
 - Frontend: React, Vite, TypeScript, lucide-react (MIT/ISC/Apache-style open-source licences).
 - Zetaris NDP (Docker images, used under the licence supplied with them) and Meterless Nightshift + engine modules (proprietary: "Meterless Runtime - Proprietary Software License").
   The engines are **executed from the user's own Nightshift installation**.
+- Meterless open reference implementations of H-MEM and Markovian (Apache-2.0, https://github.com/Meterless/Meterless commit `1742dec`) are vendored **unmodified** in
+  `third_party/meterless/` with their LICENSE and a NOTICE (sha256 per file); our adapters around them are in `backend/app/services/meterless_world/reference/`.
 - **Action needed before publishing this repository:** `backend/app/services/meterless_world/worldmodel.js` is a byte-for-byte copy of Meterless's proprietary
   `worldmodel.js`, kept as a fallback when Nightshift.app is absent. The Meterless licence grants no right to redistribute it without a written agreement; remove the copy (the adapter uses the installed engine first) or obtain permission.

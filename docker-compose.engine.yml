@@ -1,0 +1,11 @@
+# Mount the host's Meterless engine directory (read-only) so Scout Intent, World Model and the Nightshift H-MEM /
+# Markovian modules run for real inside the container. The directory is proprietary: it is mounted, never copied
+# into an image. Set METERLESS_ENGINE_DIR_HOST, e.g. on macOS:
+#   METERLESS_ENGINE_DIR_HOST=/Applications/Nightshift.app/Contents/Resources/engine/js/engine \
+#   docker compose -f docker-compose.yml -f docker-compose.engine.yml up
+services:
+  api:
+    volumes:
+      - ${METERLESS_ENGINE_DIR_HOST:?set METERLESS_ENGINE_DIR_HOST to the host engine directory}:/opt/meterless/engine:ro
+    environment:
+      METERLESS_ENGINE_BACKEND: mounted

@@ -1,0 +1,10 @@
+{
+  "input": {
+    "query": "Do the keyless SUV relay thefts in NORTH and RIVERSIDE form one series?",
+    "station_ids": [
+      "NORTH",
+      "RIVERSIDE"
+    ],
+    "crime_type": "VEHICLE_THEFT"
+  }
+}
