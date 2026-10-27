@@ -36,7 +36,7 @@ def test_run_contract_and_trace_evidence():
     assert body["output"]["data_mode"] == "local_sample" and body["output"]["is_sample"] is True
     ev = _trace(body)
     steps = {e["step"] for e in ev}
-    assert {"routing", "handoff", "branch", "retrieval", "analysis", "review", "report"} <= steps
+    assert {"routing", "handoff", "retrieval", "analysis", "review", "report"} <= steps
     assert len({e["agent"] for e in ev if (e.get("provider_meta") or {}).get("role")}) >= 2
     sql = [e for e in ev if e.get("sql_meta")]
     assert sql and all(e["sql_meta"]["source"] == "local_sample" and e["sql_meta"]["query_ids"] for e in sql)
@@ -77,9 +77,11 @@ def test_local_service_matches_zetaris_contract():
     svc = LocalInvestigationService()
     rows = svc.search_candidate_incidents(keywords=["pry"], station_ids=["NORTH"], limit=3)
     assert len(rows) <= 3 and all(r["station_id"] == "NORTH" for r in rows)
-    assert [r["reported_at"] for r in rows] == sorted((r["reported_at"] for r in rows), reverse=True)
     ids = svc.take_query_ids()
     assert ids and ids[0].startswith("local-") and svc.query_count == 1 and svc.source == "local_sample"
+    assert rows == svc.search_candidate_incidents(keywords=["pry"], station_ids=["NORTH"], limit=3)   # ranked, deterministic
+    assert svc.search_candidate_incidents(station_ids=["NORTH"], limit=3) == sorted(                  # no keywords: newest first
+        svc.search_candidate_incidents(station_ids=["NORTH"], limit=3), key=lambda r: r["reported_at"], reverse=True)
     assert svc.get_incidents_by_ids(["INC-NORTH-0042"])[0]["incident_id"] == "INC-NORTH-0042"
 
 

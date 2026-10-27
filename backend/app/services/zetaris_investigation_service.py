@@ -21,6 +21,7 @@ import re
 from typing import Any, Dict, List, Optional, Set
 
 from app.config import Settings, settings
+from app.services.candidate_ranking import expand_terms, pool_size, rank_candidates
 from app.services.zetaris_adapter import (
     ZetarisAdapter,
     ZetarisNotConfiguredError,
@@ -120,18 +121,21 @@ class ZetarisInvestigationService:
             clean_dt = _sanitize_term(date_to)
             conditions.append(f"reported_at <= '{clean_dt}'")
 
-        if keywords:
-            kw_clauses = []
-            for kw in keywords:
-                clean_kw = _sanitize_term(kw).lower()
-                if clean_kw and len(clean_kw) >= 3:
-                    kw_clauses.append(f"LOWER(method_description) LIKE '%{clean_kw}%'")
-                    kw_clauses.append(f"LOWER(cast(property_involved as string)) LIKE '%{clean_kw}%'")
-            if kw_clauses:
-                conditions.append(f"({' OR '.join(kw_clauses)})")
+        terms = expand_terms([_sanitize_term(k) for k in keywords or []])
+        score_sql = ""
+        if terms:
+            likes = [f"LOWER(method_description) LIKE '%{t}%' OR LOWER(cast(property_involved as string)) LIKE '%{t}%'" for t in terms]
+            conditions.append(f"({' OR '.join(likes)})")
+            hits = [f"(CASE WHEN LOWER(method_description) LIKE '%{t}%' OR LOWER(cast(property_involved as string)) LIKE '%{t}%' THEN 1 ELSE 0 END)" for t in terms]
+            corro = "(CASE WHEN cast(source_reference_ids as string) NOT IN ('[]', '') THEN 1 ELSE 0 END)"
+            score_sql = f"({' + '.join(hits)} + {corro})"
 
         where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-        sql = f"SELECT * FROM {table} {where_clause} ORDER BY reported_at DESC LIMIT {limit}"
+        if terms:
+            # Relevance, not recency: a bounded pool ordered by term hits + corroboration, re-ranked below.
+            sql = f"SELECT * FROM {table} {where_clause} ORDER BY {score_sql} DESC, incident_id LIMIT {pool_size(limit)}"
+        else:
+            sql = f"SELECT * FROM {table} {where_clause} ORDER BY reported_at DESC LIMIT {limit}"
 
         logger.info("Executing Zetaris candidate incidents SQL: %s", sql)
         rows = self._sql(sql)
@@ -141,7 +145,7 @@ class ZetarisInvestigationService:
             r["property_involved"] = _parse_json_field(r.get("property_involved"))
             r["source_reference_ids"] = _parse_json_field(r.get("source_reference_ids"))
 
-        return rows
+        return rank_candidates(rows, terms, limit) if terms else rows
 
     def get_incidents_by_ids(self, incident_ids: List[str]) -> List[Dict[str, Any]]:
         """Fetch specific police incidents by ID."""
