@@ -395,7 +395,7 @@ SLIDES = [
          bullets=["Judge examples (recorded Nemotron responses) predate the retrieval change: offline now falls back to a labelled code-only path for non-matching prompts. Not re-recorded; that needs live credentials.",
                   "Reported by the team (trace not committed): live run through Docker with real Zetaris and Nightshift, before the retrieval change: full loop, real Nemotron on all four agents, zero partial failures. A live safe-burglary run retrieved the planted pair but the verifier and Skeptic refused an ungrounded link.",
                   "No model benchmark is claimed. A pre-registered evaluation and a --live harness exist but have not been run; evaluation/results.json is a scripted stand-in, so there is no real-model result.",
-                  "Engineering: pytest backend/tests tests gives 284 passed, 7 skipped (run on this build, SAMPLE_MODE, engines built); secret scan on source and image; CI runs the judge path and --network none."]),
+                  "Engineering: pytest backend/tests tests gives 257 passed, 7 skipped (run on this build, SAMPLE_MODE, engines built); secret scan on source and image; CI runs the judge path and --network none."]),
     dict(title="Responsible AI", point="Responsible AI",
          bullets=["Leads, not verdicts: no determination of guilt; a human decides.",
                   "Explainable by construction: shared attributes, differences, missing evidence, objections, citations, query ids.",

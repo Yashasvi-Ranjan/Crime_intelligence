@@ -56,7 +56,7 @@ NVIDIA **Nemotron** models do the reasoning, each in the lane that suits it:
 | fast | `nvidia/nemotron-3.5-lightning-30b-a3b` | Planner, Finder, Reporter | in use (live use reported by the team; no live trace committed) |
 | deep | `nvidia/nemotron-3-ultra-550b-a55b` | Skeptic (a different model from the Finder, so it is not agreeing with itself; never shown the Finder's score) | in use (live use reported by the team; no live trace committed; about 20 to 40 s per call as reported, spent on adversarial review, not routine steps) |
 
-What we deliberately **do not** use, and say so: `nvidia/nemotron-3-embed-1b` is listed by Nightshift but `POST /v1/embeddings` returned HTTP 404 on our build, so retrieval is lexical SQL, not semantic; a rerank model and Nemotron Bolt are not served; the Super-VL model id is configured in the registry but CCTV image analysis is not part of the investigation loop and we make no vision claim.
+What we deliberately **do not** use, and say so: `nvidia/nemotron-3-embed-1b` is listed by Nightshift but `POST /v1/embeddings` returned HTTP 404 on our build, so retrieval is lexical SQL, not semantic; a rerank model and Nemotron Bolt are not served; CCTV image analysis is not part of the investigation loop and we make no vision claim; the old Super-VL/optical-fallback code was removed from the model registry.
 
 ## 5. What is unique
 
