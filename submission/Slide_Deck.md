@@ -134,7 +134,7 @@ Screens to capture, all synthetic, on the 1536 px desktop layout:
 - Retrieval then changed, so candidate sets and prompt hashes changed and some recorded fixtures no longer match. Offline, those prompts now fall back to a labelled code-only path. Replayed/code-fallback model calls before to after: ex1 3/2 to 1/2, ex2 4/0 to 1/3, ex3 3/2 to 1/3; links before to after: ex1 1 to 0, ex2 3 to 1, ex3 1 to 1.
 - `scripts/judge_compare.py` is therefore expected to fail against the committed `output_examples/` until the fixtures are re-recorded (needs live Nightshift credentials and `scripts/record_fixtures.py`). Not run since the change; not re-recorded.
 
-**Engineering:** 234 `def test_` functions counted with `grep -rn "def test_" tests backend/tests` (parametrised cases and skips not reflected). Last full run on the integration branch, with the reference engines built and `SAMPLE_MODE=true`: root `tests/` 124 passed; `backend/` 160 passed, 7 skipped (engine/live tests skip when unavailable). Secret scan on source and image, and Docker plus CI on every push (CI results for the new commits not yet seen).
+**Engineering:** `pytest backend/tests tests` gives 284 passed, 7 skipped (root `tests/` 124 passed; `backend/` 160 passed, 7 skipped; engine/live tests skip when unavailable), run on the integration branch with the reference engines built and `SAMPLE_MODE=true`. Secret scan on source and image, and Docker plus CI on every push (CI results for the new commits not yet seen).
 **Never say:** "zero hallucinations" or "agents beat the LLM". Scores are uncalibrated heuristics.
 
 ## Slide 12 · Responsible AI (extra)
