@@ -9,6 +9,7 @@ import {
   Key,
 } from 'lucide-react';
 import { ZetarisHealthResponse } from '../types';
+import { PageHead } from '../components/PageHead';
 import { api } from '../services/api';
 
 export const ZetarisStatusPage: React.FC = () => {
@@ -47,6 +48,7 @@ export const ZetarisStatusPage: React.FC = () => {
 
   return (
     <div>
+      <PageHead cmd="xsci zetaris status" meta="data layer" />
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <div>

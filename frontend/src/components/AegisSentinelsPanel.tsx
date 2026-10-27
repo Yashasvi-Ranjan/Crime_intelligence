@@ -37,7 +37,7 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
             fontSize: '0.75rem',
             fontWeight: 700,
             padding: '2px 8px',
-            borderRadius: '12px',
+            borderRadius: 'var(--radius-md)',
             background: isOk ? 'rgba(16, 185, 129, 0.15)' : isWarn ? 'rgba(245, 158, 11, 0.15)' : 'rgba(244, 63, 94, 0.15)',
             color: isOk ? 'var(--accent-emerald)' : isWarn ? 'var(--accent-amber)' : 'var(--accent-rose)',
             border: `1px solid ${isOk ? 'rgba(16, 185, 129, 0.3)' : isWarn ? 'rgba(245, 158, 11, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
@@ -52,9 +52,9 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
   return (
     <div
       style={{
-        background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)',
-        border: '1px solid rgba(148, 163, 184, 0.15)',
-        borderRadius: '12px',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 'var(--radius-md)',
         padding: '1.25rem',
         marginBottom: '1.5rem',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
@@ -62,7 +62,7 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', padding: '6px', borderRadius: '8px', color: '#fff' }}>
+          <div style={{ background: 'var(--accent-green)', padding: '6px', borderRadius: 'var(--radius-md)', color: '#fff' }}>
             <ShieldCheck size={18} />
           </div>
           <div>
@@ -86,9 +86,9 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
         {/* Subagent 1: Operational Tracker */}
         <div
           style={{
-            background: 'rgba(15, 23, 42, 0.6)',
+            background: 'var(--bg-card)',
             border: '1px solid rgba(51, 65, 85, 0.5)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-md)',
             padding: '1rem',
           }}
         >
@@ -114,9 +114,9 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
         {/* Subagent 2: HackOS Compliance Auditor */}
         <div
           style={{
-            background: 'rgba(15, 23, 42, 0.6)',
+            background: 'var(--bg-card)',
             border: '1px solid rgba(51, 65, 85, 0.5)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-md)',
             padding: '1rem',
           }}
         >
@@ -139,9 +139,9 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
         {/* Subagent 3: Anti-Disqualification Sentinel */}
         <div
           style={{
-            background: 'rgba(15, 23, 42, 0.6)',
+            background: 'var(--bg-card)',
             border: '1px solid rgba(51, 65, 85, 0.5)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-md)',
             padding: '1rem',
           }}
         >

@@ -142,7 +142,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           position: 'fixed',
           inset: 0,
           background: 'rgba(5, 8, 16, 0.75)',
-          backdropFilter: 'blur(5px)',
+          
           transition: 'opacity 0.25s ease',
         }}
       />
@@ -155,7 +155,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           maxWidth: '680px',
           height: '100%',
           background: '#090d16',
-          borderLeft: '1px solid rgba(99, 102, 241, 0.3)',
+          borderLeft: '1px solid rgba(92, 200, 230, 0.35)',
           boxShadow: '-10px 0 50px rgba(0, 0, 0, 0.8)',
           display: 'flex',
           flexDirection: 'column',
@@ -168,7 +168,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           style={{
             padding: '1.25rem 1.5rem',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%)',
+            background: 'var(--bg-card)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
@@ -178,9 +178,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                  background: 'var(--accent-green)',
                   padding: '6px',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-md)',
                   color: '#fff',
                   display: 'flex',
                   alignItems: 'center',
@@ -196,7 +196,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 700,
                   padding: '2px 8px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-md)',
                   background: 'rgba(16, 185, 129, 0.15)',
                   color: '#10b981',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -214,9 +214,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                 style={{
                   fontSize: '0.75rem',
                   padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: 'rgba(30, 41, 59, 0.8)',
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-strong)',
                   color: '#38bdf8',
                   fontFamily: 'monospace',
                 }}
@@ -251,9 +251,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
               }}
               title="Refresh Trace"
               style={{
-                background: 'rgba(30, 41, 59, 0.6)',
-                border: '1px solid rgba(148, 163, 184, 0.2)',
-                borderRadius: '6px',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-md)',
                 padding: '6px',
                 color: '#94a3b8',
                 cursor: 'pointer',
@@ -264,9 +264,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
             <button
               onClick={onClose}
               style={{
-                background: 'rgba(30, 41, 59, 0.6)',
-                border: '1px solid rgba(148, 163, 184, 0.2)',
-                borderRadius: '6px',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-md)',
                 padding: '6px',
                 color: '#94a3b8',
                 cursor: 'pointer',
@@ -281,7 +281,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
         <div
           style={{
             padding: '0.75rem 1.5rem',
-            background: 'rgba(15, 23, 42, 0.9)',
+            background: 'var(--bg-card)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
             display: 'flex',
             flexDirection: 'column',
@@ -301,7 +301,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
               <div style={{ color: '#64748b' }}>No model calls recorded for this run.</div>
             )}
             {usedModels.map((m) => (
-              <div key={m.key} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+              <div key={m.key} style={{ background: 'var(--bg-elevated)', padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(92, 200, 230, 0.35)' }}>
                 <span style={{ color: '#a5b4fc', fontWeight: 700 }}>{m.model}</span>
                 <div style={{ color: '#64748b' }}>{m.agents.join(', ')} · {m.source}{m.calls > 1 ? ` · ${m.calls} calls` : ''}</div>
               </div>
@@ -310,7 +310,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
         </div>
 
         {traceError && (
-          <div style={{ margin: '0 1.5rem', padding: '8px 12px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.12)', color: '#fda4af', fontSize: '0.75rem' }}>
+          <div style={{ margin: '0 1.5rem', padding: '8px 12px', borderRadius: 'var(--radius-md)', background: 'rgba(244, 63, 94, 0.12)', color: '#fda4af', fontSize: '0.75rem' }}>
             Trace could not be loaded ({traceError}). Nothing is shown rather than a made-up trace.
           </div>
         )}
@@ -319,7 +319,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
         <div
           style={{
             padding: '0.6rem 1.5rem',
-            background: 'rgba(15, 23, 42, 0.5)',
+            background: 'var(--bg-card)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
             display: 'flex',
             alignItems: 'center',
@@ -336,10 +336,10 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 600,
                   padding: '3px 7px',
-                  borderRadius: '4px',
-                  background: selectedAgentFilter === ag ? 'rgba(99, 102, 241, 0.3)' : 'rgba(30, 41, 59, 0.4)',
+                  borderRadius: 'var(--radius-sm)',
+                  background: selectedAgentFilter === ag ? 'rgba(92, 200, 230, 0.35)' : 'var(--bg-elevated)',
                   color: selectedAgentFilter === ag ? '#818cf8' : '#64748b',
-                  border: `1px solid ${selectedAgentFilter === ag ? '#6366f1' : 'rgba(148, 163, 184, 0.15)'}`,
+                  border: `1px solid ${selectedAgentFilter === ag ? '#5cc8e6' : 'var(--border-strong)'}`,
                   cursor: 'pointer',
                   textTransform: 'capitalize',
                 }}
@@ -358,9 +358,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
               style={{
                 width: '100%',
                 padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid rgba(148, 163, 184, 0.2)',
-                background: 'rgba(30, 41, 59, 0.8)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-strong)',
+                background: 'var(--bg-elevated)',
                 color: '#fff',
                 fontSize: '0.7rem',
               }}
@@ -402,9 +402,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                 <div
                   key={idx}
                   style={{
-                    background: 'rgba(15, 23, 42, 0.7)',
+                    background: 'var(--bg-card)',
                     border: `1px solid ${cfg.border}`,
-                    borderRadius: '10px',
+                    borderRadius: 'var(--radius-md)',
                     padding: '0.9rem',
                     display: 'flex',
                     flexDirection: 'column',
@@ -429,7 +429,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                           color: cfg.text,
                           border: `1px solid ${cfg.border}`,
                           padding: '6px',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-md)',
                           display: 'flex',
                           alignItems: 'center',
                         }}
@@ -446,7 +446,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                               fontSize: '0.6rem',
                               fontWeight: 600,
                               padding: '1px 6px',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-sm)',
                               background: 'rgba(255, 255, 255, 0.08)',
                               color: '#94a3b8',
                               textTransform: 'uppercase',
@@ -470,10 +470,10 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                         style={{
                           fontSize: '0.65rem',
                           padding: '2px 8px',
-                          borderRadius: '4px',
-                          background: 'rgba(99, 102, 241, 0.15)',
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'rgba(92, 200, 230, 0.35)',
                           color: '#818cf8',
-                          border: '1px solid rgba(99, 102, 241, 0.3)',
+                          border: '1px solid rgba(92, 200, 230, 0.35)',
                           fontFamily: 'monospace',
                           fontWeight: 600,
                         }}
@@ -488,7 +488,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                   <div
                     style={{
                       background: 'rgba(0, 0, 0, 0.35)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-md)',
                       padding: '5px 8px',
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -550,7 +550,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                               fontSize: '0.65rem',
                               fontWeight: 700,
                               padding: '2px 6px',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-sm)',
                               background: 'rgba(168, 85, 247, 0.2)',
                               color: '#c084fc',
                               border: '1px solid rgba(168, 85, 247, 0.4)',
@@ -572,7 +572,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                                 style={{
                                   fontSize: '0.65rem',
                                   padding: '1px 5px',
-                                  borderRadius: '3px',
+                                  borderRadius: 'var(--radius-sm)',
                                   background: 'rgba(56, 189, 248, 0.15)',
                                   color: '#38bdf8',
                                 }}
@@ -585,7 +585,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                       )}
 
                       {ev.details?.decision && (
-                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '6px 8px', borderRadius: '4px', borderLeft: '3px solid #10b981' }}>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '6px 8px', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid #10b981' }}>
                           <span style={{ color: '#10b981', fontWeight: 600 }}>Skeptic Decision: </span>
                           <span style={{ color: '#e2e8f0' }}>{ev.details.decision}</span>
                         </div>
@@ -606,7 +606,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                           style={{
                             background: '#040711',
                             padding: '8px',
-                            borderRadius: '4px',
+                            borderRadius: 'var(--radius-sm)',
                             fontSize: '0.65rem',
                             color: '#94a3b8',
                             overflowX: 'auto',
@@ -629,7 +629,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           style={{
             padding: '1rem 1.5rem',
             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(15, 23, 42, 0.95)',
+            background: 'var(--bg-card)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -644,9 +644,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
             onClick={onClose}
             style={{
               padding: '6px 14px',
-              borderRadius: '6px',
-              background: 'rgba(30, 41, 59, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-strong)',
               color: '#fff',
               fontSize: '0.75rem',
               fontWeight: 600,
@@ -665,7 +665,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
 function getAgentBadge(agent: string) {
   const ag = agent.toLowerCase();
   if (ag.includes('planner')) {
-    return { border: '#a855f7', fill: 'rgba(168, 85, 247, 0.2)', text: '#c084fc', icon: BrainCircuit };
+    return { border: '#b99cf5', fill: 'rgba(168, 85, 247, 0.2)', text: '#c084fc', icon: BrainCircuit };
   }
   if (ag.includes('finder')) {
     return { border: '#38bdf8', fill: 'rgba(56, 189, 248, 0.2)', text: '#7dd3fc', icon: Search };
@@ -679,5 +679,5 @@ function getAgentBadge(agent: string) {
   if (ag.includes('reporter')) {
     return { border: '#10b981', fill: 'rgba(16, 185, 129, 0.2)', text: '#6ee7b7', icon: FileText };
   }
-  return { border: '#6366f1', fill: 'rgba(99, 102, 241, 0.2)', text: '#a5b4fc', icon: Activity };
+  return { border: '#5cc8e6', fill: 'rgba(92, 200, 230, 0.35)', text: '#a5b4fc', icon: Activity };
 }

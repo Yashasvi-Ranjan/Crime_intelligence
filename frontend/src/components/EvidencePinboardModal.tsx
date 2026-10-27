@@ -62,7 +62,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
         position: 'fixed',
         inset: 0,
         background: 'rgba(5, 8, 16, 0.85)',
-        backdropFilter: 'blur(6px)',
+        
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -109,8 +109,8 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
         className="court-dossier-printable"
         style={{
           background: '#0b1120',
-          border: '1px solid rgba(99, 102, 241, 0.35)',
-          borderRadius: '14px',
+          border: '1px solid rgba(92, 200, 230, 0.35)',
+          borderRadius: 'var(--radius-md)',
           width: '100%',
           maxWidth: '920px',
           maxHeight: '92vh',
@@ -126,7 +126,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
           style={{
             padding: '1.25rem 1.5rem',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+            background: 'var(--bg-card)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -135,9 +135,9 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                background: 'var(--accent-green)',
                 padding: '8px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
@@ -163,8 +163,8 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 alignItems: 'center',
                 gap: '6px',
                 padding: '7px 14px',
-                borderRadius: '6px',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--accent-green)',
                 color: '#fff',
                 border: 'none',
                 fontSize: '0.8rem',
@@ -178,9 +178,9 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             <button
               onClick={onClose}
               style={{
-                background: 'rgba(30, 41, 59, 0.6)',
-                border: '1px solid rgba(148, 163, 184, 0.2)',
-                borderRadius: '6px',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-md)',
                 padding: '6px',
                 color: '#94a3b8',
                 cursor: 'pointer',
@@ -206,7 +206,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
           <div
             className="print-header"
             style={{
-              borderBottom: '2px solid rgba(99, 102, 241, 0.4)',
+              borderBottom: '2px solid rgba(92, 200, 230, 0.35)',
               paddingBottom: '1.25rem',
               textAlign: 'center',
             }}
@@ -223,7 +223,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 fontSize: '0.7rem',
                 fontWeight: 700,
                 padding: '3px 12px',
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-sm)',
                 background: 'rgba(239, 68, 68, 0.15)',
                 color: '#ef4444',
                 border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -239,9 +239,9 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
           <div
             className="print-border"
             style={{
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: '8px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 'var(--radius-md)',
               padding: '1.2rem',
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
@@ -297,7 +297,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 lineHeight: '1.6',
                 background: 'rgba(0, 0, 0, 0.3)',
                 padding: '1rem',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid rgba(255, 255, 255, 0.05)',
                 color: '#cbd5e1',
               }}
@@ -328,10 +328,10 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                   key={idx}
                   className="print-border"
                   style={{
-                    background: 'rgba(15, 23, 42, 0.7)',
+                    background: 'var(--bg-card)',
                     borderLeft: '4px solid #10b981',
-                    border: '1px solid rgba(148, 163, 184, 0.15)',
-                    borderRadius: '6px',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 'var(--radius-md)',
                     padding: '0.85rem',
                     fontSize: '0.8rem',
                   }}
@@ -348,7 +348,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                           background: 'rgba(56, 189, 248, 0.15)',
                           color: '#38bdf8',
                           padding: '1px 6px',
-                          borderRadius: '4px',
+                          borderRadius: 'var(--radius-sm)',
                           fontFamily: 'monospace',
                           fontWeight: 600,
                         }}
@@ -384,9 +384,9 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             <div
               className="print-border"
               style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                border: '1px solid rgba(148, 163, 184, 0.15)',
-                borderRadius: '8px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-md)',
                 padding: '1rem',
                 fontSize: '0.8rem',
                 display: 'flex',
@@ -420,7 +420,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                         style={{
                           background: 'rgba(0, 0, 0, 0.25)',
                           padding: '6px 8px',
-                          borderRadius: '4px',
+                          borderRadius: 'var(--radius-sm)',
                           borderLeft: `3px solid ${obj.severity === 'high' ? '#f43f5e' : obj.severity === 'medium' ? '#f59e0b' : '#38bdf8'}`,
                           fontSize: '0.75rem',
                         }}
@@ -433,7 +433,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                             style={{
                               fontSize: '0.65rem',
                               padding: '1px 5px',
-                              borderRadius: '3px',
+                              borderRadius: 'var(--radius-sm)',
                               background: obj.grounded ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
                               color: obj.grounded ? '#10b981' : '#f43f5e',
                             }}
@@ -475,7 +475,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
               style={{
                 fontSize: '0.9rem',
                 fontWeight: 800,
-                color: '#a855f7',
+                color: '#b99cf5',
                 letterSpacing: '0.05em',
                 marginBottom: '0.6rem',
                 display: 'flex',
@@ -488,9 +488,9 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             <div
               className="print-border"
               style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                border: '1px solid rgba(148, 163, 184, 0.15)',
-                borderRadius: '8px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-md)',
                 padding: '1rem',
                 fontSize: '0.75rem',
                 display: 'grid',
@@ -523,7 +523,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
           <div
             className="print-border"
             style={{
-              borderTop: '2px solid rgba(99, 102, 241, 0.3)',
+              borderTop: '2px solid rgba(92, 200, 230, 0.35)',
               paddingTop: '1.25rem',
               display: 'flex',
               flexDirection: 'column',

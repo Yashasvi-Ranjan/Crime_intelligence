@@ -153,35 +153,18 @@ export const InvestigationPage: React.FC = () => {
   };
 
   return (
-    <div className="investigation-page" style={{ padding: '1.5rem 2rem', maxWidth: '1440px', margin: '0 auto' }}>
+    <div className="investigation-page" style={{ padding: '0', maxWidth: '1440px', margin: '0 auto' }}>
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-            <div style={{ background: 'var(--accent-purple)', padding: '6px', borderRadius: '8px', color: '#fff' }}>
-              <BrainCircuit size={22} />
-            </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.02em' }}>
-              INVESTIGATION WORKBENCH
-            </h1>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '12px',
-                background: 'rgba(168, 85, 247, 0.15)',
-                color: 'var(--accent-purple)',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
-              }}
-            >
-              Multi-Agent Intelligence Hub
-            </span>
+          <div className="prompt" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
+            <span style={{ color: 'var(--accent-green)', marginRight: '0.55rem' }}>$</span>
+            xsci investigate
+            <span className="cursor-blk" aria-hidden />
           </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '850px' }}>
-            Coordinate Planner, Finder, Skeptic, and Reporter agents across North, Central, and Riverside
-            jurisdictions. Queries real Zetaris SQL, checks every citation deterministically, shares state via the Meterless
-            engines, and routes all model calls through Nightshift (NVIDIA Nemotron).
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', maxWidth: '820px', lineHeight: 1.6 }}>
+            Planner → Finder → Skeptic → Reporter over five Zetaris sources. Every cited ID, quote and attribute is re-checked by code.
+            Output is leads, not verdicts.
           </p>
         </div>
 
@@ -194,14 +177,14 @@ export const InvestigationPage: React.FC = () => {
               alignItems: 'center',
               gap: '6px',
               padding: '6px 12px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--accent-green)',
               border: 'none',
               color: '#fff',
               fontSize: '0.8rem',
               fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
+              
             }}
           >
             <Terminal size={14} />
@@ -214,7 +197,7 @@ export const InvestigationPage: React.FC = () => {
               alignItems: 'center',
               gap: '6px',
               padding: '6px 12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
               color: 'var(--text-secondary)',
@@ -234,7 +217,7 @@ export const InvestigationPage: React.FC = () => {
           style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '10px',
+            borderRadius: 'var(--radius-md)',
             padding: '1rem',
             marginBottom: '1.5rem',
             display: 'grid',
@@ -243,7 +226,7 @@ export const InvestigationPage: React.FC = () => {
           }}
         >
           {/* Nightshift + Nemotron */}
-          <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: '8px' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Cpu size={14} color="var(--accent-blue)" /> Nightshift / NVIDIA Nemotron
@@ -253,7 +236,7 @@ export const InvestigationPage: React.FC = () => {
                   fontSize: '0.7rem',
                   fontWeight: 600,
                   padding: '2px 6px',
-                  borderRadius: '4px',
+                  borderRadius: 'var(--radius-sm)',
                   background: aiDiag?.status === 'connected' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
                   color: aiDiag?.status === 'connected' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
                 }}
@@ -269,7 +252,7 @@ export const InvestigationPage: React.FC = () => {
           </div>
 
           {/* Meterless World Model */}
-          <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: '8px' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <BrainCircuit size={14} color="var(--accent-purple)" /> Meterless World Model
@@ -279,7 +262,7 @@ export const InvestigationPage: React.FC = () => {
                   fontSize: '0.7rem',
                   fontWeight: 600,
                   padding: '2px 6px',
-                  borderRadius: '4px',
+                  borderRadius: 'var(--radius-sm)',
                   background: engineHealth?.status === 'connected' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
                   color: engineHealth?.status === 'connected' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
                 }}
@@ -295,7 +278,7 @@ export const InvestigationPage: React.FC = () => {
           </div>
 
           {/* Zetaris Data Layer */}
-          <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: '8px' }}>
+          <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Database size={14} color="var(--accent-cyan)" /> Zetaris NDP SQL Layer
@@ -305,7 +288,7 @@ export const InvestigationPage: React.FC = () => {
                   fontSize: '0.7rem',
                   fontWeight: 600,
                   padding: '2px 6px',
-                  borderRadius: '4px',
+                  borderRadius: 'var(--radius-sm)',
                   background: 'rgba(16, 185, 129, 0.2)',
                   color: 'var(--accent-emerald)',
                 }}
@@ -327,7 +310,7 @@ export const InvestigationPage: React.FC = () => {
         style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-md)',
           padding: '1.2rem',
           marginBottom: '1.5rem',
         }}
@@ -344,7 +327,7 @@ export const InvestigationPage: React.FC = () => {
               style={{
                 fontSize: '0.75rem',
                 padding: '4px 10px',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-md)',
                 background: selectedScenarioId === sc.scenario_id && useSampleMode ? 'var(--accent-blue-glow)' : 'var(--bg-elevated)',
                 color: selectedScenarioId === sc.scenario_id && useSampleMode ? 'var(--accent-blue)' : 'var(--text-secondary)',
                 border: selectedScenarioId === sc.scenario_id && useSampleMode ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
@@ -371,7 +354,7 @@ export const InvestigationPage: React.FC = () => {
                   padding: '10px 14px 10px 38px',
                   background: 'var(--bg-darkest)',
                   border: '1px solid var(--border-subtle)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-md)',
                   color: 'var(--text-primary)',
                   fontSize: '0.9rem',
                 }}
@@ -390,10 +373,10 @@ export const InvestigationPage: React.FC = () => {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '0 20px',
-                background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+                background: 'var(--accent-green)',
                 color: '#fff',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
                 fontWeight: 600,
                 fontSize: '0.9rem',
                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -429,7 +412,7 @@ export const InvestigationPage: React.FC = () => {
                     fontSize: '0.75rem',
                     fontWeight: 600,
                     padding: '3px 8px',
-                    borderRadius: '4px',
+                    borderRadius: 'var(--radius-sm)',
                     background: selectedStations.includes(station) ? 'var(--bg-elevated)' : 'transparent',
                     color: selectedStations.includes(station) ? 'var(--text-primary)' : 'var(--text-muted)',
                     border: selectedStations.includes(station) ? '1px solid var(--border-glow)' : '1px solid var(--border-subtle)',
@@ -446,7 +429,7 @@ export const InvestigationPage: React.FC = () => {
                 style={{
                   fontSize: '0.75rem',
                   padding: '3px 6px',
-                  borderRadius: '4px',
+                  borderRadius: 'var(--radius-sm)',
                   background: 'var(--bg-elevated)',
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border-subtle)',
@@ -483,7 +466,7 @@ export const InvestigationPage: React.FC = () => {
                   fontSize: '0.7rem',
                   fontWeight: 600,
                   padding: '2px 8px',
-                  borderRadius: '4px',
+                  borderRadius: 'var(--radius-sm)',
                   background: useSampleMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                   color: useSampleMode ? 'var(--accent-amber)' : 'var(--accent-emerald)',
                   border: useSampleMode ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
@@ -502,7 +485,7 @@ export const InvestigationPage: React.FC = () => {
           style={{
             background: 'rgba(244, 63, 94, 0.15)',
             border: '1px solid var(--accent-rose)',
-            borderRadius: '10px',
+            borderRadius: 'var(--radius-md)',
             padding: '1rem',
             marginBottom: '1.5rem',
             display: 'flex',
@@ -525,7 +508,7 @@ export const InvestigationPage: React.FC = () => {
           style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '12px',
+            borderRadius: 'var(--radius-md)',
             padding: '3rem 2rem',
             textAlign: 'center',
             marginBottom: '1.5rem',
@@ -560,10 +543,10 @@ export const InvestigationPage: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              background: 'rgba(15, 23, 42, 0.75)',
+              background: 'var(--bg-card)',
               padding: '0.6rem 1rem',
-              borderRadius: '10px',
-              border: '1px solid rgba(99, 102, 241, 0.25)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(92, 200, 230, 0.35)',
               flexWrap: 'wrap',
               gap: '10px',
             }}
@@ -577,10 +560,10 @@ export const InvestigationPage: React.FC = () => {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '4px 10px',
-                  borderRadius: '6px',
-                  background: activeWorkspaceTab === 'graph' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  borderRadius: 'var(--radius-md)',
+                  background: activeWorkspaceTab === 'graph' ? 'rgba(92, 200, 230, 0.35)' : 'var(--bg-elevated)',
                   color: activeWorkspaceTab === 'graph' ? '#818cf8' : '#94a3b8',
-                  border: `1px solid ${activeWorkspaceTab === 'graph' ? '#6366f1' : 'rgba(148, 163, 184, 0.2)'}`,
+                  border: `1px solid ${activeWorkspaceTab === 'graph' ? '#5cc8e6' : 'var(--border-strong)'}`,
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -595,10 +578,10 @@ export const InvestigationPage: React.FC = () => {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '4px 10px',
-                  borderRadius: '6px',
-                  background: activeWorkspaceTab === 'pinboard' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  borderRadius: 'var(--radius-md)',
+                  background: activeWorkspaceTab === 'pinboard' ? 'rgba(245, 158, 11, 0.3)' : 'var(--bg-elevated)',
                   color: activeWorkspaceTab === 'pinboard' ? '#fbbf24' : '#94a3b8',
-                  border: `1px solid ${activeWorkspaceTab === 'pinboard' ? '#f59e0b' : 'rgba(148, 163, 184, 0.2)'}`,
+                  border: `1px solid ${activeWorkspaceTab === 'pinboard' ? '#f59e0b' : 'var(--border-strong)'}`,
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -613,10 +596,10 @@ export const InvestigationPage: React.FC = () => {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '4px 10px',
-                  borderRadius: '6px',
-                  background: activeWorkspaceTab === 'both' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  borderRadius: 'var(--radius-md)',
+                  background: activeWorkspaceTab === 'both' ? 'rgba(16, 185, 129, 0.3)' : 'var(--bg-elevated)',
                   color: activeWorkspaceTab === 'both' ? '#34d399' : '#94a3b8',
-                  border: `1px solid ${activeWorkspaceTab === 'both' ? '#10b981' : 'rgba(148, 163, 184, 0.2)'}`,
+                  border: `1px solid ${activeWorkspaceTab === 'both' ? '#10b981' : 'var(--border-strong)'}`,
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -634,14 +617,14 @@ export const InvestigationPage: React.FC = () => {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '5px 12px',
-                  borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--accent-green)',
                   color: '#fff',
                   border: 'none',
                   fontSize: '0.75rem',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
+                  
                 }}
               >
                 <Terminal size={14} /> Inspect Execution Trace
@@ -697,7 +680,7 @@ export const InvestigationPage: React.FC = () => {
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-md)',
               padding: '1.5rem',
             }}
           >
@@ -713,8 +696,8 @@ export const InvestigationPage: React.FC = () => {
                         alignItems: 'center',
                         gap: '6px',
                         padding: '4px 10px',
-                        borderRadius: '6px',
-                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--accent-green)',
                         color: '#fff',
                         border: 'none',
                         fontSize: '0.75rem',
@@ -732,8 +715,8 @@ export const InvestigationPage: React.FC = () => {
                         alignItems: 'center',
                         gap: '6px',
                         padding: '4px 10px',
-                        borderRadius: '6px',
-                        background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--accent-green)',
                         color: '#fff',
                         border: 'none',
                         fontSize: '0.75rem',
@@ -750,7 +733,7 @@ export const InvestigationPage: React.FC = () => {
                       fontSize: '0.75rem',
                       fontWeight: 600,
                       padding: '2px 8px',
-                      borderRadius: '4px',
+                      borderRadius: 'var(--radius-sm)',
                       background: result.is_sample ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                       color: result.is_sample ? 'var(--accent-amber)' : 'var(--accent-emerald)',
                       border: result.is_sample ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
@@ -792,7 +775,7 @@ export const InvestigationPage: React.FC = () => {
                       fontSize: '0.75rem',
                       fontWeight: 700,
                       padding: '4px 8px',
-                      borderRadius: '4px',
+                      borderRadius: 'var(--radius-sm)',
                       background: 'var(--bg-elevated)',
                       color: 'var(--accent-blue)',
                       border: '1px solid var(--border-subtle)',
@@ -812,7 +795,7 @@ export const InvestigationPage: React.FC = () => {
                 lineHeight: 1.6,
                 background: 'var(--bg-elevated)',
                 padding: '1rem 1.2rem',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
                 borderLeft: '4px solid var(--accent-purple)',
               }}
             >
@@ -827,7 +810,7 @@ export const InvestigationPage: React.FC = () => {
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-md)',
               padding: '1.5rem',
             }}
           >
@@ -850,7 +833,7 @@ export const InvestigationPage: React.FC = () => {
                     style={{
                       background: 'var(--bg-elevated)',
                       border: '1px solid var(--border-subtle)',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--radius-md)',
                       padding: '1.2rem',
                     }}
                   >
@@ -867,7 +850,7 @@ export const InvestigationPage: React.FC = () => {
                       </div>
 
                       {link.validation_status && (
-                        <span title={link.validation_explanation ?? ''} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px',
+                        <span title={link.validation_explanation ?? ''} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: 'var(--radius-md)',
                           marginRight: '8px', border: '1px solid var(--border-subtle)',
                           color: link.validation_status === 'SUPPORTED' ? 'var(--accent-emerald)' : link.validation_status === 'WEAK' ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>
                           Verifier: {link.validation_status} • {link.independent_source_count ?? 0} independent source(s)
@@ -882,7 +865,7 @@ export const InvestigationPage: React.FC = () => {
                           gap: '6px',
                           background: 'rgba(16, 185, 129, 0.15)',
                           padding: '3px 10px',
-                          borderRadius: '12px',
+                          borderRadius: 'var(--radius-md)',
                           border: '1px solid rgba(16, 185, 129, 0.3)',
                         }}
                         title={link.confidence_rationale}
@@ -908,7 +891,7 @@ export const InvestigationPage: React.FC = () => {
                           style={{
                             fontSize: '0.75rem',
                             padding: '2px 8px',
-                            borderRadius: '4px',
+                            borderRadius: 'var(--radius-sm)',
                             background: 'var(--bg-darkest)',
                             color: 'var(--accent-blue)',
                             border: '1px solid var(--border-subtle)',
@@ -926,7 +909,7 @@ export const InvestigationPage: React.FC = () => {
                         style={{
                           background: 'rgba(244, 63, 94, 0.1)',
                           border: '1px solid rgba(244, 63, 94, 0.3)',
-                          borderRadius: '6px',
+                          borderRadius: 'var(--radius-md)',
                           padding: '0.6rem 0.8rem',
                           marginTop: '0.5rem',
                         }}
@@ -954,7 +937,7 @@ export const InvestigationPage: React.FC = () => {
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-subtle)',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius-md)',
                 padding: '1.2rem',
               }}
             >
@@ -974,7 +957,7 @@ export const InvestigationPage: React.FC = () => {
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-subtle)',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius-md)',
                 padding: '1.2rem',
               }}
             >
@@ -995,7 +978,7 @@ export const InvestigationPage: React.FC = () => {
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-md)',
               padding: '1.2rem',
             }}
           >
@@ -1022,7 +1005,7 @@ export const InvestigationPage: React.FC = () => {
                       alignItems: 'center',
                       gap: '5px',
                       padding: '4px 10px',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-md)',
                       background: expandedEvidenceSource === s.id ? 'var(--bg-elevated)' : 'transparent',
                       color: expandedEvidenceSource === s.id ? 'var(--accent-blue)' : 'var(--text-muted)',
                       border: expandedEvidenceSource === s.id ? '1px solid var(--border-glow)' : '1px solid transparent',
@@ -1048,7 +1031,7 @@ export const InvestigationPage: React.FC = () => {
                       style={{
                         background: 'var(--bg-darkest)',
                         border: '1px solid var(--border-subtle)',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-md)',
                         padding: '0.8rem',
                         fontSize: '0.8rem',
                       }}

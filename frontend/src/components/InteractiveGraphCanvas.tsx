@@ -375,7 +375,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
   const getNodeColor = (type: EntityType) => {
     switch (type) {
       case 'incident':
-        return { border: '#6366f1', fill: 'rgba(99, 102, 241, 0.25)', text: '#e0e7ff', icon: Shield };
+        return { border: '#5cc8e6', fill: 'rgba(92, 200, 230, 0.35)', text: '#e0e7ff', icon: Shield };
       case 'suspect':
         return { border: '#f43f5e', fill: 'rgba(244, 63, 94, 0.25)', text: '#ffe4e6', icon: User };
       case 'vehicle':
@@ -395,8 +395,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
     <div
       style={{
         background: 'var(--bg-card, #0f172a)',
-        border: '1px solid var(--border-subtle, rgba(148, 163, 184, 0.15))',
-        borderRadius: '14px',
+        border: '1px solid var(--border-subtle, var(--border-strong))',
+        borderRadius: 'var(--radius-md)',
         padding: '1.25rem',
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
         display: 'flex',
@@ -419,9 +419,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              background: 'var(--accent-green)',
               padding: '8px',
-              borderRadius: '10px',
+              borderRadius: 'var(--radius-md)',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',
@@ -440,7 +440,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 700,
                   padding: '2px 8px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-md)',
                   background: 'rgba(16, 185, 129, 0.15)',
                   color: 'var(--accent-emerald, #10b981)',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -458,7 +458,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
         {/* Global Stats */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8' }}>
-            <Layers size={14} color="#6366f1" />
+            <Layers size={14} color="#5cc8e6" />
             <span>Entities: <strong style={{ color: '#f8fafc' }}>{filteredNodes.length}</strong></span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8' }}>
@@ -476,9 +476,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '12px',
-          background: 'rgba(15, 23, 42, 0.6)',
+          background: 'var(--bg-card)',
           padding: '0.75rem 1rem',
-          borderRadius: '10px',
+          borderRadius: 'var(--radius-md)',
           border: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
@@ -493,9 +493,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             style={{
               width: '100%',
               padding: '6px 10px 6px 30px',
-              borderRadius: '6px',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              background: 'rgba(30, 41, 59, 0.8)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--bg-elevated)',
               color: '#fff',
               fontSize: '0.75rem',
             }}
@@ -515,10 +515,10 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 700,
                   padding: '3px 8px',
-                  borderRadius: '6px',
-                  background: active ? 'rgba(99, 102, 241, 0.3)' : 'rgba(30, 41, 59, 0.4)',
+                  borderRadius: 'var(--radius-md)',
+                  background: active ? 'rgba(92, 200, 230, 0.35)' : 'var(--bg-elevated)',
                   color: active ? '#818cf8' : '#64748b',
-                  border: `1px solid ${active ? '#6366f1' : 'rgba(148, 163, 184, 0.2)'}`,
+                  border: `1px solid ${active ? '#5cc8e6' : 'var(--border-strong)'}`,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                 }}
@@ -547,10 +547,10 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 600,
                   padding: '3px 8px',
-                  borderRadius: '6px',
-                  background: active ? cfg.fill : 'rgba(30, 41, 59, 0.4)',
+                  borderRadius: 'var(--radius-md)',
+                  background: active ? cfg.fill : 'var(--bg-elevated)',
                   color: active ? cfg.text : '#64748b',
-                  border: `1px solid ${active ? cfg.border : 'rgba(148, 163, 184, 0.2)'}`,
+                  border: `1px solid ${active ? cfg.border : 'var(--border-strong)'}`,
                   cursor: 'pointer',
                   textTransform: 'capitalize',
                   transition: 'all 0.15s ease',
@@ -587,9 +587,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
           style={{
             flex: 1,
             minHeight: '480px',
-            background: 'radial-gradient(ellipse at 50% 50%, #0d1527 0%, #060913 100%)',
-            borderRadius: '12px',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
+            background: 'radial-gradient(ellipse at 50% 50%, #0b0e0f 0%, #07090a 100%)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid rgba(92, 200, 230, 0.35)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -733,7 +733,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                         width="40"
                         height="18"
                         rx="4"
-                        fill="rgba(15, 23, 42, 0.9)"
+                        fill="var(--bg-card)"
                         stroke={strokeColor}
                         strokeWidth="1"
                       />
@@ -806,7 +806,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                       fill={cfg.fill}
                       stroke={isSelected ? '#fff' : cfg.border}
                       strokeWidth={isSelected ? 2.5 : 1.5}
-                      filter={isSelected ? 'drop-shadow(0 0 10px rgba(99, 102, 241, 0.6))' : 'none'}
+                      filter={isSelected ? 'drop-shadow(0 0 10px rgba(92, 200, 230, 0.35))' : 'none'}
                     />
                   ) : node.type === 'suspect' ? (
                     <circle
@@ -871,9 +871,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
               position: 'absolute',
               bottom: '10px',
               left: '10px',
-              background: 'rgba(15, 23, 42, 0.85)',
+              background: 'var(--bg-card)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               padding: '6px 12px',
               display: 'flex',
               gap: '12px',
@@ -883,13 +883,13 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#6366f1' }} /> Incident
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#5cc8e6' }} /> Incident
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e' }} /> Suspect
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '12px', height: '6px', borderRadius: '4px', background: '#06b6d4' }} /> Vehicle
+              <span style={{ width: '12px', height: '6px', borderRadius: 'var(--radius-sm)', background: '#06b6d4' }} /> Vehicle
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ width: '8px', height: '8px', transform: 'rotate(45deg)', background: '#10b981' }} /> Evidence
@@ -908,8 +908,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             style={{
               width: '320px',
               background: 'var(--bg-elevated, #1e293b)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              borderRadius: '12px',
+              border: '1px solid rgba(92, 200, 230, 0.35)',
+              borderRadius: 'var(--radius-md)',
               padding: '1rem',
               display: 'flex',
               flexDirection: 'column',
@@ -924,7 +924,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                     fontSize: '0.65rem',
                     fontWeight: 700,
                     padding: '2px 6px',
-                    borderRadius: '4px',
+                    borderRadius: 'var(--radius-sm)',
                     background: getNodeColor(activeSelectedNode.type).fill,
                     color: getNodeColor(activeSelectedNode.type).text,
                     border: `1px solid ${getNodeColor(activeSelectedNode.type).border}`,
@@ -949,7 +949,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
               <div>Station: <strong style={{ color: '#38bdf8' }}>{activeSelectedNode.station}</strong></div>
               <div>Status: <strong style={{ color: '#10b981' }}>{activeSelectedNode.status}</strong></div>
               {activeSelectedNode.confidence !== undefined && (
-                <div>Confidence Score: <strong style={{ color: '#a855f7' }}>{Math.round(activeSelectedNode.confidence * 100)}%</strong></div>
+                <div>Confidence Score: <strong style={{ color: '#b99cf5' }}>{Math.round(activeSelectedNode.confidence * 100)}%</strong></div>
               )}
             </div>
 
@@ -960,7 +960,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                 color: '#e2e8f0',
                 background: 'rgba(0, 0, 0, 0.25)',
                 padding: '8px',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
@@ -1017,7 +1017,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                         style={{
                           fontSize: '0.65rem',
                           padding: '2px 6px',
-                          borderRadius: '4px',
+                          borderRadius: 'var(--radius-sm)',
                           background: 'rgba(16, 185, 129, 0.15)',
                           color: '#34d399',
                           border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -1043,7 +1043,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                     .filter(([, v]) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')
                     .slice(0, 8)
                     .map(([k, v]) => (
-                      <div key={k} style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.03)', padding: '2px 6px', borderRadius: '3px' }}>
+                      <div key={k} style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.03)', padding: '2px 6px', borderRadius: 'var(--radius-sm)' }}>
                         <span style={{ color: '#64748b' }}>{k.replace(/_/g, ' ')}:</span>
                         <span style={{ color: '#cbd5e1', fontWeight: 600 }}>{String(v)}</span>
                       </div>
@@ -1070,7 +1070,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                         style={{
                           fontSize: '0.7rem',
                           padding: '4px 8px',
-                          borderRadius: '4px',
+                          borderRadius: 'var(--radius-sm)',
                           background: 'rgba(255, 255, 255, 0.04)',
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -1098,8 +1098,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
-                  borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #6366f1, #0ea5e9)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--accent-green)',
                   color: '#fff',
                   border: 'none',
                   fontSize: '0.75rem',
@@ -1117,9 +1117,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
       {/* ── Active Correlated Leads Ribbon ───────────────────────────────────── */}
       <div
         style={{
-          background: 'rgba(15, 23, 42, 0.85)',
-          border: '1px solid rgba(99, 102, 241, 0.3)',
-          borderRadius: '8px',
+          background: 'var(--bg-card)',
+          border: '1px solid rgba(92, 200, 230, 0.35)',
+          borderRadius: 'var(--radius-md)',
           padding: '0.75rem',
         }}
       >
@@ -1134,8 +1134,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
               style={{
                 fontSize: '0.7rem',
                 padding: '3px 8px',
-                borderRadius: '6px',
-                background: 'rgba(99, 102, 241, 0.15)',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(92, 200, 230, 0.35)',
                 border: `1px solid ${getEdgeStroke(e)}`,
                 color: '#e0e7ff',
                 display: 'inline-flex',

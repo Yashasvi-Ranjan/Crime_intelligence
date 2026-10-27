@@ -13,6 +13,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { DataSource, SourceInfo, SourceRecordsResponse } from '../types';
+import { PageHead } from '../components/PageHead';
 import { api } from '../services/api';
 
 interface SourcesPageProps {
@@ -289,9 +290,10 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ initialSource }) => {
 
   return (
     <div>
+      <PageHead cmd="xsci sources ls" meta="5 federated tables" />
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 700 }}>Data Source Explorer</h2>
+        <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Data Source Explorer</h2>
         <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
           Browse and inspect records across all five registered Zetaris intelligence tables
         </p>
@@ -311,7 +313,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ initialSource }) => {
                 gap: '0.5rem',
                 padding: '0.65rem 1.15rem',
                 borderRadius: 'var(--radius-md)',
-                background: isActive ? 'linear-gradient(135deg, #1e3a8a, #0284c7)' : 'var(--bg-card)',
+                background: isActive ? 'var(--accent-green)' : 'var(--bg-card)',
                 borderColor: isActive ? 'var(--accent-blue)' : 'var(--border-subtle)',
                 color: isActive ? '#fff' : 'var(--text-secondary)',
               }}

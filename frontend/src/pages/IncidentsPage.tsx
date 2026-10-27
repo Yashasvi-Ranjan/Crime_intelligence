@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { IncidentFilters, IncidentListResponse, PoliceIncident } from '../types';
+import { PageHead } from '../components/PageHead';
 import { api } from '../services/api';
 import { IncidentDetailModal } from '../components/IncidentDetailModal';
 
@@ -112,10 +113,11 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ initialStation }) 
 
   return (
     <div>
+      <PageHead cmd="xsci incidents --all" meta="read-only · synthetic" />
       {/* Header */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 700 }}>Police Incidents Intelligence</h2>
+          <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Police Incidents Intelligence</h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             Search, filter, and inspect incidents across North, Central, and Riverside stations
           </p>

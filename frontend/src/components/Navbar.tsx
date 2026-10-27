@@ -1,82 +1,52 @@
 import React from 'react';
-import { Shield, Database, LayoutDashboard, FileSearch, Layers, BrainCircuit } from 'lucide-react';
 import { ZetarisHealthResponse } from '../types';
+import { Tab, TABS } from '../lib/tabs';
 
 interface NavbarProps {
-  activeTab: 'overview' | 'investigation' | 'incidents' | 'sources' | 'zetaris';
-  setActiveTab: (tab: 'overview' | 'investigation' | 'incidents' | 'sources' | 'zetaris') => void;
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
   zetarisHealth: ZetarisHealthResponse | null;
+  onOpenPalette: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
-  activeTab,
-  setActiveTab,
-  zetarisHealth,
-}) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, zetarisHealth, onOpenPalette }) => {
   const isZetarisLive = zetarisHealth?.status === 'connected';
 
   return (
     <header className="top-nav">
       <div className="brand-section">
-        <div className="brand-logo">
-          <Shield size={22} />
-        </div>
+        <span className="brand-logo">▌XSCI</span>
         <div className="brand-title-group">
-          <h1>CROSS-STATION CRIME INTELLIGENCE</h1>
-          <span className="brand-subtitle">
-            North • Central • Riverside Operations
-          </span>
+          <h1>CROSS-STATION INTEL</h1>
+          <span className="brand-subtitle">north · central · riverside</span>
         </div>
       </div>
 
-      <nav className="nav-links">
-        <button
-          className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          <LayoutDashboard size={15} />
-          Overview
-        </button>
-        <button
-          className={`nav-btn ${activeTab === 'investigation' ? 'active' : ''}`}
-          onClick={() => setActiveTab('investigation')}
-          style={activeTab === 'investigation' ? { borderColor: 'var(--accent-purple)', color: '#fff' } : {}}
-        >
-          <BrainCircuit size={15} color={activeTab === 'investigation' ? 'var(--accent-purple)' : undefined} />
-          Investigation Hub
-        </button>
-        <button
-          className={`nav-btn ${activeTab === 'incidents' ? 'active' : ''}`}
-          onClick={() => setActiveTab('incidents')}
-        >
-          <FileSearch size={15} />
-          Incidents
-        </button>
-        <button
-          className={`nav-btn ${activeTab === 'sources' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sources')}
-        >
-          <Layers size={15} />
-          Source Explorer
-        </button>
-        <button
-          className={`nav-btn ${activeTab === 'zetaris' ? 'active' : ''}`}
-          onClick={() => setActiveTab('zetaris')}
-        >
-          <Database size={15} />
-          Zetaris Layer
-        </button>
+      <nav className="nav-links" aria-label="Primary">
+        {TABS.map((t, i) => (
+          <button
+            key={t.id}
+            className={`nav-btn ${activeTab === t.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(t.id)}
+            aria-current={activeTab === t.id ? 'page' : undefined}
+          >
+            <kbd>{i + 1}</kbd>
+            {t.label}
+          </button>
+        ))}
       </nav>
 
       <div className="header-status">
+        <button className="cmdk-hint" onClick={onOpenPalette} aria-label="Open command palette">
+          <span>search / jump</span>
+          <kbd style={{ border: '1px solid var(--border-strong)', padding: '0 4px' }}>⌘K</kbd>
+        </button>
         <div
           className={`status-pill ${isZetarisLive ? 'connected' : 'not_configured'}`}
           title={zetarisHealth?.message || 'Checking data layer status...'}
         >
           <div className="status-dot" />
-          <span>
-            {isZetarisLive ? 'ZETARIS: LIVE' : 'DATA: LOCAL FALLBACK'}
-          </span>
+          <span>{isZetarisLive ? 'ZETARIS LIVE' : 'LOCAL FALLBACK'}</span>
         </div>
       </div>
     </header>

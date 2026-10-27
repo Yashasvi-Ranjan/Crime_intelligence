@@ -9,6 +9,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { DashboardSummary, SourceInfo } from '../types';
+import { PageHead } from '../components/PageHead';
 import { api } from '../services/api';
 
 interface OverviewPageProps {
@@ -83,7 +84,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
 
   return (
     <div>
-
+      <PageHead cmd="xsci overview --all-stations" meta={`${summary.total_incidents.toLocaleString()} incidents · ${sources.length} sources`} />
 
       {/* Top 4 Stat Cards */}
       <div className="stats-grid">

@@ -269,11 +269,11 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
       case 'forensic':
         return { color: '#10b981', fill: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.3)', icon: Microscope, label: 'Forensic Lab' };
       case 'witness':
-        return { color: '#a855f7', fill: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.3)', icon: Eye, label: 'Witness Statement' };
+        return { color: '#b99cf5', fill: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.3)', icon: Eye, label: 'Witness Statement' };
       case 'newspaper':
         return { color: '#f59e0b', fill: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.3)', icon: FileText, label: 'News Record' };
       default:
-        return { color: '#6366f1', fill: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.3)', icon: Shield, label: 'Incident Record' };
+        return { color: '#5cc8e6', fill: 'rgba(92, 200, 230, 0.35)', border: 'rgba(92, 200, 230, 0.35)', icon: Shield, label: 'Incident Record' };
     }
   };
 
@@ -281,8 +281,8 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
     <div
       style={{
         background: 'var(--bg-card, #0f172a)',
-        border: '1px solid var(--border-subtle, rgba(148, 163, 184, 0.15))',
-        borderRadius: '14px',
+        border: '1px solid var(--border-subtle, var(--border-strong))',
+        borderRadius: 'var(--radius-md)',
         padding: '1.25rem',
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
         display: 'flex',
@@ -305,9 +305,9 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+              background: 'var(--accent-green)',
               padding: '8px',
-              borderRadius: '10px',
+              borderRadius: 'var(--radius-md)',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',
@@ -326,7 +326,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 700,
                   padding: '2px 8px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-md)',
                   background: 'rgba(245, 158, 11, 0.15)',
                   color: '#f59e0b',
                   border: '1px solid rgba(245, 158, 11, 0.3)',
@@ -349,9 +349,9 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
               fontSize: '0.7rem',
               fontWeight: 600,
               padding: '4px 10px',
-              borderRadius: '6px',
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-strong)',
               color: '#94a3b8',
               cursor: 'pointer',
             }}
@@ -364,9 +364,9 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
               fontSize: '0.7rem',
               fontWeight: 600,
               padding: '4px 10px',
-              borderRadius: '6px',
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-strong)',
               color: '#94a3b8',
               cursor: 'pointer',
             }}
@@ -382,8 +382,8 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                 alignItems: 'center',
                 gap: '6px',
                 padding: '6px 12px',
-                borderRadius: '6px',
-                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--accent-green)',
                 color: '#fff',
                 border: 'none',
                 fontSize: '0.75rem',
@@ -406,9 +406,9 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '12px',
-          background: 'rgba(15, 23, 42, 0.6)',
+          background: 'var(--bg-card)',
           padding: '0.75rem 1rem',
-          borderRadius: '10px',
+          borderRadius: 'var(--radius-md)',
           border: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
@@ -423,9 +423,9 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
             style={{
               width: '100%',
               padding: '6px 10px 6px 30px',
-              borderRadius: '6px',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              background: 'rgba(30, 41, 59, 0.8)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--bg-elevated)',
               color: '#fff',
               fontSize: '0.75rem',
             }}
@@ -452,10 +452,10 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 600,
                   padding: '3px 8px',
-                  borderRadius: '6px',
-                  background: active ? 'rgba(99, 102, 241, 0.3)' : 'rgba(30, 41, 59, 0.4)',
+                  borderRadius: 'var(--radius-md)',
+                  background: active ? 'rgba(92, 200, 230, 0.35)' : 'var(--bg-elevated)',
                   color: active ? '#818cf8' : '#64748b',
-                  border: `1px solid ${active ? '#6366f1' : 'rgba(148, 163, 184, 0.15)'}`,
+                  border: `1px solid ${active ? '#5cc8e6' : 'var(--border-strong)'}`,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -480,10 +480,10 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                 fontSize: '0.65rem',
                 fontWeight: 600,
                 padding: '3px 7px',
-                borderRadius: '4px',
-                background: stationFilter === st ? 'rgba(56, 189, 248, 0.25)' : 'rgba(30, 41, 59, 0.4)',
+                borderRadius: 'var(--radius-sm)',
+                background: stationFilter === st ? 'rgba(56, 189, 248, 0.25)' : 'var(--bg-elevated)',
                 color: stationFilter === st ? '#38bdf8' : '#64748b',
-                border: `1px solid ${stationFilter === st ? '#38bdf8' : 'rgba(148, 163, 184, 0.15)'}`,
+                border: `1px solid ${stationFilter === st ? '#38bdf8' : 'var(--border-strong)'}`,
                 cursor: 'pointer',
               }}
             >
@@ -511,9 +511,9 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
               padding: '3rem',
               textAlign: 'center',
               color: '#64748b',
-              background: 'rgba(15, 23, 42, 0.4)',
-              borderRadius: '10px',
-              border: '1px dashed rgba(148, 163, 184, 0.2)',
+              background: 'var(--bg-card)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px dashed var(--border-strong)',
             }}
           >
             No evidence cards match the active category, precinct, or search filter.
@@ -531,12 +531,12 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
               onClick={() => setSelectedCardForModal(card)}
               style={{
                 background: isPinned
-                  ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)'
-                  : 'rgba(15, 23, 42, 0.65)',
+                  ? 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%)'
+                  : 'var(--bg-card)',
                 border: isPinned
                   ? '1.5px solid rgba(245, 158, 11, 0.6)'
-                  : '1px solid rgba(148, 163, 184, 0.15)',
-                borderRadius: '10px',
+                  : '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-md)',
                 padding: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
@@ -555,8 +555,8 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                   position: 'absolute',
                   top: '10px',
                   right: '10px',
-                  background: isPinned ? 'rgba(245, 158, 11, 0.25)' : 'rgba(30, 41, 59, 0.6)',
-                  border: `1px solid ${isPinned ? '#f59e0b' : 'rgba(148, 163, 184, 0.2)'}`,
+                  background: isPinned ? 'rgba(245, 158, 11, 0.25)' : 'var(--bg-elevated)',
+                  border: `1px solid ${isPinned ? '#f59e0b' : 'var(--border-strong)'}`,
                   color: isPinned ? '#fbbf24' : '#64748b',
                   borderRadius: '50%',
                   width: '28px',
@@ -579,7 +579,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                     background: cfg.fill,
                     color: cfg.color,
                     padding: '4px',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-md)',
                     border: `1px solid ${cfg.border}`,
                     display: 'flex',
                     alignItems: 'center',
@@ -651,7 +651,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
             position: 'fixed',
             inset: 0,
             background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(4px)',
+            
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -662,8 +662,8 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
           <div
             style={{
               background: '#0f172a',
-              border: '1px solid rgba(99, 102, 241, 0.4)',
-              borderRadius: '12px',
+              border: '1px solid rgba(92, 200, 230, 0.35)',
+              borderRadius: 'var(--radius-md)',
               maxWidth: '560px',
               width: '100%',
               padding: '1.5rem',
@@ -681,7 +681,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                     background: getCategoryConfig(selectedCardForModal.type).fill,
                     color: getCategoryConfig(selectedCardForModal.type).color,
                     padding: '6px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-md)',
                   }}
                 >
                   <Info size={18} />
@@ -708,10 +708,10 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
               style={{
                 fontSize: '0.85rem',
                 lineHeight: '1.5',
-                background: 'rgba(30, 41, 59, 0.6)',
+                background: 'var(--bg-elevated)',
                 padding: '1rem',
-                borderRadius: '8px',
-                border: '1px solid rgba(148, 163, 184, 0.15)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-strong)',
               }}
             >
               {selectedCardForModal.summary}
@@ -719,19 +719,19 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
 
             {/* Citations & Metadata */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '0.75rem' }}>
-              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '6px 10px', borderRadius: '6px' }}>
+              <div style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ color: '#64748b' }}>Record ID:</div>
                 <strong style={{ color: '#f8fafc' }}>{selectedCardForModal.id}</strong>
               </div>
-              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '6px 10px', borderRadius: '6px' }}>
+              <div style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ color: '#64748b' }}>Precinct:</div>
                 <strong style={{ color: '#38bdf8' }}>{selectedCardForModal.station}</strong>
               </div>
-              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '6px 10px', borderRadius: '6px' }}>
+              <div style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ color: '#64748b' }}>Timestamp / Log:</div>
                 <span style={{ color: '#cbd5e1' }}>{selectedCardForModal.timestamp || 'N/A'}</span>
               </div>
-              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '6px 10px', borderRadius: '6px' }}>
+              <div style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ color: '#64748b' }}>Zetaris Pushdown Path:</div>
                 <code style={{ color: '#10b981', fontSize: '0.7rem' }}>{selectedCardForModal.citations[0]}</code>
               </div>
@@ -746,7 +746,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                 style={{
                   background: '#040711',
                   padding: '8px',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-md)',
                   color: '#94a3b8',
                   maxHeight: '140px',
                   overflowY: 'auto',
@@ -767,10 +767,10 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                   alignItems: 'center',
                   gap: '6px',
                   padding: '6px 12px',
-                  borderRadius: '6px',
-                  background: pinnedIds.has(selectedCardForModal.id) ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 41, 59, 0.8)',
+                  borderRadius: 'var(--radius-md)',
+                  background: pinnedIds.has(selectedCardForModal.id) ? 'rgba(245, 158, 11, 0.2)' : 'var(--bg-elevated)',
                   color: pinnedIds.has(selectedCardForModal.id) ? '#fbbf24' : '#cbd5e1',
-                  border: `1px solid ${pinnedIds.has(selectedCardForModal.id) ? '#f59e0b' : 'rgba(148, 163, 184, 0.2)'}`,
+                  border: `1px solid ${pinnedIds.has(selectedCardForModal.id) ? '#f59e0b' : 'var(--border-strong)'}`,
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -783,8 +783,8 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                 onClick={() => setSelectedCardForModal(null)}
                 style={{
                   padding: '6px 14px',
-                  borderRadius: '6px',
-                  background: '#6366f1',
+                  borderRadius: 'var(--radius-md)',
+                  background: '#5cc8e6',
                   color: '#fff',
                   border: 'none',
                   fontSize: '0.75rem',

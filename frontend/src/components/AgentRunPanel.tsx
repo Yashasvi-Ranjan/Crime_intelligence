@@ -5,11 +5,11 @@ import { InvestigationResponse } from '../types';
 const card: React.CSSProperties = {
   background: 'var(--bg-card)',
   border: '1px solid var(--border-subtle)',
-  borderRadius: '12px',
+  borderRadius: 'var(--radius-md)',
   padding: '1.2rem',
 };
 const chip = (color: string): React.CSSProperties => ({
-  fontSize: '0.7rem', fontWeight: 600, padding: '2px 8px', borderRadius: '10px',
+  fontSize: '0.7rem', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--radius-md)',
   background: 'var(--bg-darkest)', color, border: '1px solid var(--border-subtle)',
 });
 const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: '0.72rem' };
@@ -61,13 +61,13 @@ export const AgentRunPanel: React.FC<{ result: InvestigationResponse; onResume?:
         </div>
         {result.resume_hint && onResume && (
           <button onClick={() => onResume(result.investigation_id)}
-            style={{ fontSize: '0.8rem', padding: '5px 12px', borderRadius: 6, border: '1px solid var(--accent-amber)', background: 'transparent', color: 'var(--accent-amber)', cursor: 'pointer', marginBottom: '0.6rem' }}>
+            style={{ fontSize: '0.8rem', padding: '5px 12px', borderRadius: 2, border: '1px solid var(--accent-amber)', background: 'transparent', color: 'var(--accent-amber)', cursor: 'pointer', marginBottom: '0.6rem' }}>
             Resume this investigation
           </button>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {(result.iterations ?? []).map((it) => (
-            <div key={it.iteration} style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: '0.5rem 0.8rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <div key={it.iteration} style={{ background: 'var(--bg-elevated)', borderRadius: 2, padding: '0.5rem 0.8rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               <strong style={{ color: 'var(--text-primary)' }}>Iteration {it.iteration}</strong> — {(it.agents as string[]).join(' → ')}
               {' • '}retrieved {it.new_incidents} incident(s), {it.new_evidence} evidence record(s)
               {it.skeptic && <> • Skeptic: <code>{it.skeptic}</code></>}
