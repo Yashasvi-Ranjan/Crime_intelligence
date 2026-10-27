@@ -71,15 +71,13 @@
   ],
   "engines": [
     {
-      "backend": [
-        "mounted"
-      ],
+      "backend": [],
       "calls": 1,
       "engine": "scout_intent",
       "operations": [
         "detect"
       ],
-      "status": "connected"
+      "status": "engine_unavailable"
     },
     {
       "backend": [
@@ -110,11 +108,11 @@
       "calls": 0,
       "engine": "world_model",
       "operations": [],
-      "status": "connected"
+      "status": "engine_unavailable"
     }
   ],
-  "execution_time_seconds": 1.964,
-  "log_file": "logs/trace-inv_1793072017_b47825.jsonl",
+  "execution_time_seconds": 0.109,
+  "log_file": "logs/trace-inv_1793072447_61dc8b.jsonl",
   "output": {
     "candidate_incident_ids": [
       "INC-CENTRAL-1310",
@@ -386,7 +384,7 @@
     "stopping_reason": "evidence_sufficient",
     "summary": "Two incident pairs share the method of battery reciprocating saw severance of exhaust manifolds for Toyota Prius catalytic converter removal. However, significant contradictions and missing evidence prevent establishing a single series. One pair is directly contradicted by primary incident records; the other pair involves different vehicle types and lacks forensic linkage. No shared forensic, CCTV, or witness evidence connects any incidents."
   },
-  "run_id": "inv_1793072017_b47825",
+  "run_id": "inv_1793072447_61dc8b",
   "status": "completed",
-  "trace_id": "inv_1793072017_b47825"
+  "trace_id": "inv_1793072447_61dc8b"
 }

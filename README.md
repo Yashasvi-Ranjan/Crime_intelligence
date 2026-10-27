@@ -276,8 +276,8 @@ An engine that cannot run is recorded as `engine_unavailable` in the trace and i
 **Sample mode** (`SAMPLE_MODE=true` or `options.sample_mode`) runs the *real* Planner -> retrieval -> Finder -> verifier -> Skeptic -> Reporter loop: retrieval is the
 same four functions over `data/generated` (trace `source: local_sample`, generated query ids), and each model call is answered by a **recorded live Nemotron response**
 matched by `sha256(role, model, prompt)` from `data/sample/model_fixtures/` (trace `source: replayed`; fixtures are never keyed to an example and never contain a
-final answer). A prompt with no fixture runs a documented, clearly weaker code-only fallback (`source: code_fallback`, `reported_model: null`). Regenerate fixtures
-and `output_examples/` with `python scripts/record_fixtures.py` (needs live Zetaris + Nightshift; `--local-retrieval` records live models over local data). The old
+final answer). A prompt with no fixture runs a documented, clearly weaker code-only fallback (`source: code_fallback`, `reported_model: null`). Record fixtures on the host with `python scripts/record_fixtures.py` (needs live Zetaris + Nightshift; `--local-retrieval` records live models over local data), then rebuild the image and
+regenerate `output_examples/` *inside it* (`docker run --rm -v "$PWD/output_examples:/app/output_examples" crime-intel python scripts/record_fixtures.py --outputs-only`) so the expected engine statuses match the judge's container. The old
 pre-built scenarios survive only as `POST /api/investigations/analyze` with `"demo_content": true` (labelled `[DEMO CONTENT]`, no agent runs).
 
 **Tests and scan**: `python -m pytest -q backend/tests && python -m pytest -q tests` (engine and live tests skip, not fail, when unavailable);

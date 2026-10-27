@@ -71,15 +71,13 @@
   ],
   "engines": [
     {
-      "backend": [
-        "mounted"
-      ],
+      "backend": [],
       "calls": 1,
       "engine": "scout_intent",
       "operations": [
         "detect"
       ],
-      "status": "connected"
+      "status": "engine_unavailable"
     },
     {
       "backend": [
@@ -111,11 +109,11 @@
       "calls": 0,
       "engine": "world_model",
       "operations": [],
-      "status": "connected"
+      "status": "engine_unavailable"
     }
   ],
-  "execution_time_seconds": 1.585,
-  "log_file": "logs/trace-inv_1793072070_ef703d.jsonl",
+  "execution_time_seconds": 0.167,
+  "log_file": "logs/trace-inv_1793072447_40a674.jsonl",
   "output": {
     "candidate_incident_ids": [
       "INC-NORTH-0501",
@@ -288,7 +286,7 @@
     "stopping_reason": "no_supportable_links_found (after: evidence_sufficient)",
     "summary": "Two keyless entry relay theft incidents occurred 26 days apart in different jurisdictions (NORTH and RIVERSIDE). While both involve Toyota Prius vehicles and relay attack methodology, no forensic, CCTV, or witness evidence currently links the incidents. The skeptic objection regarding timeline and geographic separation remains unresolved due to lack of connecting evidence."
   },
-  "run_id": "inv_1793072070_ef703d",
+  "run_id": "inv_1793072447_40a674",
   "status": "completed",
-  "trace_id": "inv_1793072070_ef703d"
+  "trace_id": "inv_1793072447_40a674"
 }

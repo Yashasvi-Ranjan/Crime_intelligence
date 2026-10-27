@@ -71,15 +71,13 @@
   ],
   "engines": [
     {
-      "backend": [
-        "mounted"
-      ],
+      "backend": [],
       "calls": 1,
       "engine": "scout_intent",
       "operations": [
         "detect"
       ],
-      "status": "connected"
+      "status": "engine_unavailable"
     },
     {
       "backend": [
@@ -111,11 +109,11 @@
       "calls": 0,
       "engine": "world_model",
       "operations": [],
-      "status": "connected"
+      "status": "engine_unavailable"
     }
   ],
-  "execution_time_seconds": 1.694,
-  "log_file": "logs/trace-inv_1793071948_820eb4.jsonl",
+  "execution_time_seconds": 0.197,
+  "log_file": "logs/trace-inv_1793072447_9245de.jsonl",
   "output": {
     "candidate_incident_ids": [
       "INC-NORTH-2598",
@@ -294,7 +292,7 @@
     "stopping_reason": "no_supportable_links_found (after: evidence_sufficient)",
     "summary": "Analysis of LINK-01 connecting INC-NORTH-0880 and INC-CENTRAL-0549 is currently rejected due to location and property discrepancies, plus the existence of a common modus operandi across multiple incidents. No forensic toolmark comparison has been reported to confirm a shared heavy pry bar or crowbar."
   },
-  "run_id": "inv_1793071948_820eb4",
+  "run_id": "inv_1793072447_9245de",
   "status": "completed",
-  "trace_id": "inv_1793071948_820eb4"
+  "trace_id": "inv_1793072447_9245de"
 }
