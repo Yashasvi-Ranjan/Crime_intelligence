@@ -236,11 +236,12 @@ class ZetarisAdapter:
 
         import uuid
         auth_header = token if token.startswith("Bearer ") else f"Bearer {token}"
+        self.last_request_id = str(uuid.uuid4())      # the query id recorded in the trace
         req_headers = {
             "Authorization": auth_header,
             # Header name is X-Org-ID (capital ID) — API returns 400 "missing" for X-Org-Id
             "X-Org-ID": str(self._settings.zetaris_org_id),
-            "X-Request-ID": str(uuid.uuid4()),
+            "X-Request-ID": self.last_request_id,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -263,7 +264,8 @@ class ZetarisAdapter:
             _token_cache.clear()
             token = self._authenticate()
             req_headers["Authorization"] = token if token.startswith("Bearer ") else f"Bearer {token}"
-            req_headers["X-Request-ID"] = str(uuid.uuid4())
+            self.last_request_id = str(uuid.uuid4())
+            req_headers["X-Request-ID"] = self.last_request_id
             resp = httpx.post(
                 url,
                 json=payload,

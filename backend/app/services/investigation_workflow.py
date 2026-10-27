@@ -107,23 +107,36 @@ class InvestigationWorkflow:
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
         continue_from: Optional[str] = None,
+        run_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         t_start = time.time()
-        run = _Run(self, query)
+        run = _Run(self, query, run_id)
         try:
             return run.execute(incident_ids, station_ids, crime_type, date_from, date_to, continue_from, t_start)
         finally:
             run.close()
 
 
+class _UnavailableWorld:
+    """Stand-in once the World Model engine has been traced as engine_unavailable: every write is a no-op and
+    the read returns nothing, so the run continues without pretending shared state exists."""
+
+    def __getattr__(self, name: str):
+        if name.startswith("get_"):
+            return lambda *a, **k: {}
+        return lambda *a, **k: None
+
+
 class _Run:
     """State and behaviour of one investigation run."""
 
-    def __init__(self, wf: InvestigationWorkflow, query: str) -> None:
+    def __init__(self, wf: InvestigationWorkflow, query: str, run_id: Optional[str] = None) -> None:
         self.wf = wf
         self.cfg = wf._cfg
         self.query = query
-        self.run_id = f"inv_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+        self.run_id = run_id or f"inv_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+        self.world: Any = wf._world           # replaced by _UnavailableWorld if the World Model engine cannot run
+        self.data_fallback = False
         self.tracer = TraceLogger(self.run_id)
         self.budget = _Budget(self.cfg)
         self.calls: List[CallRecord] = []
@@ -222,21 +235,23 @@ class _Run:
             cfg_out, op = wf._markov.validate()
             self._engine(op, "initialization", "markovian")
         except EngineUnavailableError as exc:
-            raise RuntimeError(f"Markovian engine unavailable: {exc}") from exc
+            self._engine(EngineOp.unavailable("markovian", "validate", str(exc)), "initialization", "markovian")
 
         # 3. World Model + H-MEM context (context only, never evidence).
         memory_context: List[Dict[str, Any]] = []
         try:
             if resumed is None:
-                wf._world.init_investigation_state(self.run_id, self.query, stations)
+                self.world.init_investigation_state(self.run_id, self.query, stations)
             tracer.log_event("initialization", "system", "world_model.init", engine_meta={"world": f"inv_{self.run_id}"})
         except Exception as exc:
-            raise RuntimeError(f"World Model engine unavailable: {exc}") from exc
+            self.world = _UnavailableWorld()
+            self._engine(EngineOp.unavailable("world_model", "init", str(exc)), "initialization", "world_model")
         if self.cfg.hmem_enabled and resumed is None:
             try:
                 memory_context, op = wf._hmem.retrieve(self.query)
                 self._engine(op, "memory", "h-mem")
             except EngineUnavailableError as exc:
+                self._engine(EngineOp.unavailable("hmem", "retrieve", str(exc)), "memory", "h-mem")
                 self._fail("h-mem.retrieve", str(exc))
 
         # 4. Rebuild evidence for a resumed run from Zetaris (source of truth).
@@ -276,6 +291,7 @@ class _Run:
                 # Retrieval (real Zetaris SQL, executed by code - never by a model)
                 before_inc, before_ev = len(self.incidents), len(self._evidence_ids())
                 requests = self._bounded_requests(decision, route, stations, i)
+                self._handoff("planner", "analyst", f"{len(requests)} retrieval request(s): {[r.kind for r in requests]}")
                 executed = 0
                 for rq in requests:
                     fp = json.dumps(rq.model_dump(exclude={"reason"}), sort_keys=True)
@@ -303,6 +319,7 @@ class _Run:
                     break
 
                 # Finder
+                self._handoff("analyst", "finder", f"{len(self.incidents)} incident(s), {len(self._evidence_ids())} evidence record(s)")
                 finder_ok = self._find(i, it)
                 if not finder_ok and i == first_iteration:
                     stop_reason, status = "finder_failed", "blocked"
@@ -311,11 +328,12 @@ class _Run:
 
                 # Deterministic verification
                 active = self._active_links()
+                self._handoff("finder", "verifier", f"{len(active)} active link(s): {[l['link_id'] for l in active]}")
                 self.validations = {l["link_id"]: verify_link(l, self.index) for l in active}
                 self.last_validation.update(self.validations)
                 vlist = [v.as_dict() for v in self.validations.values()]
                 try:
-                    wf._world.record_validation(self.run_id, i, vlist)
+                    self.world.record_validation(self.run_id, i, vlist)
                     tracer.log_event("validation", "verifier", "verify_links", engine_meta={"world_model": "record_validation"},
                                      details={"statuses": {k: v.status for k, v in self.validations.items()},
                                               "independent_sources": {k: v.independent_source_count for k, v in self.validations.items()}})
@@ -324,6 +342,7 @@ class _Run:
                 it["validation"] = {k: v.status for k, v in self.validations.items()}
 
                 # Skeptic
+                self._handoff("verifier", "skeptic", f"{ {k: v.status for k, v in self.validations.items()} }")
                 review = self._skeptic(i, active, it)
 
                 # Checkpoint (Markovian)
@@ -332,6 +351,13 @@ class _Run:
                 st.skeptic_objections = [{**o, "open": True} for o in self.objections if o.get("open", True)]
                 st.evidence_refs = {"incidents": sorted(self.incidents), "evidence": sorted(self._evidence_ids())}
                 wants_more = self._wants_more(review)
+                if review is not None:
+                    self.tracer.log_event("branch", "orchestrator", "skeptic_branch", details={
+                        "skeptic_status": review.review_status, "open_objections": sum(1 for o in self.objections if o.get("open", True)),
+                        "decision": "retry: send the Planner back for more retrieval" if wants_more else "proceed: write the report",
+                        "iteration": i})
+                    self._handoff("skeptic", "planner" if wants_more else "reporter",
+                                  "objections requesting retrieval" if wants_more else f"review {review.review_status}")
                 st.outstanding_tasks = [o.get("retrieval_hint") or o["description"][:80] for o in self.objections
                                         if o.get("open", True) and o.get("requests_retrieval")][:6]
                 st.next_action = "plan_more_retrieval" if wants_more else "report"
@@ -386,8 +412,12 @@ class _Run:
                 "task": "Plan the first retrieval. Use specific method/property keywords (e.g. tool, vehicle, entry method).",
             }, default=str)
         else:
-            frame, op = self.wf._markov.continuation_prompt(self.query, carryover)
-            self._engine(op, "planning", "markovian")
+            try:
+                frame, op = self.wf._markov.continuation_prompt(self.query, carryover)
+                self._engine(op, "planning", "markovian")
+            except EngineUnavailableError as exc:
+                self._engine(EngineOp.unavailable("markovian", "build_prompt", str(exc)), "planning", "markovian")
+                frame = f"Objective: {self.query}\n\nCarryover from the previous iteration:\n{carryover}"
             open_obj = [{"kind": o["kind"], "description": o["description"][:200], "hint": o.get("retrieval_hint", ""),
                          "link_id": o.get("link_id")} for o in self.objections if o.get("open", True)][:6]
             prompt = (f"{frame}\n\n[Application note: ignore the marker instructions above; the application records checkpoints. "
@@ -409,7 +439,7 @@ class _Run:
         it["agents"].append("planner")
         it["planner_action"] = decision.action
         try:
-            self.wf._world.record_planner_decision(self.run_id, i, {"action": decision.action, "rationale": decision.rationale[:300],
+            self.world.record_planner_decision(self.run_id, i, {"action": decision.action, "rationale": decision.rationale[:300],
                                                                     "requests": [r.model_dump() for r in decision.retrieval_requests],
                                                                     "outstanding": decision.outstanding_questions})
         except Exception as exc:
@@ -464,11 +494,28 @@ class _Run:
         for r in found:
             if r.get("incident_id"):
                 self.incidents.setdefault(r["incident_id"], r)
+        self._drain_data_events()
         self.tracer.log_event(tracer_step, "analyst", f"zetaris_sql:{rq.kind}", status="ok",
                               sql_meta={"queries": data.query_count - q0, "incident_rows": len(found),
+                                        "source": getattr(data, "source", "zetaris_live"), "query_ids": self._query_ids(),
                                         "tables": [self.cfg.table_fqn("police_incidents")] if rq.kind != "related_records" else
                                         [self.cfg.table_fqn(t) for t in ("forensic_reports", "cctv_reports", "witness_reports", "newspaper_reports")]},
                               details={"incident_ids": [r.get("incident_id") for r in found][:20], "reason": rq.reason[:160]})
+
+    def _query_ids(self) -> List[str]:
+        take = getattr(self.wf._data, "take_query_ids", None)
+        return take() if take else []
+
+    def _drain_data_events(self) -> None:
+        """Degradations the data layer recorded (e.g. Zetaris unreachable -> local sample) go into the trace."""
+        take = getattr(self.wf._data, "take_events", None)
+        for ev in (take() if take else []):
+            self.data_fallback = self.data_fallback or ev.get("event") == "zetaris_fallback"
+            self.tracer.log_event("retrieval", "analyst", ev["event"], details=ev, status="degraded", error=ev.get("reason"))
+            self._fail("zetaris", ev.get("reason", "Zetaris unavailable; local sample data used"))
+
+    def _handoff(self, frm: str, to: str, payload: str) -> None:
+        self.tracer.log_event("handoff", frm, "handoff", details={"from": frm, "to": to, "payload": payload})
 
     def _auto_supporting_evidence(self) -> None:
         """Fetch supporting records for incidents whose evidence has not been pulled yet."""
@@ -483,8 +530,10 @@ class _Run:
         self._evidence_fetched.update(todo)
         for e in data.errors[err0:]:
             self._fail("zetaris.evidence", e)
+        self._drain_data_events()
         self.tracer.log_event("retrieval", "analyst", "zetaris_sql:supporting_evidence", sql_meta={
-            "queries": data.query_count - q0, **{k: len(v) for k, v in self.evidence.items()}},
+            "queries": data.query_count - q0, "source": getattr(data, "source", "zetaris_live"), "query_ids": self._query_ids(),
+            **{k: len(v) for k, v in self.evidence.items()}},
             details={"incident_ids": todo})
 
     def _merge_evidence(self, ev: Dict[str, List[Dict[str, Any]]]) -> None:
@@ -537,7 +586,7 @@ class _Run:
             d["withdrawn"] = False
             self.links[l.link_id] = d
             try:
-                self.wf._world.record_finder_link(self.run_id, i, d)
+                self.world.record_finder_link(self.run_id, i, d)
             except Exception as exc:
                 self._fail("world_model.record_finder_link", str(exc))
         it["links_proposed"] = len(out.links)
@@ -578,7 +627,7 @@ class _Run:
                       "invalid_cited_ids": cited["invalid"], "valid_cited_ids": cited["valid"]})
             self.objections.append(d)
         try:
-            self.wf._world.record_skeptic_review(self.run_id, i, {"review_status": review.review_status,
+            self.world.record_skeptic_review(self.run_id, i, {"review_status": review.review_status,
                                                                    "objections": [o for o in self.objections if o["iteration"] == i]})
         except Exception as exc:
             self._fail("world_model.record_skeptic_review", str(exc))
@@ -606,6 +655,7 @@ class _Run:
             self.wf._markov.save(st, carry)
             return carry
         except EngineUnavailableError as exc:
+            self._engine(EngineOp.unavailable("markovian", "extract_carryover", str(exc)), "checkpoint", "markovian")
             self._fail("markovian.checkpoint", str(exc))
             return self.wf._markov.carryover_text(st)
 
@@ -615,6 +665,7 @@ class _Run:
         assert st is not None
         # Reporter reads validated state only.
         state_view = self._validated_state()
+        self._handoff("orchestrator", "reporter", f"validated state: {len(state_view['links'])} link(s)")
         report: Optional[ag.ReportOutput] = None
         report_model_generated = True
         if self.links or self.incidents:
@@ -630,14 +681,14 @@ class _Run:
 
         # World Model: reporter synthesis + run status
         try:
-            wf._world.record_reporter_synthesis(self.run_id, "final", report.executive_summary[:1200], len(self._active_links()),
+            self.world.record_reporter_synthesis(self.run_id, "final", report.executive_summary[:1200], len(self._active_links()),
                                                 len(self._all_contradictions()), report.follow_up_actions)
-            wf._world.record_run_status(self.run_id, status, stop_reason, st.iteration)
+            self.world.record_run_status(self.run_id, status, stop_reason, st.iteration)
         except Exception as exc:
             self._fail("world_model.final", str(exc))
         world_state: Dict[str, Any] = {}
         try:
-            world_state = wf._world.get_investigation_state(self.run_id)
+            world_state = self.world.get_investigation_state(self.run_id)
         except Exception as exc:
             self._fail("world_model.read_state", str(exc))
 
@@ -655,6 +706,7 @@ class _Run:
                 eff, op = wf._markov.efficiency(self.tokens_per_iter)
                 self._engine(op, "completion", "markovian")
         except EngineUnavailableError as exc:
+            self._engine(EngineOp.unavailable("markovian", "efficiency", str(exc)), "completion", "markovian")
             self._fail("markovian.final", str(exc))
 
         self.tracer.log_event("completion", "orchestrator", "finalize", details={
@@ -774,6 +826,7 @@ class _Run:
             return {"attempted": True, "stored": ok, "retention_weight": round(min(conf, 0.9), 2),
                     "note": "retention weight for H-MEM's floor, not a probability"}
         except EngineUnavailableError as exc:
+            self._engine(EngineOp.unavailable("hmem", "mine", str(exc)), "memory", "h-mem")
             self._fail("h-mem.store", str(exc))
             return {"attempted": True, "stored": False, "error": str(exc)[:160]}
 
@@ -834,8 +887,8 @@ class _Run:
             "anti_disqualification": disqualification_sentinel.evaluate(json.dumps(report, default=str), links, set(self.incidents.keys()), self._evidence_ids()).to_dict(),
         }
         return {
-            "investigation_id": self.run_id, "is_sample": False, "data_mode": "zetaris_live", "scenario_id": None,
-            "title": report["title"], "query": self.query, "stations_involved": stations,
+            "investigation_id": self.run_id, "is_sample": self._data_mode() != "zetaris_live", "data_mode": self._data_mode(),
+            "scenario_id": None, "title": report["title"], "query": self.query, "stations_involved": stations,
             "candidate_incidents": list(self.incidents.values()), "supporting_evidence": self.evidence,
             "candidate_links": links,
             "contradictions_and_limitations": report["contradictions_and_limitations"],
@@ -867,6 +920,11 @@ class _Run:
             "resume_hint": f"POST /api/investigations/analyze with continue_from={self.run_id}" if status in ("interrupted", "budget_exhausted") else None,
         }
 
+    def _data_mode(self) -> str:
+        if self.data_fallback:
+            return "local_fallback"
+        return "local_sample" if getattr(self.wf._data, "source", "zetaris_live") == "local_sample" else "zetaris_live"
+
     def _integration_status(self, world: Dict[str, Any], win: List[CallRecord], provider: Optional[str]) -> Dict[str, Any]:
         cfg = self.cfg
         ops: Dict[str, List[Dict[str, Any]]] = {}
@@ -874,21 +932,41 @@ class _Run:
             ops.setdefault(o["engine"], []).append(o)
         def eng(name: str) -> Dict[str, Any]:
             lst = ops.get(name, [])
-            return {"status": ("connected" if lst and all(o["status"] == "ok" for o in lst) else ("not_invoked" if not lst else "error")),
-                    "operations": sorted({o["op"] for o in lst}), "calls": len(lst)}
+            if not lst:
+                status = "not_invoked"
+            elif any(o["status"] == "engine_unavailable" for o in lst):
+                status = "engine_unavailable"
+            else:
+                status = "connected" if all(o["status"] == "ok" for o in lst) else "error"
+            backends = sorted({(o.get("detail") or {}).get("backend") for o in lst} - {None})
+            return {"status": status, "operations": sorted({o["op"] for o in lst}), "calls": len(lst), "backend": backends}
         reported = sorted({c.reported_model for c in win if c.reported_model})
+        sources = sorted({c.source for c in self.calls})
+        live_models = sources in ([], ["live"])
+        mode = self._data_mode()
+        world_down = isinstance(self.world, _UnavailableWorld)
+        zetaris: Dict[str, Any]
+        if mode == "zetaris_live":
+            zetaris = {"status": "connected", "mode": "zetaris_live", "tables_queried": [
+                cfg.table_fqn(t) for t in ("police_incidents", "forensic_reports", "cctv_reports", "witness_reports", "newspaper_reports")]}
+        else:
+            zetaris = {"status": "sample" if mode == "local_sample" else "fallback", "mode": mode,
+                       "note": "Rows come from data/generated through the local loader, not from Zetaris.",
+                       "tables_queried": []}
         return {
-            "zetaris": {"status": "connected", "mode": "zetaris_live", "tables_queried": [
-                cfg.table_fqn(t) for t in ("police_incidents", "forensic_reports", "cctv_reports", "witness_reports", "newspaper_reports")]},
-            "nightshift_nemotron": {"status": "connected" if win else "no_model_calls", "mode": "nightshift_live",
+            "zetaris": zetaris,
+            "nightshift_nemotron": {"status": ("connected" if live_models else "replayed" if sources == ["replayed"] else "mixed") if win or self.calls else "no_model_calls",
+                                    "mode": "nightshift_live" if live_models else "sample_replay" if sources == ["replayed"] else "mixed",
+                                    "call_sources": sources,
                                     "model": reported[-1] if reported else cfg.nightshift_model, "models_used": reported,
                                     "provider": provider or "nvidia", "winning_route": None},
-            "meterless_engine": {"status": "connected", "mode": "engine_live", "feature": "world_model_shared_state",
+            "meterless_engine": {"status": "engine_unavailable" if world_down else "connected",
+                                 "mode": "engine_unavailable" if world_down else "engine_live", "feature": "world_model_shared_state",
                                  "schema_version": 1, "world_name": f"inv_{self.run_id}",
                                  "entities_count": world.get("entities_count", 0), "observations_count": world.get("observations_total", 0),
                                  "contradictions_count": len(world.get("contradictions", []))},
-            "meterless_engines": {"world_model": {"status": "connected" if world else "error", "observations_by_kind":
-                                                  {k: len(v) for k, v in (world.get("observations_by_kind") or {}).items()}},
+            "meterless_engines": {"world_model": {"status": "engine_unavailable" if world_down else ("connected" if world else "error"),
+                                                  "observations_by_kind": {k: len(v) for k, v in (world.get("observations_by_kind") or {}).items()}},
                                   "scout_intent": eng("scout"), "h_mem": eng("hmem"), "markovian": eng("markovian")},
             "model_registry": self.wf._registry.report(),
         }
@@ -897,8 +975,8 @@ class _Run:
         msg = route.refusal or route.clarification or "No action taken."
         self.tracer.log_event("completion", "scout", status, details={"message": msg})
         return {
-            "investigation_id": self.run_id, "is_sample": False, "data_mode": "zetaris_live", "scenario_id": None,
-            "title": "Clarification needed" if status == "needs_clarification" else "Request not executed",
+            "investigation_id": self.run_id, "is_sample": self._data_mode() != "zetaris_live", "data_mode": self._data_mode(),
+            "scenario_id": None, "title": "Clarification needed" if status == "needs_clarification" else "Request not executed",
             "query": self.query, "stations_involved": [], "candidate_incidents": [],
             "supporting_evidence": {}, "candidate_links": [], "contradictions_and_limitations": [],
             "unresolved_questions": [msg] if status == "needs_clarification" else [], "follow_up_actions": [],

@@ -6,15 +6,17 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.config import settings
-from app.routers import health, incidents, investigations, sources
+from app.routers import health, incidents, investigations, run, sources
 
 logging.basicConfig(
+    stream=sys.stdout,          # judges read stdout as well as logs/trace-<run_id>.jsonl
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
@@ -46,6 +48,7 @@ app.include_router(health.router)
 app.include_router(incidents.router)
 app.include_router(sources.router)
 app.include_router(investigations.router)
+app.include_router(run.router)
 
 
 @app.on_event("startup")

@@ -50,16 +50,34 @@ def _parse_json_field(val: Any) -> Any:
 class ZetarisInvestigationService:
     """Service for running real SQL data retrieval for investigations."""
 
+    source = "zetaris_live"            # recorded in the trace next to every query id
+
     def __init__(self, cfg: Optional[Settings] = None, adapter: Optional[ZetarisAdapter] = None) -> None:
         self._cfg = cfg or settings
         self._adapter = adapter or ZetarisAdapter(self._cfg)
         self.query_count = 0
         self.errors: List[str] = []   # per-source retrieval failures that were tolerated
+        self._query_ids: List[str] = []
+        self.events: List[Dict[str, Any]] = []   # degradations the workflow should put in the trace
+
+    def take_query_ids(self) -> List[str]:
+        """Query ids issued since the last call (consumed by the trace)."""
+        ids, self._query_ids = self._query_ids, []
+        return ids
+
+    def take_events(self) -> List[Dict[str, Any]]:
+        ev, self.events = self.events, []
+        return ev
 
     def _sql(self, sql: str) -> List[Dict[str, Any]]:
         """Single choke point for SQL so queries can be counted and traced."""
         self.query_count += 1
-        return self._adapter.execute_sql(sql)
+        try:
+            return self._adapter.execute_sql(sql)
+        finally:
+            qid = getattr(self._adapter, "last_request_id", None)
+            if qid:
+                self._query_ids.append(qid)
 
     def _ensure_connected(self) -> None:
         if not self._cfg.zetaris_configured:

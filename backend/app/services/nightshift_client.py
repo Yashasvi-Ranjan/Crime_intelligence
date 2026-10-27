@@ -12,15 +12,42 @@ Credentials are never logged or returned in responses.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 import httpx
 
 from app.config import Settings, settings
 
 logger = logging.getLogger(__name__)
+
+
+_SECRET_PATTERNS = (
+    re.compile(r"(?i)bearer\s+[A-Za-z0-9._~+/=-]+"),
+    re.compile(r"\bnvapi-[A-Za-z0-9_-]+"),
+    re.compile(r"\bsk-[A-Za-z0-9_-]{8,}"),
+    re.compile(r"(?i)(api[_-]?key|token|authorization)(\"?\s*[:=]\s*\"?)[^\s\",}]+"),
+)
+
+
+def _redact(text: str, limit: int = 300) -> str:
+    """Scrub secret-looking substrings from a response body and truncate it for logging."""
+    out = text or ""
+    for pat in _SECRET_PATTERNS:
+        out = pat.sub(lambda m: (m.group(1) + m.group(2) + "[REDACTED]") if m.lastindex == 2 else "[REDACTED]", out)
+    return out[:limit]
+
+
+def _log_auth_rejection(endpoint: str, model: str, resp: httpx.Response) -> None:
+    logger.error(
+        "Nightshift rejected credentials: host=%s model=%s status=%d body=%s "
+        "(the token sent was not accepted by this gateway; check NIGHTSHIFT_API_KEY / "
+        "NIGHTSHIFT_API_KEY_FILE vs the Nightshift proxy-token)",
+        urlparse(endpoint).netloc, model, resp.status_code, _redact(resp.text),
+    )
 
 
 class NightshiftNotConfiguredError(Exception):
@@ -146,6 +173,7 @@ class NightshiftClient:
                 elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
                 if resp.status_code == 401 or resp.status_code == 403:
+                    _log_auth_rejection(endpoint, target_model, resp)
                     raise NightshiftAuthError(f"Nightshift auth rejected (HTTP {resp.status_code}).")
 
                 if resp.status_code in (429, 502, 503, 504):
@@ -201,6 +229,7 @@ class NightshiftClient:
         except httpx.RequestError as exc:
             raise NightshiftQueryError(f"Nightshift connection error: {exc}") from exc
         if resp.status_code in (401, 403):
+            _log_auth_rejection(endpoint, "(list_models)", resp)
             raise NightshiftAuthError(f"Nightshift auth rejected (HTTP {resp.status_code}).")
         if resp.status_code != 200:
             raise NightshiftQueryError(f"Nightshift /models returned HTTP {resp.status_code}")
@@ -226,6 +255,7 @@ class NightshiftClient:
         except httpx.RequestError as exc:
             raise NightshiftQueryError(f"Nightshift connection error: {exc}") from exc
         if resp.status_code in (401, 403):
+            _log_auth_rejection(endpoint, model, resp)
             raise NightshiftAuthError(f"Nightshift auth rejected (HTTP {resp.status_code}).")
         if resp.status_code != 200:
             raise NightshiftQueryError(f"Nightshift embeddings returned HTTP {resp.status_code}: {resp.text[:120]}")

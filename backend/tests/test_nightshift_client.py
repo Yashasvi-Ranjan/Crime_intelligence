@@ -138,3 +138,56 @@ def test_nightshift_unconfigured():
     ai = NightshiftClient(cfg=cfg)
     with pytest.raises(NightshiftNotConfiguredError):
         ai.generate(messages=[{"role": "user", "content": "Test"}])
+
+
+def test_nightshift_401_logs_redacted_diagnostics(caplog):
+    """Mocked transport: verifies logging/redaction only, NOT live authentication."""
+    cfg = make_mock_settings(token="super-secret-token-123")
+
+    def handler(request: httpx.Request):
+        return httpx.Response(
+            401, text='{"error":"bad key","echo":"Bearer super-secret-token-123 nvapi-ABCDEF123456"}'
+        )
+
+    ai = NightshiftClient(cfg=cfg, client=httpx.Client(transport=httpx.MockTransport(handler)))
+    with caplog.at_level("ERROR", logger="app.services.nightshift_client"):
+        with pytest.raises(NightshiftAuthError):
+            ai.generate(messages=[{"role": "user", "content": "Hello"}])
+
+    log = caplog.text
+    assert "127.0.0.1:8088" in log
+    assert "nvidia/nemotron-3.5-lightning-30b-a3b" in log
+    assert "status=401" in log
+    assert "super-secret-token-123" not in log
+    assert "nvapi-ABCDEF123456" not in log
+    assert "[REDACTED]" in log
+
+
+def test_nightshift_missing_credentials(monkeypatch, tmp_path):
+    """No key, no key file, and no local proxy-token -> NotConfigured, no HTTP call made."""
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    cfg = Settings(
+        nightshift_base_url="http://127.0.0.1:8088/v1", nightshift_api_key="", nightshift_api_key_file=""
+    )
+    calls = []
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: calls.append(r) or httpx.Response(200)))
+    with pytest.raises(NightshiftNotConfiguredError):
+        NightshiftClient(cfg=cfg, client=client).generate(messages=[{"role": "user", "content": "x"}])
+    assert calls == []
+
+
+def test_nightshift_authenticated_request_sends_bearer_to_chat_completions():
+    """Mocked transport: checks the request shape the client sends, not live authentication."""
+    cfg = make_mock_settings(token="tok-abc")
+    seen = {}
+
+    def handler(request: httpx.Request):
+        seen["auth"] = request.headers["authorization"]
+        seen["path"] = request.url.path
+        return httpx.Response(
+            200, json={"model": cfg.nightshift_model, "choices": [{"message": {"content": "ok"}}]}
+        )
+
+    ai = NightshiftClient(cfg=cfg, client=httpx.Client(transport=httpx.MockTransport(handler)))
+    assert ai.generate(messages=[{"role": "user", "content": "hi"}]).content == "ok"
+    assert seen == {"auth": "Bearer tok-abc", "path": "/v1/chat/completions"}

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import time
 from dataclasses import asdict, dataclass, field
@@ -40,6 +41,7 @@ STATIONS = {"NORTH", "CENTRAL", "RIVERSIDE"}
 INCIDENT_ID_RE = re.compile(r"^INC-[A-Z]+-\d{3,5}$")
 INCIDENT_IN_TEXT_RE = re.compile(r"\bINC-[A-Z]+-\d{3,5}\b")
 RUN_ID_RE = re.compile(r"^inv_\d+_[0-9a-f]{6}$")
+SAFE_RUN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$")   # caller-supplied ids: filename-safe only
 ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}([T ][\d:.]+Z?)?$")
 
 
@@ -59,14 +61,52 @@ class EngineOp:
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+    @classmethod
+    def unavailable(cls, engine: str, op: str, reason: str) -> "EngineOp":
+        """An engine that could not run. Traced as such; never dressed up as a successful event."""
+        return cls(engine, op, "engine_unavailable", 0.0, {"reason": reason[:240]}, error=reason[:300])
+
+
+ENGINE_FILES = {"scout": "scout-intents.js", "hmem": "hmem.js", "markovian": "markovian.js"}
+
+
+def resolve_engine_backend(cfg: Settings, engine: str) -> Optional[str]:
+    """Which implementation serves ``engine``: "mounted" (host Nightshift engine dir), "reference"
+    (vendored Apache-2.0 Meterless reference build) or None (engine_unavailable).
+
+    METERLESS_ENGINE_BACKEND:  auto      mounted when its file exists, else the reference, else unavailable
+                               mounted   mounted only
+                               reference the reference where one exists (H-MEM, Markovian), else mounted
+    Sample mode uses "reference" so prompts built from engine output are identical on every machine.
+    """
+    mode = (cfg.meterless_engine_backend or "auto").lower()
+    node = bool(shutil.which("node"))
+    mounted = node and Path(cfg.meterless_engine_dir, ENGINE_FILES[engine]).exists()
+    reference = node and engine in REFERENCE_ENGINES and (cfg.reference_engine_path / f"{engine}.cjs").exists()
+    if mode == "mounted":
+        return "mounted" if mounted else None
+    if mode == "reference":
+        return "reference" if reference else ("mounted" if mounted else None)
+    return "mounted" if mounted else ("reference" if reference else None)
+
+
+REFERENCE_ENGINES = ("hmem", "markovian")
+REFERENCE_RUNNER = Path(__file__).parent / "meterless_world" / "reference_runner.cjs"
+
 
 def run_engine(cfg: Settings, engine: str, op: str, args: Dict[str, Any], store_file: Optional[Path] = None,
-               timeout: int = 20) -> Tuple[Dict[str, Any], EngineOp]:
+               timeout: int = 20, backend: Optional[str] = None) -> Tuple[Dict[str, Any], EngineOp]:
+    backend = backend or resolve_engine_backend(cfg, engine)
+    if backend is None:
+        raise EngineUnavailableError(
+            f"{engine}.{op}: no engine available (METERLESS_ENGINE_DIR={cfg.meterless_engine_dir!r} not mounted/readable "
+            f"and no vendored reference build for this engine)")
     payload = {"engine": engine, "op": op, "args": args, "engineDir": cfg.meterless_engine_dir,
-               "storeFile": str(store_file) if store_file else None}
+               "referenceDir": str(cfg.reference_engine_path), "storeFile": str(store_file) if store_file else None}
+    runner = REFERENCE_RUNNER if backend == "reference" else RUNNER
     t0 = time.perf_counter()
     try:
-        proc = subprocess.run(["node", str(RUNNER)], input=json.dumps(payload), text=True,
+        proc = subprocess.run(["node", str(runner)], input=json.dumps(payload), text=True,
                               capture_output=True, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise EngineUnavailableError(f"{engine}.{op}: {exc}") from exc
@@ -82,7 +122,7 @@ def run_engine(cfg: Settings, engine: str, op: str, args: Dict[str, Any], store_
         out = json.loads(proc.stdout)
     except ValueError as exc:
         raise EngineUnavailableError(f"{engine}.{op}: invalid runner output") from exc
-    return out, EngineOp(engine, op, "ok", round(ms, 1))
+    return out, EngineOp(engine, op, "ok", round(ms, 1), {"backend": backend})
 
 
 # ── Scout Intent ─────────────────────────────────────────────────────────────
@@ -122,13 +162,13 @@ class ScoutIntentService:
     def detect(self, text: str) -> Tuple[Dict[str, Any], EngineOp]:
         out, op = run_engine(self._cfg, "scout", "detect", {"text": text})
         r = out["result"]
-        op.detail = {"mode": r["mode"], "score": r["score"], "tier_hint": r["tierHint"],
+        op.detail = {**op.detail, "mode": r["mode"], "score": r["score"], "tier_hint": r["tierHint"],
                      "engine_ms": r["ms"], "registry_size": r["registrySize"]}
         return r, op
 
     def selftest(self) -> Tuple[Dict[str, Any], EngineOp]:
         out, op = run_engine(self._cfg, "scout", "selftest", {})
-        op.detail = out["result"]
+        op.detail = {**op.detail, **out["result"]}
         return out["result"], op
 
     def route(self, query: str, incident_ids: Optional[List[str]] = None, station_ids: Optional[List[str]] = None,
@@ -136,7 +176,14 @@ class ScoutIntentService:
               continue_from: Optional[str] = None) -> Tuple[Route, EngineOp]:
         """Classify, validate every argument, and decide the intent. Never executes anything."""
         query = (query or "").strip()
-        scout, op = self.detect(query)
+        try:
+            scout, op = self.detect(query)
+        except EngineUnavailableError as exc:
+            # No Scout engine (e.g. a container without the mounted Nightshift engine dir; Scout Intent has no
+            # open reference implementation). Routing continues on the deterministic rules below and the
+            # trace says so; the destructive-request refusal still applies via its phrasing check.
+            scout = {"mode": "UNAVAILABLE", "score": 0.0, "tierHint": None, "candidates": []}
+            op = EngineOp.unavailable("scout", "detect", str(exc))
         route = Route(intent="CROSS_STATION_SEARCH", query=query, scout={
             "mode": scout["mode"], "score": scout["score"], "tier_hint": scout["tierHint"],
             "candidates": scout.get("candidates", [])[:3]})
@@ -163,9 +210,9 @@ class ScoutIntentService:
         route.continue_from = continue_from if continue_from and RUN_ID_RE.match(continue_from) else None
 
         # Safety: the system is read-only; a request to destroy data is refused, not routed.
-        if scout["mode"] == "DESTRUCTIVE" and _DESTRUCTIVE_DATA_RE.search(query):
+        if scout["mode"] in ("DESTRUCTIVE", "UNAVAILABLE") and _DESTRUCTIVE_DATA_RE.search(query):
             route.intent, route.refusal = "REFUSE", "This system is read-only; requests to delete or alter data are not executed."
-            route.reasons.append("scout:DESTRUCTIVE + data-mutation phrasing")
+            route.reasons.append(f"scout:{scout['mode']} + data-mutation phrasing")
             return route, op
         if problems:
             route.intent, route.clarification = "CLARIFY", "; ".join(problems)
@@ -211,7 +258,7 @@ class HMemService:
                              {"prompt": prompt, "scope": self._cfg.hmem_scope, "app": "crime-intel", "k": k},
                              store_file=self._store)
         hits = out["result"]["hits"]
-        op.detail = {"hits": len(hits), "scope": self._cfg.hmem_scope}
+        op.detail = {**op.detail, "hits": len(hits), "scope": self._cfg.hmem_scope}
         return hits, op
 
     def store_verified_summary(self, prompt: str, summary: str, confidence: float, model: str,
@@ -225,12 +272,12 @@ class HMemService:
             "intent": "investigation", "confidence": confidence, "model": model, "receiptId": receipt_id,
         }, store_file=self._store)
         stored = bool(out["result"]["stored"])
-        op.detail = {"stored": stored, "confidence": confidence, "verified_ids": len(verified_ids), "audit": out.get("audit", [])}
+        op.detail = {**op.detail, "stored": stored, "confidence": confidence, "verified_ids": len(verified_ids), "audit": out.get("audit", [])}
         return stored, op
 
     def stats(self) -> Tuple[Dict[str, Any], EngineOp]:
         out, op = run_engine(self._cfg, "hmem", "stats", {}, store_file=self._store)
-        op.detail = out["result"]
+        op.detail = {**op.detail, **out["result"]}
         return out["result"], op
 
 
@@ -268,7 +315,7 @@ class MarkovianService:
 
     def validate(self) -> Tuple[Dict[str, Any], EngineOp]:
         out, op = run_engine(self._cfg, "markovian", "validate", {"config": self.chunk_config()})
-        op.detail = out["result"]["config"]
+        op.detail = {**op.detail, **out["result"]["config"]}
         return out["result"]["config"], op
 
     @staticmethod
@@ -290,24 +337,24 @@ class MarkovianService:
         out, op = run_engine(self._cfg, "markovian", "extract_carryover",
                              {"chunkText": chunk, "prevCarryover": "", "budgetTokens": self.chunk_config()["carryoverTokens"]})
         r = out["result"]
-        op.detail = {"strategy": r["strategy"], "carryover_chars": len(r["carryover"]), "iteration": st.iteration}
+        op.detail = {**op.detail, "strategy": r["strategy"], "carryover_chars": len(r["carryover"]), "iteration": st.iteration}
         return r["carryover"], op
 
     def continuation_prompt(self, goal: str, carryover: str) -> Tuple[str, EngineOp]:
         out, op = run_engine(self._cfg, "markovian", "build_prompt",
                              {"mode": "RESEARCH", "isFirst": False, "prompt": goal, "carryover": carryover})
-        op.detail = {"prompt_chars": len(out["result"]["prompt"])}
+        op.detail = {**op.detail, "prompt_chars": len(out["result"]["prompt"])}
         return out["result"]["prompt"], op
 
     def efficiency(self, tokens_per_iteration: List[int]) -> Tuple[Dict[str, Any], EngineOp]:
         out, op = run_engine(self._cfg, "markovian", "efficiency",
                              {"chunks": [{"tokens": t} for t in tokens_per_iteration], "config": self.chunk_config()})
-        op.detail = out["result"]
+        op.detail = {**op.detail, **out["result"]}
         return out["result"], op
 
     # Resumable state (a crashed or interrupted run is continued, never restarted).
     def _path(self, run_id: str) -> Path:
-        if not RUN_ID_RE.match(run_id):
+        if not SAFE_RUN_ID_RE.match(run_id):
             raise ValueError("invalid run id")
         d = self._cfg.state_path / "runs"
         d.mkdir(parents=True, exist_ok=True)

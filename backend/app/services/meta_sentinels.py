@@ -64,11 +64,11 @@ class OperationalTracker:
         violations = []
 
         total_tokens = sum(
-            c.get("completion_tokens", 0) + c.get("prompt_tokens", 0)
+            (c.get("completion_tokens") or 0) + (c.get("prompt_tokens") or 0)
             for c in model_calls
         )
         avg_latency = (
-            sum(c.get("latency_ms", 0) for c in model_calls) / len(model_calls)
+            sum((c.get("latency_ms") or 0) for c in model_calls) / len(model_calls)
             if model_calls
             else 0.0
         )
