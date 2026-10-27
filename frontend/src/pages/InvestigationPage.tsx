@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BrainCircuit,
   Search,
@@ -30,7 +30,7 @@ import {
 } from '../types';
 import { api } from '../services/api';
 import { AgentRunPanel } from '../components/AgentRunPanel';
-import { AegisSentinelsPanel } from '../components/AegisSentinelsPanel';
+import { buildEvidenceIndex } from '../lib/evidence';
 import { InteractiveGraphCanvas } from '../components/InteractiveGraphCanvas';
 import { ExecutionTraceDrawer } from '../components/ExecutionTraceDrawer';
 import { EvidencePinboard } from '../components/EvidencePinboard';
@@ -62,6 +62,7 @@ export const InvestigationPage: React.FC = () => {
   const [probingDiag, setProbingDiag] = useState<boolean>(false);
 
   // Expanded evidence state
+  const evidenceIndex = useMemo(() => (result ? buildEvidenceIndex(result) : new Map()), [result]);
   const [expandedEvidenceSource, setExpandedEvidenceSource] = useState<string | null>('forensic_reports');
 
   useEffect(() => {
@@ -229,7 +230,7 @@ export const InvestigationPage: React.FC = () => {
           <div style={{ background: 'var(--bg-elevated)', padding: '0.8rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Cpu size={14} color="var(--accent-blue)" /> Nightshift / NVIDIA Nemotron
+                <Cpu size={14} color="var(--accent-blue)" /> Model gateway (Nightshift)
               </span>
               <span
                 style={{
@@ -245,8 +246,8 @@ export const InvestigationPage: React.FC = () => {
               </span>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              <div>Model: <code style={{ color: 'var(--text-primary)' }}>{aiDiag?.model || 'nvidia/nemotron-3.5-lightning-30b-a3b'}</code></div>
-              <div>Provider: <code style={{ color: 'var(--accent-blue)' }}>{aiDiag?.provider || 'nvidia'}</code></div>
+              <div>Model: <code style={{ color: 'var(--text-primary)' }}>{aiDiag?.model || 'not available'}</code></div>
+              <div>Provider: <code style={{ color: 'var(--accent-blue)' }}>{aiDiag?.provider || 'not available'}</code></div>
               <div>Latency: {aiDiag?.latency_ms ? `${aiDiag.latency_ms}ms` : 'N/A'}</div>
             </div>
           </div>
@@ -534,9 +535,6 @@ export const InvestigationPage: React.FC = () => {
       {/* ── Investigation Results ─────────────────────────────────────────── */}
       {result && !loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* L4 Sentinels Supervisory Panel */}
-          <AegisSentinelsPanel sentinels={result.sentinels} />
-
           {/* Workspace View Controls Bar */}
           <div
             style={{
@@ -552,7 +550,7 @@ export const InvestigationPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>L4 WORKSPACE VIEW:</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>WORKSPACE VIEW:</span>
               <button
                 onClick={() => setActiveWorkspaceTab('graph')}
                 style={{
@@ -605,7 +603,7 @@ export const InvestigationPage: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                <Layers size={13} /> Unified Gotham Workspace (Both)
+                <Layers size={13} /> Graph + Pinboard
               </button>
             </div>
 
@@ -632,7 +630,7 @@ export const InvestigationPage: React.FC = () => {
             </div>
           </div>
 
-          {/* L4 Interactive Knowledge Graph Canvas */}
+          {/* Interactive Knowledge Graph Canvas */}
           {(activeWorkspaceTab === 'graph' || activeWorkspaceTab === 'both') && (
             <InteractiveGraphCanvas
               links={result.candidate_links}
@@ -645,7 +643,7 @@ export const InvestigationPage: React.FC = () => {
             />
           )}
 
-          {/* L4 Interactive Evidence Pinboard */}
+          {/* Interactive Evidence Pinboard */}
           {(activeWorkspaceTab === 'pinboard' || activeWorkspaceTab === 'both') && (
             <EvidencePinboard
               supportingEvidence={result.supporting_evidence}
@@ -819,6 +817,13 @@ export const InvestigationPage: React.FC = () => {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
                 Candidate Cross-Station Links ({result.candidate_links.length})
               </h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {result.candidate_links.some((l) => l.validation_status)
+                  ? (['SUPPORTED', 'WEAK', 'UNSUPPORTED'] as const)
+                      .map((st) => `${result.candidate_links.filter((l) => l.validation_status === st).length} ${st}`)
+                      .join(' • ') + ` • ${result.candidate_links.filter((l) => !l.validation_status).length} no verifier result`
+                  : 'verifier results not available for this response'}
+              </span>
             </div>
 
             {result.candidate_links.length === 0 ? (
@@ -849,6 +854,11 @@ export const InvestigationPage: React.FC = () => {
                         </span>
                       </div>
 
+                      {!link.validation_status && (
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: 'var(--radius-md)', marginRight: '8px', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                          Verifier: not available
+                        </span>
+                      )}
                       {link.validation_status && (
                         <span title={link.validation_explanation ?? ''} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: 'var(--radius-md)',
                           marginRight: '8px', border: '1px solid var(--border-subtle)',
@@ -882,25 +892,46 @@ export const InvestigationPage: React.FC = () => {
                       <strong>Link Basis:</strong> {link.similarity_basis}
                     </div>
 
-                    {/* Supporting Evidence Chips */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Citations:</span>
-                      {link.supporting_evidence_ids.map((evId) => (
-                        <span
-                          key={evId}
-                          style={{
-                            fontSize: '0.75rem',
-                            padding: '2px 8px',
-                            borderRadius: 'var(--radius-sm)',
-                            background: 'var(--bg-darkest)',
-                            color: 'var(--accent-blue)',
-                            border: '1px solid var(--border-subtle)',
-                            fontFamily: 'var(--font-mono)',
-                          }}
-                        >
-                          {evId}
-                        </span>
-                      ))}
+                    {/* Citations: record ids with the cited text from the returned records */}
+                    <div style={{ marginBottom: '0.8rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                        Citations ({link.supporting_evidence_ids.length}):
+                      </div>
+                      {link.supporting_evidence_ids.length === 0 && (
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>No citations in the response.</div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {link.supporting_evidence_ids.map((evId) => {
+                          const rec = evidenceIndex.get(evId);
+                          return (
+                            <div key={evId} style={{ display: 'flex', gap: '8px', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                              <span
+                                style={{
+                                  fontSize: '0.75rem',
+                                  padding: '2px 8px',
+                                  borderRadius: 'var(--radius-sm)',
+                                  background: 'var(--bg-darkest)',
+                                  color: 'var(--accent-blue)',
+                                  border: '1px solid var(--border-subtle)',
+                                  fontFamily: 'var(--font-mono)',
+                                }}
+                              >
+                                {evId}
+                              </span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', flex: 1, minWidth: '200px' }}>
+                                {rec
+                                  ? (rec.quote ? <>[{rec.kind}] &ldquo;{rec.quote}&rdquo;</> : <>[{rec.kind}] (record has no text field)</>)
+                                  : <em>record text not in this response</em>}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {link.rejected_ids && link.rejected_ids.length > 0 && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--accent-rose)', marginTop: '4px' }}>
+                          Cited ids rejected by the verifier (not found in retrieved data): <code>{link.rejected_ids.join(', ')}</code>
+                        </div>
+                      )}
                     </div>
 
                     {/* Contradictions for this link */}

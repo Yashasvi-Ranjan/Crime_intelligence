@@ -42,7 +42,7 @@ export interface GraphEdge {
   target: string;
   type?: 'cross_station_link' | 'involves_suspect' | 'involves_vehicle' | 'supported_by_evidence';
   confidence: number;
-  status: 'SUPPORTED' | 'WEAK' | 'UNSUPPORTED';
+  status: 'SUPPORTED' | 'WEAK' | 'UNSUPPORTED' | 'NOT_AVAILABLE' | 'CITED';
   basis?: string;
   supporting_evidence_ids?: string[];
 }
@@ -56,7 +56,8 @@ export interface EvidenceCardItem {
   location?: string;
   summary: string;
   corroboratesIncidentIds: string[];
-  groundingStatus: 'GROUNDED' | 'UNVERIFIED';
+  /** Derived from the verifier status of the links that cite this record. */
+  groundingStatus: 'SUPPORTED' | 'WEAK' | 'UNSUPPORTED' | 'NOT_AVAILABLE' | 'NOT_CITED';
   citations: string[];
   metadata: Record<string, any>;
   pinned?: boolean;

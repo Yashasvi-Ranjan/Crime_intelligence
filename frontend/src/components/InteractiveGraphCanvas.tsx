@@ -103,14 +103,15 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
 
     // 2. Incident-to-Incident Edges from Candidate Links
     allLinks.forEach((link) => {
-      const status = link.validation_status || (link.confidence_score >= 0.7 ? 'SUPPORTED' : link.confidence_score >= 0.4 ? 'WEAK' : 'UNSUPPORTED');
+      // Verifier status comes only from the response; no status is inferred from the heuristic score.
+      const status = link.validation_status || 'NOT_AVAILABLE';
       edgeList.push({
         id: link.link_id || `edge-${link.source_incident_id}-${link.target_incident_id}`,
         source: link.source_incident_id,
         target: link.target_incident_id,
         type: 'cross_station_link',
         confidence: link.confidence_score,
-        status: status as 'SUPPORTED' | 'WEAK' | 'UNSUPPORTED',
+        status: status as GraphEdge['status'],
         basis: link.similarity_basis || link.confidence_rationale,
         supporting_evidence_ids: link.supporting_evidence_ids,
       });
@@ -148,7 +149,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
               target: entityId,
               type: isSuspect ? 'involves_suspect' : 'involves_vehicle',
               confidence: link.confidence_score,
-              status: status as 'SUPPORTED' | 'WEAK' | 'UNSUPPORTED',
+              status: status as GraphEdge['status'],
               basis: `Direct correlation: ${attr.value}`,
             });
 
@@ -158,7 +159,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
               target: entityId,
               type: isSuspect ? 'involves_suspect' : 'involves_vehicle',
               confidence: link.confidence_score,
-              status: status as 'SUPPORTED' | 'WEAK' | 'UNSUPPORTED',
+              status: status as GraphEdge['status'],
               basis: `Direct correlation: ${attr.value}`,
             });
           }
@@ -202,7 +203,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             target: evId,
             type: 'supported_by_evidence',
             confidence: 0,
-            status: 'SUPPORTED',
+            status: 'CITED',
             basis: `Retrieved ${category} record that cites this incident`,
           });
         }
@@ -219,7 +220,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   target: evId,
                   type: 'supported_by_evidence',
                   confidence: 0,
-                  status: 'SUPPORTED',
+                  status: 'CITED',
                   basis: `Cited as supporting evidence for ${link.link_id} (verifier status is on the link)`,
                 });
               }
@@ -233,7 +234,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   target: evId,
                   type: 'supported_by_evidence',
                   confidence: 0,
-                  status: 'SUPPORTED',
+                  status: 'CITED',
                   basis: `Cited as supporting evidence for ${link.link_id} (verifier status is on the link)`,
                 });
               }
@@ -388,7 +389,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
   const getEdgeStroke = (edge: GraphEdge) => {
     if (edge.status === 'SUPPORTED') return '#10b981'; // emerald
     if (edge.status === 'WEAK') return '#f59e0b'; // amber
-    return '#f43f5e'; // rose
+    if (edge.status === 'UNSUPPORTED') return '#f43f5e'; // rose
+    return '#64748b'; // slate: verifier status not available / citation edge
   };
 
   return (
@@ -433,7 +435,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, letterSpacing: '0.02em', color: '#f8fafc' }}>
-                PALANTIR GOTHAM MULTI-ENTITY KNOWLEDGE GRAPH
+                AEGIS ENTITY LINK GRAPH
               </h3>
               <span
                 style={{
@@ -446,7 +448,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                 }}
               >
-                LIVE DIRECTED SVG
+                DERIVED FROM RESPONSE
               </span>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>
@@ -674,6 +676,17 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
               </marker>
               <marker
+                id="arrow-slate"
+                viewBox="0 0 10 10"
+                refX="20"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+              </marker>
+              <marker
                 id="arrow-cyan"
                 viewBox="0 0 10 10"
                 refX="20"
@@ -710,7 +723,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   ? 'url(#arrow-emerald)'
                   : edge.status === 'WEAK'
                   ? 'url(#arrow-amber)'
-                  : 'url(#arrow-rose)';
+                  : edge.status === 'UNSUPPORTED'
+                  ? 'url(#arrow-rose)'
+                  : 'url(#arrow-slate)';
 
               return (
                 <g key={edge.id}>

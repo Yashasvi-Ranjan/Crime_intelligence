@@ -12,7 +12,7 @@ import {
 
 const API_BASE = '/api';
 // If the live backend (tunnelled to the developer's machine) is unreachable, requests are retried against /offline-api: the same API served in
-// offline sample mode (bundled synthetic data, recorded Nemotron responses). The UI shows a banner whenever this is active.
+// offline sample mode (bundled synthetic data, recorded model responses). The UI shows a banner whenever this is active.
 const OFFLINE_BASE = '/offline-api';
 const OFFLINE_HOLD_MS = 30_000;
 let offlineUntil = 0;
