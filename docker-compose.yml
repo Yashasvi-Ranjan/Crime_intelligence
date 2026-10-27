@@ -14,7 +14,7 @@ services:
 
   api:
     build: { context: ., dockerfile: Dockerfile }
-    image: crime-intel
+    image: oah-submission
     ports: ["8000:8000"]
     env_file:
       - path: .env

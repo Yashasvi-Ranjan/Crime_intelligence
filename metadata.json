@@ -9,8 +9,8 @@
     {"name": "Meterless engines", "role": "H-MEM and Markovian run in the container from the open Apache-2.0 reference implementations (commit 1742dec, vendored unmodified in third_party/meterless). Scout Intent and World Model run only from a mounted Nightshift engine directory; otherwise they are traced engine_unavailable."}
   ],
   "entry_point": {
-    "docker_build": "docker build -t crime-intel .",
-    "docker_run": "docker run -p 8000:8000 crime-intel",
+    "docker_build": "docker build -t oah-submission .",
+    "docker_run": "docker run -p 8000:8000 oah-submission",
     "compose": "docker compose build && docker compose up",
     "api": "http://localhost:8000",
     "web": "http://localhost:3001",
@@ -21,7 +21,7 @@
   "sample_mode": {
     "enable": "SAMPLE_MODE=true  (or options.sample_mode in the request)",
     "behaviour": "Runs the real Planner/Finder/Skeptic/verifier/Reporter loop over data/generated with model responses replayed from data/sample/model_fixtures by prompt hash; a missing fixture runs a documented code-only fallback traced as code_fallback. Needs no network, credentials, Zetaris or Nightshift.",
-    "offline_check": "docker run --network none -e SAMPLE_MODE=true crime-intel"
+    "offline_check": "docker run --network none -e SAMPLE_MODE=true oah-submission"
   },
   "examples": {"inputs": "input_examples/", "outputs": "output_examples/", "compare": "python scripts/judge_compare.py"},
   "trace": "logs/trace-<run_id>.jsonl",

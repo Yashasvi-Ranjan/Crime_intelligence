@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Cross-Station Crime Intelligence API  (docker build -t crime-intel . && docker run -p 8000:8000 crime-intel)
+# Cross-Station Crime Intelligence API  (docker build -t oah-submission . && docker run -p 8000:8000 oah-submission)
 
 # ── stage 1: bundle the vendored Apache-2.0 Meterless reference engines (H-MEM, Markovian) ──
 FROM node:20-slim AS engines

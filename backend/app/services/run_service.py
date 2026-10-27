@@ -25,6 +25,7 @@ from app.services.investigation_workflow import InvestigationWorkflow
 from app.services.meterless_engines import HMemService, MarkovianService, ScoutIntentService
 from app.services.meterless_service import meterless_service
 from app.services.sample_mode.fixtures import FixtureStore
+from app.services.trace_logger import DEFAULT_LOGS_DIR, resolve_logs_dir, safe_trace_name
 from app.services.sample_mode.local_investigation import LocalInvestigationService
 from app.services.sample_mode.registries import ResilientModelRegistry, SampleModelRegistry
 from app.services.sample_mode.resilient_data import ResilientInvestigationService
@@ -61,6 +62,12 @@ def run_workflow(sample: bool, query: str, cfg: Optional[Settings] = None, run_i
         return wf.run_investigation(query=query, run_id=run_id, **kw)
     finally:
         cleanup()
+
+
+def _log_file(rid: str) -> str:
+    d = resolve_logs_dir()
+    name = f"trace-{safe_trace_name(rid)}.jsonl"
+    return f"logs/{name}" if d == DEFAULT_LOGS_DIR else str(d / name)
 
 
 def _engines(res: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -113,6 +120,6 @@ def run_investigation(run_id: Optional[str], payload: Dict[str, Any], sample_mod
         "agents": res.get("agents", []),
         "engines": _engines(res),
         "trace_id": rid,
-        "log_file": f"logs/trace-{rid}.jsonl",
+        "log_file": _log_file(rid),
         "execution_time_seconds": round(time.time() - t0, 3),
     }

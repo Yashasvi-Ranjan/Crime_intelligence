@@ -20,6 +20,8 @@ import json
 import logging
 import os
 import re
+import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -38,17 +40,30 @@ def safe_trace_name(run_id: str) -> str:
     return re.sub(r"[^A-Za-z0-9_\-]", "_", run_id)[:32] + "-" + hashlib.sha1(run_id.encode("utf-8", "replace")).hexdigest()[:10]
 
 
+DEFAULT_LOGS_DIR = Path(__file__).resolve().parent.parent.parent.parent / "logs"
+
+
+def resolve_logs_dir(preferred: Optional[Path] = None) -> Path:
+    """logs/ next to the repo; if it cannot be written (e.g. a bind mount owned by another uid), a temp dir, loudly."""
+    d = preferred or DEFAULT_LOGS_DIR
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+        if os.access(d, os.W_OK):
+            return d
+    except OSError:
+        pass
+    alt = Path(tempfile.gettempdir()) / "crime-intel-logs"
+    alt.mkdir(parents=True, exist_ok=True)
+    logger.warning("trace directory %s is not writable; writing traces to %s instead (they are also printed to stdout)", d, alt)
+    return alt
+
+
 class TraceLogger:
     """Manages appending trace events to logs/trace-<run_id>.jsonl."""
 
     def __init__(self, run_id: str, base_dir: Optional[Path] = None) -> None:
         self.run_id = run_id
-        if base_dir:
-            self.logs_dir = base_dir
-        else:
-            # cross_station_crime_intelligence/logs
-            self.logs_dir = Path(__file__).resolve().parent.parent.parent.parent / "logs"
-        self.logs_dir.mkdir(parents=True, exist_ok=True)
+        self.logs_dir = resolve_logs_dir(base_dir)
         self.log_file = self.logs_dir / f"trace-{safe_trace_name(self.run_id)}.jsonl"
 
     def log_event(
@@ -89,6 +104,9 @@ class TraceLogger:
             line = json.dumps(event) + "\n"
             with open(self.log_file, "a", encoding="utf-8") as f:
                 f.write(line)
+            if os.environ.get("TRACE_STDOUT", "1") != "0":
+                # Same event, one line on stdout, so `docker logs <container>` shows the trace without a volume mount.
+                print("TRACE " + line, end="", file=sys.stdout, flush=True)
         except Exception as exc:
             logger.warning("Failed to write to trace log %s: %s", self.log_file, exc)
 

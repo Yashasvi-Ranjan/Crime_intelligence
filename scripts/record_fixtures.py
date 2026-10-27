@@ -14,7 +14,7 @@ served by a recorded fixture (replayed) versus the code-only fallback. Aim: 100%
   python scripts/record_fixtures.py --outputs-only       # no live calls: regenerate output_examples/ from the
                                                          # CURRENT sample path (whatever fixtures exist). Run it INSIDE the
                                                          # image so engine availability matches the judge's environment:
-  docker run --rm -v "$PWD/output_examples:/app/output_examples" crime-intel python scripts/record_fixtures.py --outputs-only
+  docker run --rm -v "$PWD/output_examples:/app/output_examples" oah-submission python scripts/record_fixtures.py --outputs-only
 
 Fixtures hold what a model said about one prompt; they never contain a whole-investigation answer and are never
 keyed to an example. Review `git diff data/sample` before committing: responses are synthetic-data only.
@@ -123,8 +123,8 @@ def main() -> int:
     if not a.outputs_only:
         print("\nNEXT: output_examples/ must reflect the judge's environment (no mounted engines, so Scout Intent and World Model\n"
               "report engine_unavailable). Rebuild the image, then regenerate them inside it:\n"
-              "  docker build -t crime-intel . && docker run --rm -v \"$PWD/output_examples:/app/output_examples\" "
-              "crime-intel python scripts/record_fixtures.py --outputs-only")
+              "  docker build -t oah-submission . && docker run --rm -v \"$PWD/output_examples:/app/output_examples\" "
+              "oah-submission python scripts/record_fixtures.py --outputs-only")
     return rc
 
 

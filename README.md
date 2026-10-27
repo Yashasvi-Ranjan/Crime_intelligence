@@ -211,28 +211,34 @@ Everything below runs from a fresh clone. Config lives in **one place: `<repo ro
 excluded from every image). It is optional: with no `.env` the stack starts and `SAMPLE_MODE=true` needs no credentials at all.
 
 ```bash
-cp .env.example .env            # then fill in the <-- FILL IN values (live mode only)
+git clone <your-repo-url> && cd <your-repo>
+cp .env.example .env            # fill in your Zetaris and Nightshift settings (live mode only)
 
-# API only
-docker build -t crime-intel .
-docker run -p 8000:8000 crime-intel
+docker build -t oah-submission .
+docker run --rm -p 8000:8000 --env-file .env oah-submission        # API on :8000
 
-# API + dashboard:  API http://localhost:8000   web http://localhost:3001
-docker compose build && docker compose up
+# in a second terminal
+curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_1.json   # also example_2/3
+curl http://localhost:8000/health        # zetaris / nightshift / engines: each "live", "sample" or "down"
 
-# One investigation (also example_2.json, example_3.json); the trace is logs/trace-<run_id>.jsonl, the response names it in "log_file"
-curl -X POST localhost:8000/run -H 'content-type: application/json' -d @input_examples/example_1.json
-curl localhost:8000/health      # zetaris / nightshift / engines: each "live", "sample" or "down"
+# read the run
+docker logs <container_id>               # every trace event is also printed to stdout as one `TRACE {...}` JSON line
+docker exec <container_id> sh -c 'cat logs/trace-*.jsonl'          # the trace files live INSIDE the container...
+docker run --rm -p 8000:8000 --env-file .env -v "$PWD/logs:/app/logs" oah-submission   # ...or mount ./logs to read them on the host
+                                         # (on Linux add:  --user "$(id -u):$(id -g)"  so the container can write to ./logs)
 
-# Offline, no Zetaris, no Nightshift, no .env, no network
-docker run -p 8000:8000 -e SAMPLE_MODE=true crime-intel
+# API + dashboard together:  API http://localhost:8000   web http://localhost:3001
+docker compose build && docker compose up        # compose bind-mounts ./logs and ./.state for you
+
+# Without your setup: Zetaris and Nightshift stopped, no credentials, no network
+docker run --rm -p 8000:8000 --env-file .env -e SAMPLE_MODE=true oah-submission
+docker run --rm -p 8000:8000 -e SAMPLE_MODE=true oah-submission                 # no .env at all
 SAMPLE_MODE=true docker compose up
-docker run -d --name offline --network none -e SAMPLE_MODE=true crime-intel      # no published port on --network none:
-docker exec offline python scripts/judge_compare.py --url http://127.0.0.1:8000  # answers all three examples from inside
+docker run -d --name offline --network none -e SAMPLE_MODE=true oah-submission  # no published port on --network none:
+docker exec offline python scripts/judge_compare.py --url http://127.0.0.1:8000 # answers all three examples from inside
 
 # Compare any running server's answers with output_examples/ (ignores timings, run ids and query ids)
 python scripts/judge_compare.py --url http://localhost:8000
-python scripts/trace_check.py        # (inside the container) checks every trace against the judge checklist
 python run.py --once input_examples/example_1.json    # host alternative to curl
 ```
 
@@ -277,11 +283,11 @@ An engine that cannot run is recorded as `engine_unavailable` in the trace and i
 same four functions over `data/generated` (trace `source: local_sample`, generated query ids), and each model call is answered by a **recorded live Nemotron response**
 matched by `sha256(role, model, prompt)` from `data/sample/model_fixtures/` (trace `source: replayed`; fixtures are never keyed to an example and never contain a
 final answer). A prompt with no fixture runs a documented, clearly weaker code-only fallback (`source: code_fallback`, `reported_model: null`). Record fixtures on the host with `python scripts/record_fixtures.py` (needs live Zetaris + Nightshift; `--local-retrieval` records live models over local data), then rebuild the image and
-regenerate `output_examples/` *inside it* (`docker run --rm -v "$PWD/output_examples:/app/output_examples" crime-intel python scripts/record_fixtures.py --outputs-only`) so the expected engine statuses match the judge's container. The old
+regenerate `output_examples/` *inside it* (`docker run --rm -v "$PWD/output_examples:/app/output_examples" oah-submission python scripts/record_fixtures.py --outputs-only`) so the expected engine statuses match the judge's container. The old
 pre-built scenarios survive only as `POST /api/investigations/analyze` with `"demo_content": true` (labelled `[DEMO CONTENT]`, no agent runs).
 
 **Tests and scan**: `python -m pytest -q backend/tests && python -m pytest -q tests` (engine and live tests skip, not fail, when unavailable);
-`sh scripts/secret_scan.sh [--image crime-intel]`.
+`sh scripts/secret_scan.sh [--image oah-submission]`.
 
 ---
 
