@@ -440,6 +440,68 @@ def test_workflow_returns_complete_integration_status():
     assert status["zetaris"]["status"] == "connected"
 
 
+def _run_legacy_with_mocks(wf, sample_incidents):
+    """Run the legacy pipeline once with retrieval stubbed, returning the result."""
+    with patch.object(wf._data, "search_candidate_incidents", return_value=sample_incidents):
+        with patch.object(wf._data, "retrieve_supporting_evidence", return_value={
+            "forensic_reports": [], "cctv_reports": [], "witness_reports": [], "newspaper_reports": [],
+        }):
+            return wf.run_investigation(query="crowbar safe burglary")
+
+
+def _legacy_workflow_with_mocked_models():
+    call_iter = iter([_mock_nightshift(MOCK_PLANNER_RESPONSE), _mock_nightshift("[]"),
+                      _mock_nightshift(MOCK_EVALUATOR_CLEAN), _mock_nightshift(MOCK_REPORTER)])
+    mock_ai = MagicMock(spec=NightshiftClient)
+    mock_ai.generate.side_effect = lambda *args, **kwargs: next(call_iter)
+    return InvestigationWorkflow(ai_client=mock_ai)
+
+
+@requires_world_model
+def test_legacy_status_does_not_claim_zetaris_live_for_local_data():
+    """If the data service is the local loader, the legacy result must say so (the UI reads is_sample for its LIVE badge)."""
+    sample_incidents = get_sample_investigation("crowbar_safe_cracking", "test")["candidate_incidents"]
+    wf = _legacy_workflow_with_mocked_models()
+    with patch.object(wf._data, "source", "local_sample"):
+        result = _run_legacy_with_mocks(wf, sample_incidents)
+
+    assert result["is_sample"] is True
+    assert result["data_mode"] == "local_sample"
+    z = result["integration_status"]["zetaris"]
+    assert z["status"] == "sample" and z["mode"] == "local_sample" and z["tables_queried"] == []
+    assert result["retrieval_and_analysis_status"] == "completed_not_fully_live"
+
+
+@requires_world_model
+def test_legacy_status_labels_an_engine_test_double_and_never_reports_it_live():
+    """A labelled test-double engine is reported as such, and the run is never 'completed_live'."""
+    from unittest.mock import PropertyMock
+    sample_incidents = get_sample_investigation("crowbar_safe_cracking", "test")["candidate_incidents"]
+    wf = _legacy_workflow_with_mocked_models()
+    with patch.object(type(wf._world), "backend", new_callable=PropertyMock, return_value="test_double"):
+        result = _run_legacy_with_mocks(wf, sample_incidents)
+
+    me = result["integration_status"]["meterless_engine"]
+    assert me["mode"] == "test_double" and me["backend"] == "test_double"
+    assert result["retrieval_and_analysis_status"] == "completed_not_fully_live"
+
+
+@requires_world_model
+def test_legacy_status_live_path_unchanged_when_data_and_models_are_live():
+    """With the live data service and a reported model the old live labels still apply (engine backend is not forced)."""
+    from unittest.mock import PropertyMock
+    sample_incidents = get_sample_investigation("crowbar_safe_cracking", "test")["candidate_incidents"]
+    wf = _legacy_workflow_with_mocked_models()
+    with patch.object(type(wf._world), "backend", new_callable=PropertyMock, return_value="mounted"):
+        result = _run_legacy_with_mocks(wf, sample_incidents)
+
+    assert result["is_sample"] is False and result["data_mode"] == "zetaris_live"
+    assert result["integration_status"]["zetaris"]["status"] == "connected"
+    assert result["integration_status"]["nightshift_nemotron"]["mode"] == "nightshift_live"
+    assert result["integration_status"]["meterless_engine"]["mode"] == "engine_live"
+    assert result["retrieval_and_analysis_status"] == "completed_live"
+
+
 @requires_world_model
 def test_workflow_required_response_fields():
     """

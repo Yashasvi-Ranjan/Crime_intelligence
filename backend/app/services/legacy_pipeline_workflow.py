@@ -530,10 +530,18 @@ Return a JSON object:
         winning_route = last_model_meta.get("meterless_meta", {}).get("winning_route", {})
         reported_model = last_model_meta.get("reported_model")   # only what a response reported; never the configured name
 
+        # Report what actually ran, not what this path is normally wired to. The data service says where rows came
+        # from (same convention as InvestigationWorkflow._data_mode) and the world service says which engine served it.
+        data_source = getattr(self._data, "source", "zetaris_live")
+        zetaris_live = data_source == "zetaris_live"
+        engine_backend = getattr(self._world, "backend", None)      # "mounted" | "test_double" | None
+        engine_is_double = engine_backend == "test_double"
+        fully_live = zetaris_live and bool(reported_model) and not engine_is_double
+
         return {
             "investigation_id": run_id,
-            "is_sample": False,
-            "data_mode": "zetaris_live",
+            "is_sample": not zetaris_live,
+            "data_mode": data_source,
             "scenario_id": None,
             "title": report_title,
             "query": query,
@@ -546,7 +554,7 @@ Return a JSON object:
             "follow_up_actions": follow_ups,
             "executive_summary": exec_summary,
             "integration_status": {
-                "zetaris": {
+                "zetaris": ({
                     "status": "connected",
                     "mode": "zetaris_live",
                     "tables_queried": [
@@ -556,17 +564,23 @@ Return a JSON object:
                         self._cfg.table_fqn("witness_reports"),
                         self._cfg.table_fqn("newspaper_reports"),
                     ],
-                },
+                } if zetaris_live else {
+                    "status": "sample",
+                    "mode": data_source,
+                    "note": "Rows come from the local loader, not from Zetaris.",
+                    "tables_queried": [],
+                }),
                 "nightshift_nemotron": {
                     "status": "connected" if reported_model else "no_model_calls",
-                    "mode": "nightshift_live",
+                    "mode": "nightshift_live" if reported_model else "no_model_calls",
                     "model": reported_model,
                     "provider": winning_route.get("provider") or "nvidia",
                     "winning_route": winning_route if winning_route else None,
                 },
                 "meterless_engine": {
                     "status": "connected",
-                    "mode": "engine_live",
+                    "mode": "test_double" if engine_is_double else "engine_live",
+                    "backend": engine_backend,
                     "feature": "world_model_shared_state",
                     "schema_version": 1,
                     "world_name": f"inv_{run_id}",
@@ -575,7 +589,7 @@ Return a JSON object:
                     "contradictions_count": len(world_state.get("contradictions", [])),
                 },
             },
-            "retrieval_and_analysis_status": "completed_live",
+            "retrieval_and_analysis_status": "completed_live" if fully_live else "completed_not_fully_live",
             "trace_file": str(tracer.log_file.name),
             "timestamp": time.time(),
             "elapsed_seconds": elapsed_total,
