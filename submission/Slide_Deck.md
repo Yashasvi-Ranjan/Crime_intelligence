@@ -1,6 +1,6 @@
 # AEGIS Slide Deck Content
 
-Written for: hackathon judges. Numbers come from this repo (`evaluation/results.json`, `output_examples/`, README, `metadata.json`). Anything unconfirmed is marked **[VERIFY]**.
+Written for: hackathon judges. Numbers come from this repo (`output_examples/`, README, `metadata.json`, `submission/`).
 
 ---
 
@@ -122,21 +122,15 @@ Screens to capture, all synthetic, on the 1536 px desktop layout:
 **Check no secrets visible:** no `.env`, no settings page, and no token in terminal scrollback.
 
 ## Slide 11 · Results
-**Benchmark (live-recorded models, `evaluation/results.json`, 7 planted cases: 5 positive, 2 decoy):**
+**No model benchmark is claimed.** `evaluation/results.json` (7 planted cases) was produced with a scripted offline stand-in for the models (hand-written planner/finder logic over `data/generated`), not Nemotron. It tests the pipeline, the verifier and the scoring mechanics, so its "100% recall" must not appear on a slide as a model result. Seven cases at one run each is also too small to be significant.
 
-| | Lightning-only baseline | Multi-agent AEGIS |
-|---|---|---|
-| Valid-link recall, verified | 0.00 | **1.00** |
-| False links / decoy links | 2 / 2 | **0 / 0** |
-| Fabricated fallback links | 7 | **0** |
-| Source contradictions surfaced in output | 0 of 7 cases | **3 of 6 cases** |
-| Citation accuracy / failed runs | 1.0 / 0 | 1.0 / 0 |
-
-- Footnote: 7 cases, one run each. This is directional, not statistically significant.
+**What was measured with real Nemotron:**
+- Live run through Docker (real Zetaris and Nightshift): full loop, Nemotron on all four agents, zero partial failures.
+- A live safe-burglary run retrieved the planted pair, but the verifier and Skeptic refused an ungrounded link: "no supportable link" is the correct output for a link the evidence does not support.
 
 **Judge path (fresh clone, sample mode, `output_examples/`):**
 - Example 2 (catalytic converters) gives 3 links scored 0.78 / 0.55 / 0.32, with the stated reasons the series can't be asserted.
-- Examples 1 and 3 end in `no_supportable_links_found`, with no forensic, CCTV or witness evidence to corroborate.
+- Examples 1 and 3 end in `no_supportable_links_found` (their links are UNSUPPORTED / WEAK): the retrieved evidence did not independently corroborate a series. Recall on the planted series is not demonstrated by these runs.
 - All 3 answers are reproducible and compared automatically: `judge_compare.py` runs in CI, including `--network none`.
 
 **Engineering:** about 200 test functions across backend and root (engine/live tests skip when unavailable), secret scan on source and image, and Docker plus CI on every push.
@@ -171,8 +165,8 @@ Screens to capture, all synthetic, on the 1536 px desktop layout:
 
 ---
 
-## [VERIFY] before presenting
-1. **Eval latency.** `results.json` shows about 1.4 s per run, and the baseline's 7 "fabricated fallback links" suggest those runs used replay or fallback. This conflicts with "3–6 min live". Say how the eval was run, or re-run it live.
-2. **Judge-path examples 1 and 3.** Both planted series end in "no supportable links". That's defensible as conservative, but expect the question "why didn't it find the series?" Have the answer ready: no corroborating forensic, CCTV or witness record was retrieved.
-3. **Contradicting claims.** `SPONSOR_SUBMISSION_FINAL.md` says "195/195 tests", "working vision and embedding lanes", "zero hallucinations", and has a competitor table. The README says otherwise. These are left off the slides, so run pytest and reconcile the doc.
-4. **Licence.** The README flags a proprietary `worldmodel.js` copy in the repo that needs removing or written permission before you publish.
+## Notes resolved before publishing
+1. **Eval.** Resolved: the committed evaluation used a scripted stand-in, so it is described as a pipeline test, not a model benchmark (see Slide 11, the README and `scripts/evaluate_agents.py`).
+2. **Examples 1 and 3.** Expect "why didn't it find the series?" Answer: retrieval did not surface independent corroborating records, so the verifier refused to assert a link; we show that rather than hide it.
+3. **Older documents.** `SPONSOR_SUBMISSION_FINAL.md` ("195/195 tests", "vision and embedding lanes", "zero hallucinations") contradicted the code and has been removed; the accurate version is `submission/SPONSOR_TECHNOLOGY.md`.
+4. **Licence.** `worldmodel.js` (proprietary) was never committed to any branch and is gitignored; the open Apache-2.0 reference engines are vendored unmodified in `third_party/meterless/`.
