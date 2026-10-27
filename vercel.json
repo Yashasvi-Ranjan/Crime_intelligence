@@ -8,7 +8,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py?_route=$1" },
-    { "source": "/api", "destination": "/api/index.py?_route=" }
+    { "source": "/api/(.*)", "destination": "https://oxide-packages-textiles-carrier.trycloudflare.com/api/$1" },
+    { "source": "/api", "destination": "https://oxide-packages-textiles-carrier.trycloudflare.com/api" }
   ]
 }
