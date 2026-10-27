@@ -533,25 +533,14 @@ prompt hash, code-only fallback (labelled) for any prompt without a fixture, `da
 (`crowbar_safe_cracking`, `catalytic_converter`, `keyless_suv_relay`) are demo content only: `"demo_content": true`, `data_mode: demo_content`, no agent, model,
 query or engine runs. `POST /api/investigations/analyze` in live mode still returns HTTP 503 when Zetaris or Nightshift is unconfigured; `POST /run` instead falls back, traced.
 
-## 16. Known limitations
-
-- Embedding retrieval and reranking are **not enabled**: `/v1/embeddings` is 404 on this Nightshift build and no rerank model/route exists. No specialist-retrieval comparison was possible.
-- Bolt E4B is not available; Scout Intent's registry has no crime intents (see section 10).
-- The Skeptic on Ultra is slow (tens of seconds per call); a full investigation takes roughly 3-6 minutes. The API call is synchronous (no streaming progress); the UI shows the per-iteration trace when the run ends.
-- Model outputs are non-deterministic; the evaluation uses one run per case on 7 synthetic cases and is not statistically meaningful.
-- The verifier's contradiction/duplicate heuristics cover the data's known patterns (vehicle colour, witness flags, forensic exclusion, repeat CCTV/witness reports); they are not exhaustive.
-- H-MEM retrieval is its built-in lexical/hybrid scorer (no vectors, since embeddings are unavailable).
-- Zetaris per-source retrieval failures are tolerated and reported in `partial_failures`; SQL is sanitized string interpolation, not bound parameters.
-- Meterless engines run only where Nightshift.app is installed.
-
-## 17. AI and Model Usage
+## 16. AI and Model Usage
 
 All model calls go through Meterless Nightshift to NVIDIA Nemotron models (Lightning 30B A3B; Ultra 550B A55B for the Skeptic). Models plan,
 analyse retrieved records, critique, and write the report. They do not access the database directly, and every ID, quotation and attribute they cite is
 checked by deterministic code against Zetaris records. Model-generated hypotheses are labelled as hypotheses; scores are uncalibrated.
 The data is fully synthetic (fictional stations, people and places). Claude Code (Anthropic) was used to help write this code.
 
-## 18. Third-Party Code and Licences
+## 17. Third-Party Code and Licences
 
 - Python: FastAPI, Pydantic / pydantic-settings, Starlette, Uvicorn, httpx, python-dotenv, pytest (all permissive open-source licences).
 - Frontend: React, Vite, TypeScript, lucide-react (MIT/ISC/Apache-style open-source licences).
