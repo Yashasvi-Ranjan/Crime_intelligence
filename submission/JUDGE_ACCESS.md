@@ -13,6 +13,7 @@ curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @i
 curl http://localhost:8000/health
 python scripts/judge_compare.py --url http://localhost:8000     # all three examples, compared with output_examples/
 ```
+For the host venv path run `sh scripts/build_reference_engines.sh` first (README "Host (venv) path"); exact Docker checks are in `docs/DOCKER_VERIFY.md`.
 Add `--network none` (and run `docker exec` instead of publishing a port) to prove it needs no network; see the README "Run with Docker" section.
 
 ## Read the evidence
@@ -24,4 +25,4 @@ Add `--network none` (and run `docker exec` instead of publishing a port) to pro
 `docker compose build && docker compose up` serves the API on http://localhost:8000 and the dashboard on http://localhost:3001 (no login).
 
 ## Live mode (optional)
-Needs the sponsor stack running on the host (Zetaris on :8888/:8889, Nightshift on :8088) and a filled-in `.env`; see `.env.example`. Judges without that stack should use sample mode above.
+Needs the sponsor stack running on the host (the live path was not run by the reviewers of this documentation; `docs/LIVE_RUN_RUNBOOK.md` captures a redacted trace) (Zetaris on :8888/:8889, Nightshift on :8088) and a filled-in `.env`; see `.env.example`. Judges without that stack should use sample mode above.

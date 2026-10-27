@@ -9,20 +9,45 @@ Meterless Nightshift, a **deterministic verifier** re-checks every ID, quotation
 
 | | |
 |---|---|
-| **Website** | https://crime-intelligence-six.vercel.app/ (see [Live website](#live-website): live Zetaris and Nemotron while the developer's backend is up, otherwise a clearly labelled offline demo) |
-| **Docker image** | [`yashasvir171/oah-submission`](https://hub.docker.com/r/yashasvir171/oah-submission) on Docker Hub (`linux/amd64` and `linux/arm64`) |
+| **Website (optional, not the judge path)** | https://crime-intelligence-six.vercel.app/ (see [Website and deployment](#website-and-deployment): what it serves depends on what `vercel.json`'s `/api` rewrite currently points at; judges should use the offline path below) |
+| **Docker image** | [`yashasvir171/oah-submission`](https://hub.docker.com/r/yashasvir171/oah-submission) on Docker Hub (the authors state `linux/amd64` and `linux/arm64`; not verifiable from this repo, see [`docs/DOCKER_VERIFY.md`](docs/DOCKER_VERIFY.md)) |
 | **Deployment details** | [`submission/DEPLOYMENT.md`](submission/DEPLOYMENT.md) |
 | **Demo video, slides, documents** | [`submission/`](submission/README.md) |
 
-**Try it with only Docker (no credentials, no network, no clone needed for the image):**
+**Judge path, offline (no credentials; the run needs no network, only pulling or building the image does):**
 ```bash
 docker run --rm -p 8000:8000 -e SAMPLE_MODE=true yashasvir171/oah-submission:latest
 # in a second terminal (input_examples/ is in this repo):
 curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_1.json
 ```
-To build the image yourself instead: `docker build -t oah-submission .` and use `oah-submission` in place of the Docker Hub name.
+To build the image yourself instead (recommended: it tests the committed Dockerfile; the build needs network): `docker build -t oah-submission .` and use `oah-submission` in place of the Docker Hub name.
+Step-by-step checks with expected output: [`docs/DOCKER_VERIFY.md`](docs/DOCKER_VERIFY.md). **The Docker path has been audited by reading only; it was not run when this documentation was written** (CI runs the same steps).
 Details, live mode, engines and the judge checklist: [Run with Docker](#run-with-docker). Submission documents (project text, sponsor technology,
 pre-existing components, responsible AI, judge access, slide deck, demo video): [`submission/`](submission/README.md).
+
+### Host (venv) path, no Docker
+
+```bash
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+sh scripts/build_reference_engines.sh     # REQUIRED for the judge check, see below
+SAMPLE_MODE=true python run.py            # API on http://localhost:8000
+# second terminal, same venv:
+python scripts/judge_compare.py --url http://localhost:8000     # all three examples vs output_examples/
+```
+
+**What `scripts/build_reference_engines.sh` does.** It bundles the vendored, unmodified Apache-2.0 Meterless **H-MEM** and **Markovian**
+reference sources (`third_party/meterless/`) together with this repo's two adapters (`backend/app/services/meterless_world/reference/{hmem,markovian}.ts`)
+into `third_party/meterless/build/hmem.cjs` and `markovian.cjs` (gitignored) using `npx esbuild@0.24.2`. It needs **Node 20+ with `npx` and network access**
+(esbuild is fetched once), takes seconds, and can be re-run safely. The Dockerfile runs it in its first build stage, so the Docker path needs no extra step.
+Without it, H-MEM and Markovian cannot start from the bundles and are traced as unavailable instead of `connected` (backend `reference`), so
+`judge_compare.py` fails on the `engines[]` section (the third-party audit of this repo reports the same). It does **not** build World Model or Scout Intent.
+
+**Proprietary engines (World Model, Scout Intent).** These are Meterless Nightshift modules and are not in this repo or in any image. They run only when the
+Nightshift engine directory is present (host: `METERLESS_ENGINE_DIR`, default `/Applications/Nightshift.app/Contents/Resources/engine/js/engine`; Docker: mounted read-only at
+`/opt/meterless/engine`, see [Meterless engines](#run-with-docker)). **Where it is absent, which is the case for every judge run above, the run is still valid:** `engines[]` and the trace
+show `scout_intent` and `world_model` with `status: engine_unavailable` (zero calls), routing continues on deterministic rules and shared state is skipped; no event is
+invented. That is exactly what `output_examples/` contains, so **do not mount the proprietary engines for the reproduction check**: with them mounted, `engines[]` and anything derived from it will differ from the committed outputs.
 
 ### What it does
 - **Models propose, code verifies, a Skeptic attacks.** Retrieval is read-only SQL through Zetaris (never a model). The verifier checks that cited IDs exist and match
@@ -38,6 +63,8 @@ pre-existing components, responsible AI, judge access, slide deck, demo video): 
 ---
 
 # Cross-Station Crime Intelligence: Synthetic Data Generator
+
+> *Document map.* This README joins two documents. **Part A** (sections 1 to 8) documents the synthetic dataset, its schemas and the data/API layer. **Part B** ("Multi-Agent Investigation System", sections 9 to 17) documents the agent system. How to run it: the judge path and [Host (venv) path](#host-venv-path-no-docker) at the top, [Run with Docker](#run-with-docker), and the host path above; sections 7 and 14 only point back to those.
 
 > **Open Agent Hackathon 2026** — *Solving Fragmented Intelligence & Multi-Station Investigation*
 
@@ -61,7 +88,7 @@ cross_station_crime_intelligence/
 ├── .dockerignore, .gitignore
 ├── requirements.txt                    # pinned Python dependencies
 ├── metadata.json                       # project / track / sponsor technology / entry point
-├── vercel.json                         # website: /api -> tunnel to the live backend, /offline-api -> offline fallback
+├── vercel.json                         # website: /api -> the backend URL listed in it (currently a Render hostname), /offline-api -> offline fallback function
 ├── api/index.py                        # Vercel function serving the OFFLINE fallback (forced sample mode)
 ├── .github/workflows/ci.yml            # pytest, docker build, judge path (SAMPLE_MODE), offline (--network none), secret scan
 │
@@ -93,8 +120,11 @@ cross_station_crime_intelligence/
 │   ├── generate_synthetic_data.py      # deterministic data generator
 │   ├── record_fixtures.py              # record fixtures from live Zetaris + Nightshift runs; regenerate output_examples/
 │   ├── judge_compare.py, trace_check.py, secret_scan.sh, build_reference_engines.sh, evaluate_agents.py
-│   ├── restart_tunnel.sh               # restart the Cloudflare quick tunnel and repoint vercel.json (--watch to automate)
-├── tests/                              # synthetic-data, adversarial and end-to-end suites
+│   ├── restart_tunnel.sh               # optional, developer-only: restart a Cloudflare quick tunnel and repoint vercel.json (--watch to automate)
+│   ├── capture_live_trace.py, redact_trace.py   # capture one live run and redact it before committing (docs/LIVE_RUN_RUNBOOK.md)
+├── docs/                               # DOCKER_VERIFY.md, LIVE_RUN_RUNBOOK.md, VIDEO_RUNBOOK.md
+├── render.yaml                         # Render Blueprint: backend from the Dockerfile in offline sample mode
+├── tests/                              # synthetic-data, adversarial, end-to-end suites and test_redact_trace.py
 ├── third_party/meterless/              # Apache-2.0 H-MEM + Markovian reference sources (unmodified, commit 1742dec), LICENSE, NOTICE.md
 ├── submission/                         # hackathon deliverables: documents (incl. DEPLOYMENT.md), slide deck, demo video, tools/build_media.py
 ├── evaluation/results.json             # scripted-stand-in evaluation (a pipeline test, not a model benchmark)
@@ -249,25 +279,34 @@ This file is strictly for **offline evaluation** to measure precision, recall, a
 
 ---
 
-## Live website
+## Website and deployment
 
-The website is a static React build on Vercel. It has no backend of its own and needs no secrets in Vercel:
+**Judges: use the offline path at the top (Docker or venv, sample mode). It depends on nothing outside this repository.** The website is a convenience, not evidence:
+nothing in the judge checks requires it, and no statement here asks you to rely on a developer's computer.
+
+What the files in this repo actually configure:
 
 ```
-Browser -> Vercel (static site) -> /api/... rewritten to a Cloudflare tunnel -> Docker container on the developer's machine
-                                                                              -> Zetaris + Nightshift (Nemotron) + mounted Meterless engines (all private)
+Browser -> Vercel (static React build, vercel.json)
+             /api/...         -> rewritten to the backend hostname written in vercel.json (currently https://aegis-backend-1ino.onrender.com)
+             /offline-api/... -> api/index.py, a Vercel function running the same API in forced sample mode
 ```
 
-- **Live mode (default).** While the backend is up, investigations use live Zetaris SQL and live Nemotron models; `GET /api/engine/health` and `GET /api/health/zetaris` show the real state.
-- **Offline fallback.** If the backend is unreachable (tunnel, Docker or the host is down), the page retries against `/offline-api`, a Vercel function that runs the same API in sample mode (bundled synthetic data, recorded Nemotron responses replayed and labelled).
-  An amber banner says so, and the page recovers by itself when the live backend returns. Only the example questions replay recorded Nemotron answers; others use the labelled, weaker code-only fallback.
+- **Durable option (matches `render.yaml` and `vercel.json`).** `render.yaml` is a Render Blueprint that builds the backend from this repo's `Dockerfile` in
+  **offline sample mode** (`SAMPLE_MODE=true`, `ZETARIS_ENABLED=false`, `METERLESS_ENGINE_BACKEND=reference`, `CORS_ALLOWED_ORIGINS` set to the Vercel site, health check `/health`, `plan: free`). It needs no secrets
+  and no developer machine. Because Render cannot reach Zetaris or Nightshift on someone's computer, that instance replays recorded Nemotron responses (labelled `replayed`) and uses the labelled code-only fallback otherwise;
+  it is **not** a live Zetaris/Nemotron deployment. To deploy: create a Render Blueprint from this repo, then set the `/api` rewrite destination in `vercel.json` to the service URL Render gives you and redeploy Vercel.
+  Whether the Render hostname named in `vercel.json` is currently up is not verifiable from this repo; free-plan services typically sleep when idle, so the first request can be slow.
+- **If that backend is unreachable**, the page retries against `/offline-api` and shows an amber banner; it recovers by itself when the backend returns. Only the example questions replay recorded Nemotron answers; others use the labelled, weaker code-only fallback.
+- **Live mode (optional, developer-hosted, ephemeral).** True live Zetaris and Nemotron need the sponsor stack on the host running the container (see [Run with Docker](#run-with-docker)). To expose such a host to the website a developer can use a Cloudflare **quick tunnel**
+  (`scripts/restart_tunnel.sh`), but its URL changes on every restart and can expire, it dies when the laptop sleeps, live runs (about 70 to 120 s as reported) can exceed its timeout, and there is no access control on that path. It is a demo convenience for the developer; it is not used by the Render/Vercel configuration above, and the script rewrites `vercel.json`'s `/api` target, so do not run it unless you intend to repoint the site at the tunnel.
+  A durable live deployment would need Zetaris and Nightshift reachable from the hosting platform, which this repo does not provide.
 - **"Demo content"** (off by default) returns pre-built scenarios without running any agent.
-- **Limits.** Live runs take about 70 to 120 s, close to the tunnel's timeout, so an occasional long run can be cut off; the tunnel URL of a quick tunnel changes on restart (`vercel.json` must then be updated); there is no access control on the live path.
-  The site depends on the developer's machine being on. Judges should rely on the Docker path above for a deterministic result.
+- Check what you are seeing: the amber banner appears only in offline mode, `GET /health` states `live`, `sample` or `down` per service, and every model call in a trace is marked `live`, `replayed` or `code_fallback`.
 
 ## Run with Docker
 
-Everything below runs from a fresh clone. Config lives in **one place: `<repo root>/.env`** (copied from `.env.example`; gitignored and
+Everything below runs from a fresh clone. (Exact verification commands and expected output: [`docs/DOCKER_VERIFY.md`](docs/DOCKER_VERIFY.md); not yet run by the authors of that document.) Config lives in **one place: `<repo root>/.env`** (copied from `.env.example`; gitignored and
 excluded from every image). It is optional: with no `.env` the stack starts and `SAMPLE_MODE=true` needs no credentials at all.
 
 ```bash
@@ -337,7 +376,7 @@ METERLESS_ENGINE_DIR_HOST=/Applications/Nightshift.app/Contents/Resources/engine
   docker compose -f docker-compose.yml -f docker-compose.engine.yml up
 ```
 
-An engine that cannot run is recorded as `engine_unavailable` in the trace and in `engines[]`; the application never emits an engine event it did not execute.
+An engine that cannot run is recorded as `engine_unavailable` in the trace and in `engines[]`, with `calls: 0` and no operations; the application never emits an engine event it did not execute. In a stock image (no mount) a run therefore shows `h_mem` and `markovian` as `connected` (backend `reference`) and `scout_intent` and `world_model` as `engine_unavailable`, which is what `output_examples/` records. For the host path and what `scripts/build_reference_engines.sh` does, see "Host (venv) path" at the top.
 
 **Sample mode** (`SAMPLE_MODE=true` or `options.sample_mode`) runs the *real* Planner -> retrieval -> Finder -> verifier -> Skeptic -> Reporter loop: retrieval is the
 same four functions over `data/generated` (trace `source: local_sample`, generated query ids), and each model call is answered by a **recorded live Nemotron response**
@@ -357,7 +396,8 @@ pre-built scenarios survive only as `POST /api/investigations/analyze` with `"de
 
 ```bash
 # Backend dependencies
-pip install -r backend/requirements.txt
+pip install -r requirements.txt          # the pinned root file (also used by the Dockerfile and CI)
+sh scripts/build_reference_engines.sh   # needed for the engine checks; see "Host (venv) path" at the top
 
 # Frontend dependencies
 cd frontend && npm install && cd ..
@@ -438,8 +478,8 @@ To switch from `local_fallback` to live Zetaris execution:
 
 # Multi-Agent Investigation System
 
-Everything below describes what is implemented and was verified on the development machine (macOS, Nightshift.app with the
-Meterless engines installed, Zetaris running in Docker). Anything not verified is listed under **Known limitations**.
+Everything below describes what is implemented. Statements about live Zetaris, Nightshift and the proprietary engines are **reported by the team from its development machine (macOS, Nightshift.app with the
+Meterless engines installed, Zetaris running in Docker); no live trace is committed** (see `docs/LIVE_RUN_RUNBOOK.md` to produce one). What the offline path reproduces is covered by CI and `scripts/judge_compare.py`. Limits are stated inline and in `submission/RESPONSIBLE_AI.md`.
 
 ## 9. Architecture and data flow
 
@@ -512,7 +552,7 @@ Design notes and honest limits:
 
 ## 11. Models verified through Nightshift
 
-Verified on 2026-10-26 against `GET http://127.0.0.1:8088/v1/models` and real calls:
+Reported by the team as checked on 2026-10-26 against `GET http://127.0.0.1:8088/v1/models` and real calls (no live trace or captured `/v1/models` response is committed):
 
 | Role / operation | Requested model | Result |
 |---|---|---|
@@ -559,7 +599,7 @@ Live mode never falls back to sample or local data.
 ## 14. Run, test, verify
 
 ```bash
-# Backend (needs Node on PATH and Nightshift.app installed)
+# Backend (needs Node on PATH; Nightshift.app only for the proprietary engines and live mode; first run `sh scripts/build_reference_engines.sh`)
 cd backend && pip install -r requirements.txt && uvicorn app.main:app --port 8000
 # Frontend
 cd frontend && npm install && npm run dev

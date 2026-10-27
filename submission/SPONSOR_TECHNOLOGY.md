@@ -11,7 +11,7 @@ How each sponsor technology is used, which test exercises it, what each sponsor 
 - **Traceable:** every query's `X-Request-ID` is recorded as a query id in `sql_meta.query_ids` of the trace, next to `source: zetaris_live`.
 - **Governed access:** the model sees at most 14 incidents and 8 records per source; every id it cites is re-checked in code against the retrieved rows.
 - **Honest degradation:** with `POST /run`, if Zetaris is unreachable the run continues on local sample data and the trace says `zetaris_fallback` / `source: local_sample`. The older `/api/investigations/analyze` route never substitutes data and returns an explicit error.
-- **Verified live on 2026-10-27:** a container reached the host Zetaris through `host.docker.internal`, retrieved from all five tables, and returned `data_mode: zetaris_live` with real query UUIDs in the trace and no partial failures.
+- **Live run, reported by the team (2026-10-27); trace not committed:** the team reports that a container reached the host Zetaris through `host.docker.internal`, retrieved from all five tables, and returned `data_mode: zetaris_live` with real query UUIDs in the trace and no partial failures. No live trace is in this repository, so this is not independently checkable from the repo; `docs/LIVE_RUN_RUNBOOK.md` and `scripts/capture_live_trace.py` produce one.
 - **Tests:** `backend/tests/test_live_integration.py::test_live_zetaris_sql_returns_provenance_fields` and `::test_live_complete_investigation_with_real_evidence` (run with `RUN_LIVE_TESTS=1`, they need a live Zetaris and skip otherwise); `backend/tests/test_api.py` (local loader and API contracts); `backend/tests/test_sample_mode.py::test_local_service_matches_zetaris_contract` (the local-sample service honours the same filters, limits and ordering).
 - **Limit:** Zetaris runs on the judge's host, not inside our image. Without it the offline sample mode serves the same retrieval functions from `data/generated` and labels it `local_sample`, never as Zetaris.
 
@@ -42,7 +42,7 @@ Also: `GET /api/engines/health` runs one real operation per engine; every `POST 
 - **Bounded:** each call has a timeout (`NIGHTSHIFT_TIMEOUT_SECONDS`, `NIGHTSHIFT_SKEPTIC_TIMEOUT_SECONDS`); the Skeptic gets a single attempt on the large model before an explicit fallback; and the run is capped at `WORKFLOW_MAX_MODEL_CALLS`.
 - **Secrets:** the NVIDIA provider key stays inside Nightshift. The app holds only the local proxy token (`NIGHTSHIFT_API_KEY`, or a mounted `NIGHTSHIFT_API_KEY_FILE`), never exposes it to the frontend, and a secret scan covers the repo and the image.
 - **Tests:** `test_nightshift_client.py` (auth, retries, timeouts, metadata), `test_model_registry.py` (role to model, fallback, catalogue checks), live: `test_live_nightshift_lightning_reports_real_model`, `test_live_registry_verifies_models_against_nightshift_catalogue`, `test_live_ultra_skeptic_model_answers_when_listed`.
-- **Verified live on 2026-10-27 from inside Docker:** all four agents answered on real Nemotron with receipts, requested model equal to answering model.
+- **Live run, reported by the team (2026-10-27); trace not committed:** the team reports that from inside Docker all four agents answered on real Nemotron with receipts, requested model equal to answering model. No live trace is committed (see `docs/LIVE_RUN_RUNBOOK.md`).
 
 ## 4. Where NVIDIA contributes
 
@@ -50,8 +50,8 @@ NVIDIA **Nemotron** models do the reasoning, each in the lane that suits it:
 
 | Lane | Model id | Job | Status |
 |---|---|---|---|
-| fast | `nvidia/nemotron-3.5-lightning-30b-a3b` | Planner, Finder, Reporter | in use, verified live |
-| deep | `nvidia/nemotron-3-ultra-550b-a55b` | Skeptic (a different model from the Finder, so it is not agreeing with itself; never shown the Finder's score) | in use, verified live (about 20 to 40 s per call, spent on adversarial review, not routine steps) |
+| fast | `nvidia/nemotron-3.5-lightning-30b-a3b` | Planner, Finder, Reporter | in use (live use reported by the team; no live trace committed) |
+| deep | `nvidia/nemotron-3-ultra-550b-a55b` | Skeptic (a different model from the Finder, so it is not agreeing with itself; never shown the Finder's score) | in use (live use reported by the team; no live trace committed; about 20 to 40 s per call as reported, spent on adversarial review, not routine steps) |
 
 What we deliberately **do not** use, and say so: `nvidia/nemotron-3-embed-1b` is listed by Nightshift but `POST /v1/embeddings` returned HTTP 404 on our build, so retrieval is lexical SQL, not semantic; a rerank model and Nemotron Bolt are not served; the Super-VL model id is configured in the registry but CCTV image analysis is not part of the investigation loop and we make no vision claim.
 

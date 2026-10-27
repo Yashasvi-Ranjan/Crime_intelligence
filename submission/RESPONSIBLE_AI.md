@@ -2,7 +2,7 @@
 
 ## Where AI is used
 1. **Inside the product:** NVIDIA Nemotron models through Meterless Nightshift act as the Planner, Finder, Skeptic and Reporter. They plan retrieval, propose and attack candidate links between incidents, and write the report. They do not access the database, and nothing they say is trusted without a code check.
-2. **To build it:** the code was written with help from **Claude Code (Anthropic)**. The team directed the work and reviewed and ran the results; the test suite, the Docker flow and the live runs were verified by running them, not by reading generated text.
+2. **To build it:** the code was written with help from **Claude Code (Anthropic)**. The team directed the work and reviewed and ran the results; the test suite and the offline Docker flow are run in CI; the team reports it also ran the live Zetaris/Nightshift flow by hand (no live trace is committed).
 
 ## What the system is for, and what it is not
 It helps an analyst *find leads*: records at different stations that may belong to one series. It does **not** identify people, predict crime, score individuals, or make any determination of guilt. Output is labelled "lead / candidate link"; the report says so, and a human decides what to do.
