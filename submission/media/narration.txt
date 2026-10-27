@@ -1,0 +1,35 @@
+[title]
+Crime doesn't stop at a station boundary. Records do. This is AEGIS, cross-station crime intelligence, built for the Solving Fragmented Intelligence track.
+
+[problem]
+A burglar pries open an office safe at the North station on Monday, and another at Central on Thursday. Each station files one incident, and each holds its own camera footage, witness statements and forensic reports. Almost none of it is linked, so the pattern only shows to someone who reads everything. And real evidence conflicts, with look-alike decoys mixed in.
+
+[pipeline]
+A detective asks one plain-language question. A Planner decides what to retrieve. Retrieval is plain SQL through Zetaris, never a model. A Finder proposes links. A deterministic verifier re-checks every ID and quote in code. A separate Skeptic model attacks the result, and can send the Planner back for more evidence. Only then does the Reporter write, and its citations are checked again.
+
+[overview]
+This is the real application, connected to live Zetaris: ten thousand synthetic records, across three stations and five sources.
+
+[query]
+Here I ask whether the catalytic converter thefts in Central and Riverside could be one series.
+
+[graph]
+The knowledge graph draws only what the result contains: incidents, the evidence they cite, and the links the Finder proposed. Nothing is invented to fill the picture.
+
+[result]
+Each link comes back labelled by the verifier, here weak, with zero independent sources, and a score that is marked uncalibrated, not a probability. Contradictions, limitations and follow-up steps are listed. Nothing is presented as a verdict.
+
+[trace]
+Every step is auditable: which agent ran, which Nemotron model answered, each query id, and each engine event. A step that made no model call shows no model and no receipt.
+
+[terminal]
+For judges there is one command, with no credentials. The same agent loop runs offline, with local retrieval and recorded Nemotron responses replayed and labelled as replayed. The response lists the agents and engines, and the trace shows routing, handoffs, the Skeptic branch, query ids, engine events, and the requested and answering model on every call.
+
+[sponsors]
+Zetaris is the data layer. Nightshift is the only model path. NVIDIA Nemotron does the reasoning: Lightning for planning, finding and reporting, and the much larger Ultra as the Skeptic. Meterless H-MEM and Markovian run inside the container from the open reference implementations. World Model and Scout run when the Nightshift engine directory is mounted, and are reported as unavailable otherwise, never faked.
+
+[results]
+What did it find? With recorded Nemotron responses, the catalytic converter question returns three weak links, with the reasons a series can't be asserted. The safe burglary and keyless relay questions end in no supportable link, because no independent evidence corroborated them. We show that as it is. The verifier's job is to refuse what the evidence doesn't support.
+
+[closing]
+Leads, not verdicts. All data is synthetic, and a human decides. Clone the repo, run one command, and read the trace yourself. Thank you.
