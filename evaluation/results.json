@@ -1,11 +1,11 @@
 {
  "provenance": {
   "label": "NOT A MODEL BENCHMARK",
-  "label_detail": "Scripted, model-free stand-in. It tests the pipeline, verifier and scoring only. No Nemotron model was called; no receipts exist.",
+  "label_detail": "Scripted, model-free stand-in. It tests the pipeline, verifier and scoring only. No model was called; no receipts exist.",
   "mode": "offline-standin",
   "git": {
-   "commit": "a1b6a46d826766092ac266581ca20f837f27f651",
-   "dirty": true
+   "commit": "a6e26b8263fac95f62921b3a1b2fa0d0f3175d7a",
+   "dirty": false
   },
   "case_set": "all",
   "case_set_hash": "4ab362c05a90a8bcda7a4cd02c5af55fe9d4a2521fb4a8a9ed24696562873709",
@@ -13,7 +13,7 @@
   "preregistration_sha256": "454fb170e83b6762525f51742e4ee7cfe8f1d2daaa9f2af0f4b4c0cd1f442fda",
   "ground_truth_sha256": "6bd13c9d1b7fbaf307cc3c033d3ff72fe78992a3042f8aadcc00f764ce19a6b4",
   "incidents_sha256": "7205026005446a6df63dafb33b046ea49262e98041e203d49d8e1a375ce94cbf",
-  "date_utc": "2026-10-27T16:43:06Z",
+  "date_utc": "2026-10-27T16:44:31Z",
   "models_called": [],
   "model_call_receipts": 0
  },
@@ -284,7 +284,7 @@
     "runs": 12,
     "failed_runs": 0,
     "failure_rate": 0.0,
-    "mean_latency_s": 1.258,
+    "mean_latency_s": 1.233,
     "mean_model_calls": null,
     "mean_scripted_calls": 3.75,
     "mean_sql_queries": 5.0,
@@ -1383,7 +1383,7 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.5
+   "latency_s": 1.4
   },
   {
    "system": "baseline_code_fallback_only_STANDIN",
@@ -1531,7 +1531,7 @@
     "contradiction_surfaced_in_output": true,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.9
+   "latency_s": 1.8
   },
   {
    "system": "baseline_code_fallback_only_STANDIN",
@@ -1795,7 +1795,7 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.2
+   "latency_s": 1.1
   },
   {
    "system": "baseline_code_fallback_only_STANDIN",
