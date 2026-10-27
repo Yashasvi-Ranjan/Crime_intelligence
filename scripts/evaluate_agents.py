@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 """
-Evaluate the iterative multi-agent system against the original Lightning-only pipeline.
+Evaluate the iterative multi-agent system (AEGIS pipeline) against the Lightning-only baseline.
 
-Runs both systems against real Zetaris + Nightshift when configured. Otherwise it uses a
-SCRIPTED offline stand-in (OfflineModelRegistry: hand-written planner/finder/skeptic/reporter
-logic over data/generated, no model involved). Results from that path test the pipeline, the
-verifier and the scoring, NOT model quality, and must not be presented as a Nemotron benchmark. Ground truth (data/evaluation/ground_truth.json) is read ONLY here,
-for scoring; the application never loads it.
+Two clearly separated modes (exactly one is required):
 
-Usage:  python scripts/evaluate_agents.py [--cases 001,002,...] [--out evaluation/results.json] [--skip-baseline]
+  --live              Real Nemotron through Nightshift and the production retrieval path (live Zetaris).
+                      Requires credentials; fails fast with a clear message when they are absent.
+                      Protocol: evaluation/PREREGISTRATION.md. Default case set: held-out.
+  --offline-standin   Scripted, model-free stand-in (OfflineModelRegistry + local data adapter). Tests the
+                      pipeline, verifier and scoring only. Stamped "NOT A MODEL BENCHMARK"; it never emits
+                      receipts or model names, because it calls no model.
+
+Ground truth (data/evaluation/ground_truth.json) is read ONLY here and in evaluation/harness.py, for scoring;
+the application never loads it. Every output file carries a provenance stamp (mode, git commit, case-set
+hash, date, models actually called).
+
+Usage:
+  python scripts/evaluate_agents.py --live [--case-set heldout|dev|all] [--cases ID,ID] [--out PATH] [--skip-baseline]
+  python scripts/evaluate_agents.py --offline-standin [--case-set all] [--out evaluation/results.json]
 """
 
 from __future__ import annotations
@@ -24,10 +33,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
+LAUNCH_DIR = Path.cwd()      # --out is relative to where the user ran the script, not backend/
 sys.path.insert(0, str(ROOT / "backend"))
+sys.path.insert(0, str(ROOT))
 os.chdir(ROOT / "backend")   # Settings reads backend/.env relative to the working directory
 
 from app.config import settings  # noqa: E402
+from evaluation import harness  # noqa: E402
 from app.services.agents import (  # noqa: E402
     Fact,
     FinderLink,
@@ -54,8 +66,12 @@ from app.services.meterless_engines import (  # noqa: E402
     MarkovianService,
     ScoutIntentService,
 )
-from app.services.model_registry import CallRecord, ModelRegistry, NEMOTRON_MODELS  # noqa: E402
-from app.services.nightshift_client import NightshiftClient, NightshiftResponse  # noqa: E402
+from app.services.model_registry import CallRecord, ModelRegistry  # noqa: E402
+from app.services.nightshift_client import (  # noqa: E402
+    NightshiftClient,
+    NightshiftNotConfiguredError,
+    NightshiftResponse,
+)
 from app.services.zetaris_investigation_service import ZetarisInvestigationService  # noqa: E402
 
 ID_RE = re.compile(r"\b(?:INC-[A-Z]+-\d+|CCTV-\d+|WIT-\d+|FOR-\d+|EVD-\d+|NEWS-\d+)\b")
@@ -210,18 +226,18 @@ class OfflineMarkovian(MarkovianService):
 
 class OfflineModelRegistry(ModelRegistry):
     """
-    Offline model registry for evaluation when Nightshift LLM is offline.
-    Executes real semantic reasoning and contract formatting for Planner, Finder,
-    Skeptic, and Reporter on official Nemotron model lanes.
+    SCRIPTED stand-in for the model registry. Hand-written planner/finder/skeptic/reporter logic over
+    data/generated; NO model is called. It therefore reports no model name, provider or receipt id.
     """
+
+    STANDIN_NAME = "scripted-standin"
 
     def __init__(self, cfg: Any, data_service: OfflineZetarisDataService) -> None:
         super().__init__(cfg)
         self._data_service = data_service
-        self._step_counter = 0
 
     def catalog(self, refresh: bool = False) -> List[str]:
-        return list(NEMOTRON_MODELS.values())
+        return [self.STANDIN_NAME]
 
     def generate(
         self,
@@ -232,12 +248,8 @@ class OfflineModelRegistry(ModelRegistry):
         timeout_seconds: Optional[float] = None,
     ) -> Tuple[NightshiftResponse, CallRecord]:
         user_content = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
-        self._step_counter += 1
 
-        if role in ("planner", "skeptic"):
-            model = NEMOTRON_MODELS["ultra-550b"]
-        else:
-            model = NEMOTRON_MODELS["lightning-30b"]
+        model = self.STANDIN_NAME
 
         content = ""
         if role == "planner":
@@ -419,32 +431,22 @@ class OfflineModelRegistry(ModelRegistry):
             )
             content = report.model_dump_json()
 
-        resp = NightshiftResponse(
-            content=content,
-            model=model,
-            provider="nvidia",
-            winning_route={"model": model, "provider": "nvidia", "tier": "A"},
-            receipt_id=f"rcpt_nemotron_{self._step_counter:06d}",
-            latency_ms=12.0,
-            usage={"prompt_tokens": 420, "completion_tokens": 160},
-            raw_metadata={"reported_model": model, "provider": "nvidia"},
-        )
+        resp = NightshiftResponse(content=content, model=model, provider="none", receipt_id=None)
         rec = CallRecord(
             role=role,
             requested_model=model,
-            reported_model=model,
-            provider="nvidia",
-            receipt_id=resp.receipt_id,
-            latency_ms=12.0,
-            routed_as_requested=True,
-            prompt_tokens=420,
-            completion_tokens=160,
+            reported_model=None,
+            provider=None,
+            receipt_id=None,
+            routed_as_requested=None,
+            source="scripted_standin",
         )
         return resp, rec
 
 
-# Global offline services for non-live environments
-_offline_data_service = OfflineZetarisDataService(ROOT / "data" / "generated")
+def _offline_data_service() -> OfflineZetarisDataService:
+    """Fresh local table adapter per run (stand-in only; live mode uses the production retrieval service)."""
+    return OfflineZetarisDataService(ROOT / "data" / "generated")
 
 
 def load_truth() -> List[Dict[str, Any]]:
@@ -465,46 +467,56 @@ def dataset_ids() -> Set[str]:
     return ids
 
 
-def build_cases(truth: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    by_id = {t["relationship_id"]: t for t in truth}
-    cases = []
-    for rid in ("REL-SERIES-001", "REL-SERIES-002", "REL-SERIES-003", "REL-SERIES-004", "REL-SERIES-007"):
-        ids = by_id[rid]["incident_ids"]
-        cases.append({
-            "case": rid[-3:],
-            "kind": "positive",
-            "incident_ids": ids,
-            "truth_pairs": {frozenset(p) for p in itertools.combinations(ids, 2)},
-            "query": f"Are incidents {', '.join(ids)} related to one another?",
-        })
-    for rid, base in (("REL-DISTRACTOR-006", "REL-SERIES-004"), ("REL-DISTRACTOR-008", "REL-SERIES-001")):
-        decoy = by_id[rid]["incident_ids"][0]
-        base_ids = by_id[base]["incident_ids"][:2]
-        ids = [decoy, *base_ids]
-        cases.append({
-            "case": rid[-3:],
-            "kind": "decoy",
-            "incident_ids": ids,
-            "decoys": {decoy},
-            "truth_pairs": {frozenset(base_ids)},
-            "query": f"Are incidents {', '.join(ids)} related to one another?",
-        })
+def select_cases(case_set: str, only: str = "") -> List[Dict[str, Any]]:
+    truth = load_truth()
+    incidents = json.loads((ROOT / "data/generated/police_incidents.json").read_text(encoding="utf-8"))
+    cases: List[Dict[str, Any]] = []
+    if case_set in ("dev", "all"):
+        cases += harness.build_dev_cases(truth)
+    if case_set in ("heldout", "all"):
+        cases += harness.build_heldout_cases(truth, incidents)
+    if only:
+        want = set(only.split(","))
+        cases = [c for c in cases if c["case"] in want]
     return cases
 
 
 class CountingClient(NightshiftClient):
+    """Real Nightshift client that logs what each call actually returned (model and receipt from the response)."""
+
     calls = 0
+    log: List[Dict[str, Any]] = []
 
     def generate(self, *a, **k):
         type(self).calls += 1
-        return super().generate(*a, **k)
+        resp = super().generate(*a, **k)
+        type(self).log.append({"role": "baseline", "reported_model": resp.model, "receipt_id": resp.receipt_id,
+                               "provider": resp.provider, "source": "live"})
+        return resp
+
+
+class NoModelClient(NightshiftClient):
+    """Stand-in baseline client: no model is reachable, so the legacy pipeline runs its code-only fallbacks."""
+
+    calls = 0
+    log: List[Dict[str, Any]] = []
+
+    def generate(self, *a, **k):
+        raise NightshiftNotConfiguredError("offline stand-in: no model is called")
+
+
+SYSTEMS = {
+    "live": {"baseline": "baseline_lightning_only", "agents": "multi_agent_nemotron"},
+    "offline-standin": {"baseline": "baseline_code_fallback_only_STANDIN", "agents": "multi_agent_scripted_STANDIN"},
+}
+FALLBACK_MARK = "adjacent county jurisdictions"   # confidence_rationale of the legacy pipeline's code-only fallback link
 
 
 def score(case: Dict[str, Any], res: Dict[str, Any], known_ids: Set[str], active_only: bool = True) -> Dict[str, Any]:
     links = [l for l in res["candidate_links"] if not l.get("withdrawn")] if active_only else res["candidate_links"]
-    pairs = {frozenset((l["source_incident_id"], l["target_incident_id"])) for l in links}
+    pairs = {harness.pair_key(l) for l in links}
     truth = case["truth_pairs"]
-    verified = {frozenset((l["source_incident_id"], l["target_incident_id"])) for l in links if l.get("validation_status") in ("SUPPORTED", "WEAK")}
+    verified = {harness.pair_key(l) for l in links if l.get("validation_status") in ("SUPPORTED", "WEAK")}
     false_pairs = pairs - truth
 
     idx = EvidenceIndex()
@@ -519,7 +531,10 @@ def score(case: Dict[str, Any], res: Dict[str, Any], known_ids: Set[str], active
         "supporting_evidence_ids": l["supporting_evidence_ids"],
         "shared_attributes": l.get("shared_attributes", []),
     }, idx) for l in links]
-    fabricated = [l for l in links if "adjacent county jurisdictions" in (l.get("confidence_rationale") or "")]
+    fabricated = [l for l in links if FALLBACK_MARK in (l.get("confidence_rationale") or "")]
+    # Pre-registered, system-symmetric rule: a link is "supported" iff independent re-verification says SUPPORTED.
+    supported = {harness.pair_key(l) for l, v in zip(links, reverify) if v.status == "SUPPORTED"}
+    no_fallback = {harness.pair_key(l) for l in links if FALLBACK_MARK not in (l.get("confidence_rationale") or "")}
     text = " ".join([res["executive_summary"], *res["contradictions_and_limitations"], *res["follow_up_actions"]])
     cited = ID_RE.findall(text) + [i for l in links for i in l["supporting_evidence_ids"]]
     cited_ok = sum(1 for i in cited if i in known_ids)
@@ -537,12 +552,14 @@ def score(case: Dict[str, Any], res: Dict[str, Any], known_ids: Set[str], active
         re.search(r"contradict|conflict|discrepan|inconsisten|dispute|differ", x, re.I) for x in res["contradictions_and_limitations"]
     )
     return {
+        "counts": harness.case_pair_counts(case, pairs, supported),
+        "counts_excluding_code_fallback": harness.case_pair_counts(case, no_fallback, supported & no_fallback),
         "links_reported": len(links),
         "pairs_reported": sorted(map(sorted, pairs)),
         "valid_link_recall_proposed": round(len(pairs & truth) / len(truth), 3) if truth else None,
         "valid_link_recall_verified": round(len(verified & truth) / len(truth), 3) if truth else None,
         "false_links": len(false_pairs),
-        "decoy_links": sum(1 for p in pairs if p & case.get("decoys", set())),
+        "decoy_links": sum(1 for p in pairs if p & case["planted_decoys"]),
         "citation_accuracy_final_output": round(cited_ok / len(cited), 3) if cited else None,
         "cited_ids_final_output": len(cited),
         "raw_model_citations_rejected": rejected,
@@ -557,37 +574,31 @@ def score(case: Dict[str, Any], res: Dict[str, Any], known_ids: Set[str], active
     }
 
 
-def run_one(system: str, case: Dict[str, Any], known: Set[str]) -> Dict[str, Any]:
+def run_one(system: str, case: Dict[str, Any], known: Set[str], mode: str) -> Dict[str, Any]:
     t0 = time.time()
+    standin = mode == "offline-standin"
+    names = SYSTEMS[mode]
     CountingClient.calls = 0
-    out: Dict[str, Any] = {"system": system, "case": case["case"], "kind": case["kind"]}
+    CountingClient.log = []
+    out: Dict[str, Any] = {"system": system, "case": case["case"], "kind": case["kind"], "split": case["split"],
+                           "call_log": []}
 
-    # Resolve data service: use live Zetaris if configured, else offline fallback
-    data_service = None
-    if not settings.zetaris_configured:
-        data_service = _offline_data_service
-
-    # Resolve meterless engines: use live JS engines if installed, else offline adapters
-    engine_dir = Path(settings.meterless_engine_dir)
-    scout_engine = None
-    hmem_engine = None
-    markov_engine = None
-    if not (engine_dir / "scout-intents.js").exists():
-        scout_engine = OfflineScout(settings)
-        hmem_engine = OfflineHMem(settings)
-        markov_engine = OfflineMarkovian(settings)
-
-    # Resolve AI model registry: use live Nightshift if configured, else offline model registry
+    # Live mode: data_service=None -> the production Zetaris retrieval path. Stand-in: local table adapter.
+    data_service = _offline_data_service() if standin else None
+    scout_engine = hmem_engine = markov_engine = None
     model_registry = None
-    if not settings.nightshift_configured:
-        model_registry = OfflineModelRegistry(settings, _offline_data_service)
+    if standin:
+        scout_engine, hmem_engine, markov_engine = OfflineScout(settings), OfflineHMem(settings), OfflineMarkovian(settings)
+        model_registry = OfflineModelRegistry(settings, data_service)
 
     try:
-        if system == "baseline_lightning_only":
-            wf = LegacyInvestigationWorkflow(ai_client=CountingClient(settings), data_service=data_service)
+        if system == names["baseline"]:
+            client = NoModelClient(settings) if standin else CountingClient(settings)
+            wf = LegacyInvestigationWorkflow(ai_client=client, data_service=data_service)
             q0 = wf._data.query_count
             res = wf.run_investigation(query=case["query"], incident_ids=case["incident_ids"])
-            out.update(model_calls=CountingClient.calls, sql_queries=wf._data.query_count - q0)
+            out.update(model_calls=0 if standin else CountingClient.calls, sql_queries=wf._data.query_count - q0)
+            out["call_log"] = [] if standin else list(CountingClient.log)
         else:
             wf = InvestigationWorkflow(
                 cfg=settings,
@@ -611,6 +622,12 @@ def run_one(system: str, case: Dict[str, Any], known: Set[str]) -> Dict[str, Any
                 skeptic_status=res["skeptic"]["review_status"],
                 open_objections=sum(1 for o in res["skeptic"]["objections"] if o["open"]),
             )
+            out["call_log"] = [{k: c.get(k) for k in ("role", "reported_model", "receipt_id", "provider", "source", "status")}
+                               for c in res["model_calls"]]
+        if standin:
+            out["call_log"] = []   # the stand-in calls no model: never carry model names or receipts
+            out["models"] = {}
+            out["scripted_calls"] = out.pop("model_calls", 0)   # scripted steps, not model calls
         out["ok"] = True
         out["metrics"] = score(case, res, known)
     except Exception as exc:  # a failed run is data, not something to hide
@@ -628,11 +645,15 @@ def summarize(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     m = [r["metrics"] for r in ok]
     pos = [r["metrics"] for r in ok if r["kind"] == "positive"]
     return {
+        "preregistered": harness.aggregate([r["metrics"]["counts"] for r in ok]),
+        "preregistered_excluding_baseline_code_fallback": harness.aggregate(
+            [r["metrics"]["counts_excluding_code_fallback"] for r in ok]),
         "runs": len(rows),
         "failed_runs": len(rows) - len(ok),
         "failure_rate": round((len(rows) - len(ok)) / len(rows), 3) if rows else None,
         "mean_latency_s": mean([r["latency_s"] for r in rows]),
         "mean_model_calls": mean([r.get("model_calls") for r in ok]),
+        "mean_scripted_calls": mean([r.get("scripted_calls") for r in ok]),
         "mean_sql_queries": mean([r.get("sql_queries") for r in ok]),
         "valid_link_recall_proposed(positive cases)": mean([x["valid_link_recall_proposed"] for x in pos]),
         "valid_link_recall_verified(positive cases)": mean([x["valid_link_recall_verified"] for x in pos]),
@@ -650,37 +671,54 @@ def summarize(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def preflight_live() -> None:
+    missing = []
+    if not settings.nightshift_configured:
+        missing.append("Nightshift (set NIGHTSHIFT_BASE_URL and NIGHTSHIFT_API_KEY or NIGHTSHIFT_API_KEY_FILE)")
+    if not settings.zetaris_configured:
+        missing.append("Zetaris (set ZETARIS_ENABLED=true, ZETARIS_BASE_URL and credentials)")
+    if missing:
+        sys.exit("--live requires real credentials and refuses to fall back to a stand-in. Not configured: "
+                 + "; ".join(missing) + ". Use --offline-standin for a pipeline-only dry run (NOT A MODEL BENCHMARK).")
+
+
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--cases", default="")
-    ap.add_argument("--out", default=str(ROOT / "evaluation/results.json"))
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument("--live", action="store_true", help="real Nemotron via Nightshift + production retrieval")
+    g.add_argument("--offline-standin", action="store_true", help="scripted stand-in; NOT A MODEL BENCHMARK")
+    ap.add_argument("--case-set", choices=("heldout", "dev", "all"), default=None,
+                    help="default: heldout for --live, all for --offline-standin")
+    ap.add_argument("--cases", default="", help="comma-separated case ids to keep")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--skip-baseline", action="store_true")
     args = ap.parse_args()
+    mode = "live" if args.live else "offline-standin"
+    if args.live:
+        preflight_live()
+    case_set = args.case_set or ("heldout" if args.live else "all")
+    out_path = args.out or str(ROOT / ("evaluation/results_live.json" if args.live else "evaluation/results.json"))
     known = dataset_ids()
-    cases = build_cases(load_truth())
-    if args.cases:
-        want = set(args.cases.split(","))
-        cases = [c for c in cases if c["case"] in want]
-    systems = ["multi_agent"] if args.skip_baseline else ["baseline_lightning_only", "multi_agent"]
+    cases = select_cases(case_set, args.cases)
+    names = SYSTEMS[mode]
+    systems = [names["agents"]] if args.skip_baseline else [names["baseline"], names["agents"]]
     rows: List[Dict[str, Any]] = []
     for c in cases:
         for s in systems:
-            print(f"[{time.strftime('%H:%M:%S')}] {s} case {c['case']} ({c['kind']}) ...", flush=True)
-            r = run_one(s, c, known)
+            print(f"[{time.strftime('%H:%M:%S')}] {s} case {c['case']} ({c['kind']}, {c['split']}) ...", flush=True)
+            r = run_one(s, c, known, mode)
             print(f"   -> ok={r['ok']} latency={r['latency_s']}s {r.get('error', '')}", flush=True)
             rows.append(r)
-    summary = {s: summarize([r for r in rows if r["system"] == s]) for s in systems}
-    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.out).write_text(
-        json.dumps({
-            "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "cases": len(cases),
-            "summary": summary,
-            "rows": rows,
-        }, indent=1, default=str),
-        encoding="utf-8",
-    )
-    print(json.dumps(summary, indent=1))
+    call_log = [x for r in rows for x in r.get("call_log", [])]
+    summary: Dict[str, Any] = {}
+    for split in sorted({c["split"] for c in cases}):
+        summary[split] = {s: summarize([r for r in rows if r["system"] == s and r["split"] == split]) for s in systems}
+    doc = {"provenance": harness.provenance(mode, case_set, cases, call_log), "cases": len(cases),
+           "summary": summary, "rows": rows}
+    out_file = Path(out_path) if Path(out_path).is_absolute() else LAUNCH_DIR / out_path
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    out_file.write_text(json.dumps(doc, indent=1, default=str), encoding="utf-8")
+    print(json.dumps({"provenance": doc["provenance"], "summary": summary}, indent=1, default=str))
 
 
 if __name__ == "__main__":

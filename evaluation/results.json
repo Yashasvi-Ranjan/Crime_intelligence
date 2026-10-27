@@ -1,59 +1,347 @@
 {
- "generated": "2026-10-26T21:31:23Z",
- "cases": 7,
- "summary": {
-  "baseline_lightning_only": {
-   "runs": 7,
-   "failed_runs": 0,
-   "failure_rate": 0.0,
-   "mean_latency_s": 0.686,
-   "mean_model_calls": 4.0,
-   "mean_sql_queries": 5.0,
-   "valid_link_recall_proposed(positive cases)": 0.733,
-   "valid_link_recall_verified(positive cases)": 0.0,
-   "false_links_total": 2,
-   "decoy_links_total": 2,
-   "citation_accuracy_final_output": 1.0,
-   "raw_model_citations_rejected_total": 0,
-   "links_total": 7,
-   "links_not_supported_on_reverification": 0,
-   "links_unsupported_on_reverification": 0,
-   "fabricated_fallback_links": 7,
-   "links_citing_duplicate_reports": 0,
-   "cases_with_source_contradictions": 7,
-   "of_which_surfaced_in_output": 0
+ "provenance": {
+  "label": "NOT A MODEL BENCHMARK",
+  "label_detail": "Scripted, model-free stand-in. It tests the pipeline, verifier and scoring only. No model was called; no receipts exist.",
+  "mode": "offline-standin",
+  "git": {
+   "commit": "a6e26b8263fac95f62921b3a1b2fa0d0f3175d7a",
+   "dirty": false
   },
-  "multi_agent": {
-   "runs": 7,
-   "failed_runs": 0,
-   "failure_rate": 0.0,
-   "mean_latency_s": 1.371,
-   "mean_model_calls": 4.0,
-   "mean_sql_queries": 5.0,
-   "valid_link_recall_proposed(positive cases)": 1.0,
-   "valid_link_recall_verified(positive cases)": 1.0,
-   "false_links_total": 0,
-   "decoy_links_total": 0,
-   "citation_accuracy_final_output": 1.0,
-   "raw_model_citations_rejected_total": 0,
-   "links_total": 11,
-   "links_not_supported_on_reverification": 1,
-   "links_unsupported_on_reverification": 0,
-   "fabricated_fallback_links": 0,
-   "links_citing_duplicate_reports": 0,
-   "cases_with_source_contradictions": 6,
-   "of_which_surfaced_in_output": 3
+  "case_set": "all",
+  "case_set_hash": "4ab362c05a90a8bcda7a4cd02c5af55fe9d4a2521fb4a8a9ed24696562873709",
+  "heldout_seed": 7919,
+  "preregistration_sha256": "454fb170e83b6762525f51742e4ee7cfe8f1d2daaa9f2af0f4b4c0cd1f442fda",
+  "ground_truth_sha256": "6bd13c9d1b7fbaf307cc3c033d3ff72fe78992a3042f8aadcc00f764ce19a6b4",
+  "incidents_sha256": "7205026005446a6df63dafb33b046ea49262e98041e203d49d8e1a375ce94cbf",
+  "date_utc": "2026-10-27T16:44:31Z",
+  "models_called": [],
+  "model_call_receipts": 0
+ },
+ "cases": 19,
+ "summary": {
+  "dev": {
+   "baseline_code_fallback_only_STANDIN": {
+    "preregistered": {
+     "cases": 7,
+     "truth_pairs_total": 11,
+     "reported_links_total": 7,
+     "supported_links_total": 7,
+     "supported_precision": 0.714,
+     "supported_recall": 0.455,
+     "supported_recall_wilson95": [
+      0.213,
+      0.72
+     ],
+     "reported_precision": 0.714,
+     "reported_recall": 0.455,
+     "false_link_rate": 0.286,
+     "false_links_total": 2,
+     "foil_rejection_rate": 0.0,
+     "foil_cases": 2,
+     "planted_decoy_rejection_rate": 0.0,
+     "planted_decoy_cases": 2,
+     "planted_decoy_rejection_wilson95": [
+      0.0,
+      0.658
+     ]
+    },
+    "preregistered_excluding_baseline_code_fallback": {
+     "cases": 7,
+     "truth_pairs_total": 11,
+     "reported_links_total": 0,
+     "supported_links_total": 0,
+     "supported_precision": null,
+     "supported_recall": 0.0,
+     "supported_recall_wilson95": [
+      0.0,
+      0.259
+     ],
+     "reported_precision": null,
+     "reported_recall": 0.0,
+     "false_link_rate": null,
+     "false_links_total": 0,
+     "foil_rejection_rate": 1.0,
+     "foil_cases": 2,
+     "planted_decoy_rejection_rate": 1.0,
+     "planted_decoy_cases": 2,
+     "planted_decoy_rejection_wilson95": [
+      0.342,
+      1.0
+     ]
+    },
+    "runs": 7,
+    "failed_runs": 0,
+    "failure_rate": 0.0,
+    "mean_latency_s": 0.6,
+    "mean_model_calls": null,
+    "mean_scripted_calls": 0.0,
+    "mean_sql_queries": 5.0,
+    "valid_link_recall_proposed(positive cases)": 0.733,
+    "valid_link_recall_verified(positive cases)": 0.0,
+    "false_links_total": 2,
+    "decoy_links_total": 2,
+    "citation_accuracy_final_output": 1.0,
+    "raw_model_citations_rejected_total": 0,
+    "links_total": 7,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 7,
+    "links_citing_duplicate_reports": 0,
+    "cases_with_source_contradictions": 7,
+    "of_which_surfaced_in_output": 0
+   },
+   "multi_agent_scripted_STANDIN": {
+    "preregistered": {
+     "cases": 7,
+     "truth_pairs_total": 11,
+     "reported_links_total": 11,
+     "supported_links_total": 10,
+     "supported_precision": 1.0,
+     "supported_recall": 0.909,
+     "supported_recall_wilson95": [
+      0.623,
+      0.984
+     ],
+     "reported_precision": 1.0,
+     "reported_recall": 1.0,
+     "false_link_rate": 0.0,
+     "false_links_total": 0,
+     "foil_rejection_rate": 1.0,
+     "foil_cases": 2,
+     "planted_decoy_rejection_rate": 1.0,
+     "planted_decoy_cases": 2,
+     "planted_decoy_rejection_wilson95": [
+      0.342,
+      1.0
+     ]
+    },
+    "preregistered_excluding_baseline_code_fallback": {
+     "cases": 7,
+     "truth_pairs_total": 11,
+     "reported_links_total": 11,
+     "supported_links_total": 10,
+     "supported_precision": 1.0,
+     "supported_recall": 0.909,
+     "supported_recall_wilson95": [
+      0.623,
+      0.984
+     ],
+     "reported_precision": 1.0,
+     "reported_recall": 1.0,
+     "false_link_rate": 0.0,
+     "false_links_total": 0,
+     "foil_rejection_rate": 1.0,
+     "foil_cases": 2,
+     "planted_decoy_rejection_rate": 1.0,
+     "planted_decoy_cases": 2,
+     "planted_decoy_rejection_wilson95": [
+      0.342,
+      1.0
+     ]
+    },
+    "runs": 7,
+    "failed_runs": 0,
+    "failure_rate": 0.0,
+    "mean_latency_s": 1.329,
+    "mean_model_calls": null,
+    "mean_scripted_calls": 4.0,
+    "mean_sql_queries": 5.0,
+    "valid_link_recall_proposed(positive cases)": 1.0,
+    "valid_link_recall_verified(positive cases)": 1.0,
+    "false_links_total": 0,
+    "decoy_links_total": 0,
+    "citation_accuracy_final_output": 1.0,
+    "raw_model_citations_rejected_total": 0,
+    "links_total": 11,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "cases_with_source_contradictions": 6,
+    "of_which_surfaced_in_output": 3
+   }
+  },
+  "heldout": {
+   "baseline_code_fallback_only_STANDIN": {
+    "preregistered": {
+     "cases": 12,
+     "truth_pairs_total": 12,
+     "reported_links_total": 12,
+     "supported_links_total": 7,
+     "supported_precision": 0.714,
+     "supported_recall": 0.417,
+     "supported_recall_wilson95": [
+      0.193,
+      0.68
+     ],
+     "reported_precision": 0.417,
+     "reported_recall": 0.417,
+     "false_link_rate": 0.583,
+     "false_links_total": 7,
+     "foil_rejection_rate": 0.417,
+     "foil_cases": 12,
+     "planted_decoy_rejection_rate": 0.0,
+     "planted_decoy_cases": 3,
+     "planted_decoy_rejection_wilson95": [
+      0.0,
+      0.562
+     ]
+    },
+    "preregistered_excluding_baseline_code_fallback": {
+     "cases": 12,
+     "truth_pairs_total": 12,
+     "reported_links_total": 0,
+     "supported_links_total": 0,
+     "supported_precision": null,
+     "supported_recall": 0.0,
+     "supported_recall_wilson95": [
+      0.0,
+      0.243
+     ],
+     "reported_precision": null,
+     "reported_recall": 0.0,
+     "false_link_rate": null,
+     "false_links_total": 0,
+     "foil_rejection_rate": 1.0,
+     "foil_cases": 12,
+     "planted_decoy_rejection_rate": 1.0,
+     "planted_decoy_cases": 3,
+     "planted_decoy_rejection_wilson95": [
+      0.438,
+      1.0
+     ]
+    },
+    "runs": 12,
+    "failed_runs": 0,
+    "failure_rate": 0.0,
+    "mean_latency_s": 0.6,
+    "mean_model_calls": null,
+    "mean_scripted_calls": 0.0,
+    "mean_sql_queries": 5.0,
+    "valid_link_recall_proposed(positive cases)": 0.733,
+    "valid_link_recall_verified(positive cases)": 0.0,
+    "false_links_total": 7,
+    "decoy_links_total": 3,
+    "citation_accuracy_final_output": 1.0,
+    "raw_model_citations_rejected_total": 0,
+    "links_total": 12,
+    "links_not_supported_on_reverification": 5,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 12,
+    "links_citing_duplicate_reports": 0,
+    "cases_with_source_contradictions": 10,
+    "of_which_surfaced_in_output": 0
+   },
+   "multi_agent_scripted_STANDIN": {
+    "preregistered": {
+     "cases": 12,
+     "truth_pairs_total": 12,
+     "reported_links_total": 15,
+     "supported_links_total": 12,
+     "supported_precision": 0.917,
+     "supported_recall": 0.917,
+     "supported_recall_wilson95": [
+      0.646,
+      0.985
+     ],
+     "reported_precision": 0.8,
+     "reported_recall": 1.0,
+     "false_link_rate": 0.2,
+     "false_links_total": 3,
+     "foil_rejection_rate": 0.833,
+     "foil_cases": 12,
+     "planted_decoy_rejection_rate": 1.0,
+     "planted_decoy_cases": 3,
+     "planted_decoy_rejection_wilson95": [
+      0.438,
+      1.0
+     ]
+    },
+    "preregistered_excluding_baseline_code_fallback": {
+     "cases": 12,
+     "truth_pairs_total": 12,
+     "reported_links_total": 15,
+     "supported_links_total": 12,
+     "supported_precision": 0.917,
+     "supported_recall": 0.917,
+     "supported_recall_wilson95": [
+      0.646,
+      0.985
+     ],
+     "reported_precision": 0.8,
+     "reported_recall": 1.0,
+     "false_link_rate": 0.2,
+     "false_links_total": 3,
+     "foil_rejection_rate": 0.833,
+     "foil_cases": 12,
+     "planted_decoy_rejection_rate": 1.0,
+     "planted_decoy_cases": 3,
+     "planted_decoy_rejection_wilson95": [
+      0.438,
+      1.0
+     ]
+    },
+    "runs": 12,
+    "failed_runs": 0,
+    "failure_rate": 0.0,
+    "mean_latency_s": 1.233,
+    "mean_model_calls": null,
+    "mean_scripted_calls": 3.75,
+    "mean_sql_queries": 5.0,
+    "valid_link_recall_proposed(positive cases)": 1.0,
+    "valid_link_recall_verified(positive cases)": 1.0,
+    "false_links_total": 3,
+    "decoy_links_total": 0,
+    "citation_accuracy_final_output": 1.0,
+    "raw_model_citations_rejected_total": 0,
+    "links_total": 15,
+    "links_not_supported_on_reverification": 3,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "cases_with_source_contradictions": 8,
+    "of_which_surfaced_in_output": 4
+   }
   }
  },
  "rows": [
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "001",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -77,13 +365,14 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 0.7
+   "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "001",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -91,24 +380,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted",
    "open_objections": 0,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 3,
+     "reported_true": 3,
+     "reported_false": 0,
+     "supported": 3,
+     "supported_true": 3,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 3,
+     "reported_true": 3,
+     "reported_false": 0,
+     "supported": 3,
+     "supported_true": 3,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 3,
     "pairs_reported": [
      [
@@ -140,16 +443,45 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.5
+   "latency_s": 1.4
   },
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "002",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -173,13 +505,14 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 0.7
+   "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "002",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -187,24 +520,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted_with_objections",
    "open_objections": 1,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 3,
+     "reported_true": 3,
+     "reported_false": 0,
+     "supported": 2,
+     "supported_true": 2,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 3,
+     "reported_true": 3,
+     "reported_false": 0,
+     "supported": 2,
+     "supported_true": 2,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 3,
     "pairs_reported": [
      [
@@ -239,13 +586,42 @@
    "latency_s": 1.6
   },
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "003",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -269,13 +645,14 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 0.5
+   "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "003",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -283,24 +660,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted_with_objections",
    "open_objections": 1,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -324,16 +715,45 @@
     "contradiction_surfaced_in_output": true,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.2
+   "latency_s": 1.3
   },
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "004",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -360,10 +780,11 @@
    "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "004",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -371,24 +792,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted",
    "open_objections": 0,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -412,16 +847,45 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.4
+   "latency_s": 1.2
   },
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "007",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -445,13 +909,14 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 0.7
+   "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "007",
    "kind": "positive",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -459,24 +924,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted_with_objections",
    "open_objections": 1,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": false,
+     "has_planted_decoys": false
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -500,16 +979,45 @@
     "contradiction_surfaced_in_output": true,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.2
+   "latency_s": 1.3
   },
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "006",
    "kind": "decoy",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 1,
+     "supported_true": 0,
+     "supported_false": 1,
+     "foil_links": 1,
+     "planted_decoy_links": 1,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -533,13 +1041,14 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 0.8
+   "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "006",
    "kind": "decoy",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -547,24 +1056,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted",
    "open_objections": 0,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -588,16 +1111,45 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 1.3
+   "latency_s": 1.2
   },
   {
-   "system": "baseline_lightning_only",
+   "system": "baseline_code_fallback_only_STANDIN",
    "case": "008",
    "kind": "decoy",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 1,
+     "supported_true": 0,
+     "supported_false": 1,
+     "foil_links": 1,
+     "planted_decoy_links": 1,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -621,13 +1173,14 @@
     "contradiction_surfaced_in_output": false,
     "reports_it_reports_duplicates": false
    },
-   "latency_s": 0.8
+   "latency_s": 0.6
   },
   {
-   "system": "multi_agent",
+   "system": "multi_agent_scripted_STANDIN",
    "case": "008",
    "kind": "decoy",
-   "model_calls": 4,
+   "split": "dev",
+   "call_log": [],
    "sql_queries": 5,
    "iterations": 1,
    "stopping_reason": "evidence_sufficient",
@@ -635,24 +1188,38 @@
    "agent_output_failures": [],
    "repaired_outputs": 0,
    "fallback_to_lightning": false,
-   "models": {
-    "planner": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "finder": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ],
-    "skeptic": [
-     "nvidia/nemotron-3-ultra-550b-a55b"
-    ],
-    "reporter": [
-     "nvidia/nemotron-3.5-lightning-30b-a3b"
-    ]
-   },
+   "models": {},
    "skeptic_status": "accepted_with_objections",
    "open_objections": 1,
+   "scripted_calls": 4,
    "ok": true,
    "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
     "links_reported": 1,
     "pairs_reported": [
      [
@@ -676,7 +1243,1600 @@
     "contradiction_surfaced_in_output": true,
     "reports_it_reports_duplicates": false
    },
+   "latency_s": 1.3
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-POS-001",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0042"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.333,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 6,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-POS-001",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted",
+   "open_objections": 0,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 3,
+     "reported_true": 3,
+     "reported_false": 0,
+     "supported": 3,
+     "supported_true": 3,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 3,
+     "reported_true": 3,
+     "reported_false": 0,
+     "supported": 3,
+     "supported_true": 3,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 3,
+    "pairs_reported": [
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0042"
+     ],
+     [
+      "INC-CEN-0118",
+      "INC-NORTH-0294"
+     ],
+     [
+      "INC-NORTH-0042",
+      "INC-NORTH-0294"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 9,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 8,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
    "latency_s": 1.4
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-POS-002",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0182"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.333,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 6,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 4,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-POS-002",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 3,
+     "reported": 5,
+     "reported_true": 3,
+     "reported_false": 2,
+     "supported": 2,
+     "supported_true": 2,
+     "supported_false": 0,
+     "foil_links": 2,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 3,
+     "reported": 5,
+     "reported_true": 3,
+     "reported_false": 2,
+     "supported": 2,
+     "supported_true": 2,
+     "supported_false": 0,
+     "foil_links": 2,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 5,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-NORTH-2161"
+     ],
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0182"
+     ],
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0305"
+     ],
+     [
+      "INC-NORTH-2161",
+      "INC-RIV-0305"
+     ],
+     [
+      "INC-RIV-0182",
+      "INC-RIV-0305"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 2,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 8,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 3,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 6,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.8
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-POS-003",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0720",
+      "INC-RIV-0590"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 1,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-POS-003",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0720",
+      "INC-RIV-0590"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 3,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.3
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-POS-004",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0812",
+      "INC-NORTH-1104"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 4,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-POS-004",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted",
+   "open_objections": 0,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0812",
+      "INC-NORTH-1104"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 7,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.1
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-POS-007",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-1420",
+      "INC-RIV-0880"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 5,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-POS-007",
+   "kind": "positive",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-1420",
+      "INC-RIV-0880"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 7,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.3
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-DEC-006-S002",
+   "kind": "decoy",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 1,
+     "supported_true": 0,
+     "supported_false": 1,
+     "foil_links": 1,
+     "planted_decoy_links": 1,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-CEN-1680"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 1,
+    "decoy_links": 1,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 4,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-DEC-006-S002",
+   "kind": "decoy",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-RIV-0182"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 3,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.3
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-DEC-008-S003",
+   "kind": "decoy",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 1,
+     "planted_decoy_links": 1,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0520",
+      "INC-NORTH-0720"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 1,
+    "decoy_links": 1,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 1,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-DEC-008-S003",
+   "kind": "decoy",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-NORTH-0720",
+      "INC-RIV-0590"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 3,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.3
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-DEC-BOTH-S007",
+   "kind": "decoy",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 1,
+     "planted_decoy_links": 1,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-1680",
+      "INC-NORTH-0520"
+     ]
+    ],
+    "valid_link_recall_proposed": 0.0,
+    "valid_link_recall_verified": 0.0,
+    "false_links": 1,
+    "decoy_links": 1,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 6,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 4,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-DEC-BOTH-S007",
+   "kind": "decoy",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 1,
+     "reported": 1,
+     "reported_true": 1,
+     "reported_false": 0,
+     "supported": 1,
+     "supported_true": 1,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": true
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-1420",
+      "INC-RIV-0880"
+     ]
+    ],
+    "valid_link_recall_proposed": 1.0,
+    "valid_link_recall_verified": 1.0,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 7,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.3
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-NEG-1",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 1,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CENTRAL-0702",
+      "INC-NORTH-2443"
+     ]
+    ],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-NEG-1",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "no_supportable_links_found (after: evidence_sufficient)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "not_run",
+   "open_objections": 0,
+   "scripted_calls": 3,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 0,
+    "pairs_reported": [],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": null,
+    "cited_ids_final_output": 0,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.9
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-NEG-2",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 1,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CENTRAL-1400",
+      "INC-RIVERSIDE-2152"
+     ]
+    ],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 5,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-NEG-2",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "no_supportable_links_found (after: evidence_sufficient)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "not_run",
+   "open_objections": 0,
+   "scripted_calls": 3,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 0,
+    "pairs_reported": [],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": null,
+    "cited_ids_final_output": 0,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.9
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-NEG-3",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 1,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CENTRAL-2224",
+      "INC-RIVERSIDE-1217"
+     ]
+    ],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 1,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 5,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-NEG-3",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "no_supportable_links_found (after: evidence_sufficient)",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "not_run",
+   "open_objections": 0,
+   "scripted_calls": 3,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 0,
+    "pairs_reported": [],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 0,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": null,
+    "cited_ids_final_output": 0,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 2,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.9
+  },
+  {
+   "system": "baseline_code_fallback_only_STANDIN",
+   "case": "H-CROSS-001-002-004",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "models": {},
+   "scripted_calls": 0,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 1,
+     "supported_true": 0,
+     "supported_false": 1,
+     "foil_links": 1,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 0,
+     "reported_true": 0,
+     "reported_false": 0,
+     "supported": 0,
+     "supported_true": 0,
+     "supported_false": 0,
+     "foil_links": 0,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-NORTH-0042"
+     ]
+    ],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 5,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 1,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": false,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 0.6
+  },
+  {
+   "system": "multi_agent_scripted_STANDIN",
+   "case": "H-CROSS-001-002-004",
+   "kind": "negative",
+   "split": "heldout",
+   "call_log": [],
+   "sql_queries": 5,
+   "iterations": 1,
+   "stopping_reason": "evidence_sufficient",
+   "run_status": "completed",
+   "agent_output_failures": [],
+   "repaired_outputs": 0,
+   "fallback_to_lightning": false,
+   "models": {},
+   "skeptic_status": "accepted_with_objections",
+   "open_objections": 1,
+   "scripted_calls": 4,
+   "ok": true,
+   "metrics": {
+    "counts": {
+     "truth_pairs": 0,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 1,
+     "supported_true": 0,
+     "supported_false": 1,
+     "foil_links": 1,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "counts_excluding_code_fallback": {
+     "truth_pairs": 0,
+     "reported": 1,
+     "reported_true": 0,
+     "reported_false": 1,
+     "supported": 1,
+     "supported_true": 0,
+     "supported_false": 1,
+     "foil_links": 1,
+     "planted_decoy_links": 0,
+     "has_foils": true,
+     "has_planted_decoys": false
+    },
+    "links_reported": 1,
+    "pairs_reported": [
+     [
+      "INC-CEN-0450",
+      "INC-NORTH-0042"
+     ]
+    ],
+    "valid_link_recall_proposed": null,
+    "valid_link_recall_verified": null,
+    "false_links": 1,
+    "decoy_links": 0,
+    "citation_accuracy_final_output": 1.0,
+    "cited_ids_final_output": 2,
+    "raw_model_citations_rejected": 0,
+    "links_not_supported_on_reverification": 0,
+    "links_unsupported_on_reverification": 0,
+    "fabricated_fallback_links": 0,
+    "links_citing_duplicate_reports": 0,
+    "links_without_any_evidence": 0,
+    "source_contradictions_present": 0,
+    "contradiction_surfaced_in_output": true,
+    "reports_it_reports_duplicates": false
+   },
+   "latency_s": 1.3
   }
  ]
 }
