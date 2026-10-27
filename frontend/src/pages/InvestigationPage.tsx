@@ -43,7 +43,7 @@ export const InvestigationPage: React.FC = () => {
   );
   const [selectedStations, setSelectedStations] = useState<string[]>(['NORTH', 'CENTRAL', 'RIVERSIDE']);
   const [crimeType, setCrimeType] = useState<string>('ALL');
-  const [useSampleMode, setUseSampleMode] = useState<boolean>(false);
+  const [useSampleMode, setUseSampleMode] = useState<boolean>(true);
   const [sampleScenarios, setSampleScenarios] = useState<SampleScenarioMeta[]>([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('crowbar_safe_cracking');
 
@@ -143,7 +143,7 @@ export const InvestigationPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      setResult(await api.analyzeInvestigation({ query: query.trim() || 'continue', continue_from: runId, sample_mode: false }));
+      setResult(await api.analyzeInvestigation({ query: query.trim() || 'continue', continue_from: runId, sample_mode: useSampleMode }));
     } catch (err: any) {
       setError(err.message || 'Failed to resume investigation.');
     } finally {
