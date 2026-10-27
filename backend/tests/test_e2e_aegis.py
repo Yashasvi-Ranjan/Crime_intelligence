@@ -150,7 +150,7 @@ def test_api_sample_investigation_run():
     """Verify executing investigation with sample_mode=true succeeds and returns sentinels."""
     payload = {
         "query": "Investigate safe cracking burglaries across North and Central",
-        "sample_mode": True,
+        "demo_content": True,
         "scenario_id": "crowbar_safe_cracking",
     }
     response = client.post("/api/investigations/analyze", json=payload)
@@ -158,7 +158,7 @@ def test_api_sample_investigation_run():
     data = response.json()
 
     assert data["is_sample"] is True
-    assert data["data_mode"] == "sample_mode"
+    assert data["data_mode"] == "demo_content"
     assert len(data["candidate_incidents"]) >= 2
     assert len(data["candidate_links"]) >= 1
     assert "sentinels" in data

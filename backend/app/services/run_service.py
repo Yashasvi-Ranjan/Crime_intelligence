@@ -54,6 +54,15 @@ def build_workflow(cfg: Settings, sample: bool) -> Tuple[InvestigationWorkflow, 
     return wf, lambda: None
 
 
+def run_workflow(sample: bool, query: str, cfg: Optional[Settings] = None, run_id: Optional[str] = None, **kw: Any) -> Dict[str, Any]:
+    """Run the workflow and return its native result dict (used by /api/investigations/analyze)."""
+    wf, cleanup = build_workflow(cfg or settings, sample)
+    try:
+        return wf.run_investigation(query=query, run_id=run_id, **kw)
+    finally:
+        cleanup()
+
+
 def _engines(res: Dict[str, Any]) -> List[Dict[str, Any]]:
     me = (res.get("integration_status") or {}).get("meterless_engines") or {}
     out: List[Dict[str, Any]] = []

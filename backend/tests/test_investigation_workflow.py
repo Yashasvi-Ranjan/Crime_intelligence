@@ -103,7 +103,7 @@ def test_sample_investigation_crowbar():
     """Sample mode must return deterministic isolated data."""
     result = get_sample_investigation("crowbar_safe_cracking", "test query")
     assert result["is_sample"] is True
-    assert result["data_mode"] == "sample_mode"
+    assert result["data_mode"] == "demo_content"
     assert result["scenario_id"] == "crowbar_safe_cracking"
     assert len(result["candidate_incidents"]) >= 2
     assert len(result["candidate_links"]) >= 1
@@ -119,7 +119,7 @@ def test_sample_investigation_all_scenarios():
     for sc_id in SAMPLE_SCENARIOS:
         result = get_sample_investigation(sc_id, "test")
         assert result["is_sample"] is True
-        assert result["data_mode"] == "sample_mode"
+        assert result["data_mode"] == "demo_content"
         assert result["investigation_id"].startswith("sample-")
         assert result["scenario_id"] == sc_id
         assert len(result["candidate_incidents"]) >= 1
@@ -130,7 +130,7 @@ def test_sample_investigation_unknown_falls_back():
     """Unknown scenario ID should fall back to first scenario or default."""
     result = get_sample_investigation("UNKNOWN_SCENARIO_XYZ", "test")
     assert result["is_sample"] is True
-    assert result["data_mode"] == "sample_mode"
+    assert result["data_mode"] == "demo_content"
     assert len(result["candidate_incidents"]) >= 1
 
 
@@ -139,13 +139,13 @@ def test_api_investigation_sample_mode():
     resp = client.post("/api/investigations/analyze", json={
         "query": "Safe burglary crowbar grey minivan",
         "station_ids": ["NORTH", "CENTRAL"],
-        "sample_mode": True,
+        "demo_content": True,
         "scenario_id": "crowbar_safe_cracking",
     })
     assert resp.status_code == 200
     data = resp.json()
     assert data["is_sample"] is True
-    assert data["data_mode"] == "sample_mode"
+    assert data["data_mode"] == "demo_content"
     assert "candidate_incidents" in data
     assert "candidate_links" in data
     assert "executive_summary" in data

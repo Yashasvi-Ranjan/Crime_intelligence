@@ -239,7 +239,7 @@ class TestTier1CategoryPartition:
         """Partition C: Verify Triple Sentinels structure in sample mode execution."""
         resp = api_client.post(
             "/api/investigations/analyze",
-            json={"query": "safe burglaries", "sample_mode": True},
+            json={"query": "safe burglaries", "demo_content": True},
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -272,7 +272,7 @@ class TestTier1CategoryPartition:
         """Partition D: Verify Palantir Gotham-grade workspace data contracts."""
         resp = api_client.post(
             "/api/investigations/analyze",
-            json={"query": "safe burglaries", "scenario_id": "crowbar_safe_cracking", "sample_mode": True},
+            json={"query": "safe burglaries", "scenario_id": "crowbar_safe_cracking", "demo_content": True},
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -327,17 +327,17 @@ class TestTier2BoundaryValueAnalysis:
     def test_bva_empty_and_whitespace_query(self, api_client: TestClient):
         """BVA 1: Handle boundary queries (empty, single-character, extreme whitespace)."""
         # Empty string in sample mode
-        r1 = api_client.post("/api/investigations/analyze", json={"query": "", "sample_mode": True})
+        r1 = api_client.post("/api/investigations/analyze", json={"query": "", "demo_content": True})
         assert r1.status_code == 200
-        assert r1.json()["data_mode"] == "sample_mode"
+        assert r1.json()["data_mode"] == "demo_content"
 
         # Excessive whitespace
-        r2 = api_client.post("/api/investigations/analyze", json={"query": "    \n\t   ", "sample_mode": True})
+        r2 = api_client.post("/api/investigations/analyze", json={"query": "    \n\t   ", "demo_content": True})
         assert r2.status_code == 200
 
         # Special escape characters and control characters
         special_query = "Query with 'quotes', \"double quotes\", and null \\x00 characters"
-        r3 = api_client.post("/api/investigations/analyze", json={"query": special_query, "sample_mode": True})
+        r3 = api_client.post("/api/investigations/analyze", json={"query": special_query, "demo_content": True})
         assert r3.status_code == 200
 
     def test_bva_evidence_verifier_empty_and_duplicate_evidence(self):
@@ -418,12 +418,12 @@ class TestTier3PairwiseCombinatorial:
             json={
                 "query": f"Link between {station_a} and {station_b}",
                 "station_ids": [station_a, station_b],
-                "sample_mode": True,
+                "demo_content": True,
             },
         )
         assert resp.status_code == 200
         res = resp.json()
-        assert res["data_mode"] == "sample_mode"
+        assert res["data_mode"] == "demo_content"
         assert len(res["candidate_links"]) > 0
 
     @pytest.mark.parametrize(
@@ -434,7 +434,7 @@ class TestTier3PairwiseCombinatorial:
         """Pairwise 2: Predefined scenario execution across all distinct syndicate types."""
         resp = api_client.post(
             "/api/investigations/analyze",
-            json={"scenario_id": scenario_key, "query": "investigate syndicate", "sample_mode": True},
+            json={"scenario_id": scenario_key, "query": "investigate syndicate", "demo_content": True},
         )
         assert resp.status_code == 200
         res = resp.json()
@@ -476,7 +476,7 @@ class TestTier4RealWorldWorkloads:
             json={
                 "query": "Investigate safe burglaries in North industrial park and Central downtown",
                 "scenario_id": "crowbar_safe_cracking",
-                "sample_mode": True,
+                "demo_content": True,
             },
         )
         assert resp.status_code == 200
@@ -507,7 +507,7 @@ class TestTier4RealWorldWorkloads:
         for sc in scenarios:
             res = api_client.post(
                 "/api/investigations/analyze",
-                json={"scenario_id": sc, "query": "investigate", "sample_mode": True},
+                json={"scenario_id": sc, "query": "investigate", "demo_content": True},
             ).json()
 
             # Convert full response to string and audit
@@ -530,7 +530,7 @@ class TestTier4RealWorldWorkloads:
         for sc in scenarios:
             res = api_client.post(
                 "/api/investigations/analyze",
-                json={"scenario_id": sc, "query": "audit grounding", "sample_mode": True},
+                json={"scenario_id": sc, "query": "audit grounding", "demo_content": True},
             ).json()
 
             # Verify all candidate incident IDs strictly exist in generated dataset
@@ -613,11 +613,11 @@ class TestTier4RealWorldWorkloads:
         for inj in sql_injections:
             resp = api_client.post(
                 "/api/investigations/analyze",
-                json={"query": inj, "sample_mode": True},
+                json={"query": inj, "demo_content": True},
             )
             # Must safely process or return 200 sample response without 500 server crash
             assert resp.status_code == 200
             data = resp.json()
-            assert data["data_mode"] == "sample_mode"
+            assert data["data_mode"] == "demo_content"
             # Ensure injection string does not compromise sentinels
             assert data["sentinels"]["disqualification_sentinel"]["zero_secrets_leakage"] is True

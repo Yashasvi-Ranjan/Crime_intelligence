@@ -128,7 +128,8 @@ export const InvestigationPage: React.FC = () => {
         query: query.trim(),
         station_ids: selectedStations,
         crime_type: crimeType !== 'ALL' ? crimeType : undefined,
-        sample_mode: useSampleMode,
+        sample_mode: false,
+        demo_content: useSampleMode,
         scenario_id: useSampleMode ? selectedScenarioId : undefined,
       });
       setResult(resp);

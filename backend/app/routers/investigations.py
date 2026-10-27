@@ -72,16 +72,24 @@ ai_client = NightshiftClient(settings)
         "Executes a multi-agent investigation across North, Central, and Riverside stations. "
         "When live, retrieves records via Zetaris SQL, shares state via Meterless World Model, "
         "and reasons via Nightshift (NVIDIA Nemotron). If sample_mode=true is specified, "
-        "returns an isolated, verified sample scenario without claiming live execution."
+        "runs the same agent loop offline over local sample data with recorded model responses (labelled in the trace); "
+        "demo_content=true returns a pre-built demo scenario instead."
     ),
 )
 async def analyze_investigation(req: InvestigationRequest) -> InvestigationResponse:
-    # 1. Explicit Sample Mode handling
+    # 1a. Demo content: pre-built scenarios, clearly labelled, nothing executes. Only on explicit request.
+    if req.demo_content:
+        logger.info("Returning DEMO CONTENT (scenario: %s); no agents run", req.scenario_id)
+        return InvestigationResponse(**get_sample_investigation(req.scenario_id, req.query))
+
+    # 1b. Sample mode: the real Planner/Finder/Skeptic/verifier/Reporter loop over local data, offline.
     use_sample_mode = req.sample_mode if req.sample_mode is not None else settings.sample_mode
     if use_sample_mode:
-        logger.info("Executing investigation in SAMPLE MODE (scenario: %s)", req.scenario_id)
-        sample_res = get_sample_investigation(req.scenario_id, req.query)
-        return InvestigationResponse(**sample_res)
+        logger.info("Executing investigation in SAMPLE MODE (real loop, local data, replayed model responses)")
+        from app.services.run_service import run_workflow
+        return InvestigationResponse(**run_workflow(
+            sample=True, query=req.query, incident_ids=req.incident_ids, station_ids=req.station_ids, crime_type=req.crime_type,
+            date_from=req.date_from, date_to=req.date_to, continue_from=req.continue_from))
 
     # 2. Live Mode Pre-flight Checks (Strict: Never silently fall back to sample data)
     if not settings.zetaris_configured:

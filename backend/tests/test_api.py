@@ -236,7 +236,7 @@ def test_sample_scenarios_list():
 def test_investigations_analyze_sample_mode_crowbar():
     payload = {
         "query": "Investigate safe burglaries involving crowbars",
-        "sample_mode": True,
+        "demo_content": True,
         "scenario_id": "crowbar_safe_cracking",
     }
     response = client.post("/api/investigations/analyze", json=payload)
@@ -245,7 +245,7 @@ def test_investigations_analyze_sample_mode_crowbar():
 
     # Core sample mode flags
     assert data["is_sample"] is True
-    assert data["data_mode"] == "sample_mode"
+    assert data["data_mode"] == "demo_content"
     assert data["scenario_id"] == "crowbar_safe_cracking"
 
     # Sentinels verification (Milestone 2 requirement)
@@ -305,7 +305,7 @@ def test_investigations_analyze_sample_mode_crowbar():
 
 def test_investigations_analyze_sample_mode_all_scenarios():
     for sc_id in ["catalytic_converter", "keyless_suv_relay"]:
-        payload = {"query": f"test query for {sc_id}", "sample_mode": True, "scenario_id": sc_id}
+        payload = {"query": f"test query for {sc_id}", "demo_content": True, "scenario_id": sc_id}
         resp = client.post("/api/investigations/analyze", json=payload)
         assert resp.status_code == 200
         res = resp.json()

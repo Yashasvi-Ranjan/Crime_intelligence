@@ -80,7 +80,7 @@ class TestAdversarialAnalyzeEndpoint:
         payload = {
             "query": f"investigate {scenario_key}",
             "scenario_id": scenario_key,
-            "sample_mode": True,
+            "demo_content": True,
         }
         res = client.post("/api/investigations/analyze", json=payload)
         assert res.status_code == 200, f"Failed for scenario {scenario_key}: {res.text}"
@@ -88,7 +88,7 @@ class TestAdversarialAnalyzeEndpoint:
 
         # Contract checks
         assert data["is_sample"] is True
-        assert data["data_mode"] == "sample_mode"
+        assert data["data_mode"] == "demo_content"
         assert len(data["candidate_incidents"]) >= 2
         assert len(data["candidate_links"]) >= 1
 
@@ -119,7 +119,7 @@ class TestAdversarialAnalyzeEndpoint:
         """Verify query-based scenario dispatch without explicit scenario_id."""
         payload = {
             "query": query,
-            "sample_mode": True,
+            "demo_content": True,
         }
         res = client.post("/api/investigations/analyze", json=payload)
         assert res.status_code == 200
@@ -143,7 +143,7 @@ class TestAdversarialAnalyzeEndpoint:
         """Submit hostile, malformed, and injection queries. Must never crash with 500."""
         payload = {
             "query": adversarial_query,
-            "sample_mode": True,
+            "demo_content": True,
         }
         res = client.post("/api/investigations/analyze", json=payload)
         # 200 (graceful fallback) or 422 (validation error) are acceptable; NEVER 500.

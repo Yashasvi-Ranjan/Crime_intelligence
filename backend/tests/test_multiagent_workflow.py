@@ -268,9 +268,9 @@ def test_sample_mode_never_touches_live_services(monkeypatch):
     def boom(*a, **k):
         raise AssertionError("live workflow must not run in sample mode")
     monkeypatch.setattr(router.investigation_workflow, "run_investigation", boom)
-    r = TestClient(app).post("/api/investigations/analyze", json={"query": "q", "sample_mode": True, "scenario_id": "crowbar_safe_cracking"})
+    r = TestClient(app).post("/api/investigations/analyze", json={"query": "q", "demo_content": True, "scenario_id": "crowbar_safe_cracking"})
     body = r.json()
-    assert r.status_code == 200 and body["is_sample"] is True and "SAMPLE" in body["data_mode"].upper()
+    assert r.status_code == 200 and body["is_sample"] is True and body["data_mode"] == "demo_content"
     assert not body.get("engine_operations") and not body.get("model_calls")
 
 
