@@ -11,7 +11,7 @@ Meterless Nightshift, a **deterministic verifier** re-checks every ID, quotation
 |---|---|
 | **Website** | https://crime-intelligence-six.vercel.app/ (see [Live website](#live-website): live Zetaris and Nemotron while the developer's backend is up, otherwise a clearly labelled offline demo) |
 | **Docker image** | [`yashasvir171/oah-submission`](https://hub.docker.com/r/yashasvir171/oah-submission) on Docker Hub (`linux/amd64` and `linux/arm64`) |
-| **Deployment details** | [`DEPLOYMENT.md`](DEPLOYMENT.md) |
+| **Deployment details** | [`submission/DEPLOYMENT.md`](submission/DEPLOYMENT.md) |
 | **Demo video, slides, documents** | [`submission/`](submission/README.md) |
 
 **Try it with only Docker (no credentials, no network, no clone needed for the image):**
@@ -61,7 +61,6 @@ cross_station_crime_intelligence/
 ├── .dockerignore, .gitignore
 ├── requirements.txt                    # pinned Python dependencies
 ├── metadata.json                       # project / track / sponsor technology / entry point
-├── DEPLOYMENT.md                       # live website, Docker Hub and source links; how the site is deployed and its limits
 ├── vercel.json                         # website: /api -> tunnel to the live backend, /offline-api -> offline fallback
 ├── api/index.py                        # Vercel function serving the OFFLINE fallback (forced sample mode)
 ├── .github/workflows/ci.yml            # pytest, docker build, judge path (SAMPLE_MODE), offline (--network none), secret scan
@@ -94,9 +93,10 @@ cross_station_crime_intelligence/
 │   ├── generate_synthetic_data.py      # deterministic data generator
 │   ├── record_fixtures.py              # record fixtures from live Zetaris + Nightshift runs; regenerate output_examples/
 │   ├── judge_compare.py, trace_check.py, secret_scan.sh, build_reference_engines.sh, evaluate_agents.py
+│   ├── restart_tunnel.sh               # restart the Cloudflare quick tunnel and repoint vercel.json (--watch to automate)
 ├── tests/                              # synthetic-data, adversarial and end-to-end suites
 ├── third_party/meterless/              # Apache-2.0 H-MEM + Markovian reference sources (unmodified, commit 1742dec), LICENSE, NOTICE.md
-├── submission/                         # hackathon deliverables: documents, slide deck, demo video, tools/build_media.py
+├── submission/                         # hackathon deliverables: documents (incl. DEPLOYMENT.md), slide deck, demo video, tools/build_media.py
 ├── evaluation/results.json             # scripted-stand-in evaluation (a pipeline test, not a model benchmark)
 └── logs/ , .state/                     # generated at run time (gitignored): traces, run state, H-MEM store
 ```
