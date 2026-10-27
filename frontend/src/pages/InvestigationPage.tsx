@@ -43,7 +43,7 @@ export const InvestigationPage: React.FC = () => {
   );
   const [selectedStations, setSelectedStations] = useState<string[]>(['NORTH', 'CENTRAL', 'RIVERSIDE']);
   const [crimeType, setCrimeType] = useState<string>('ALL');
-  const [useSampleMode, setUseSampleMode] = useState<boolean>(true);
+  const [useSampleMode, setUseSampleMode] = useState<boolean>(false);
   const [sampleScenarios, setSampleScenarios] = useState<SampleScenarioMeta[]>([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('crowbar_safe_cracking');
 

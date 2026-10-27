@@ -20,6 +20,12 @@ if os.environ.get("VERCEL") or not os.name == "nt":
     os.environ.setdefault("STATE_DIR", "/tmp/.state")
     os.environ.setdefault("METERLESS_WORLD_DIR", "/tmp/meterless_world")
 
+# This function only serves the OFFLINE fallback (/offline-api): sample mode, bundled data, no live services, whatever the project env says.
+os.environ["SAMPLE_MODE"] = "true"
+os.environ["ZETARIS_ENABLED"] = "false"
+os.environ["NIGHTSHIFT_API_KEY"] = ""
+os.environ["NIGHTSHIFT_API_KEY_FILE"] = ""
+
 from app.main import app
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

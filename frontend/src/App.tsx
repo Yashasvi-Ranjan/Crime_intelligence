@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar } from './components/Navbar';
+import { OfflineBanner } from './components/OfflineBanner';
 import { OverviewPage } from './pages/OverviewPage';
 import { InvestigationPage } from './pages/InvestigationPage';
 import { IncidentsPage } from './pages/IncidentsPage';
@@ -59,6 +60,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
+      <OfflineBanner />
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
