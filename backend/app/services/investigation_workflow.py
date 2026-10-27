@@ -929,21 +929,21 @@ class _Run:
             return "local_fallback"
         return "local_sample" if getattr(self.wf._data, "source", "zetaris_live") == "local_sample" else "zetaris_live"
 
+    def _engine_status(self, name: str) -> Dict[str, Any]:
+        """Status of one engine derived only from the operations actually traced this run."""
+        lst = [o for o in self.engine_ops if o["engine"] == name]
+        if not lst:
+            status = "not_invoked"
+        elif any(o["status"] == "engine_unavailable" for o in lst):
+            status = "engine_unavailable"
+        else:
+            status = "connected" if all(o["status"] == "ok" for o in lst) else "error"
+        backends = sorted({(o.get("detail") or {}).get("backend") for o in lst} - {None})
+        return {"status": status, "operations": sorted({o["op"] for o in lst}), "calls": len(lst), "backend": backends}
+
     def _integration_status(self, world: Dict[str, Any], win: List[CallRecord], provider: Optional[str]) -> Dict[str, Any]:
         cfg = self.cfg
-        ops: Dict[str, List[Dict[str, Any]]] = {}
-        for o in self.engine_ops:
-            ops.setdefault(o["engine"], []).append(o)
-        def eng(name: str) -> Dict[str, Any]:
-            lst = ops.get(name, [])
-            if not lst:
-                status = "not_invoked"
-            elif any(o["status"] == "engine_unavailable" for o in lst):
-                status = "engine_unavailable"
-            else:
-                status = "connected" if all(o["status"] == "ok" for o in lst) else "error"
-            backends = sorted({(o.get("detail") or {}).get("backend") for o in lst} - {None})
-            return {"status": status, "operations": sorted({o["op"] for o in lst}), "calls": len(lst), "backend": backends}
+        eng = self._engine_status
         reported = sorted({c.reported_model for c in win if c.reported_model})
         sources = sorted({c.source for c in self.calls})
         live_models = sources in ([], ["live"])
@@ -970,6 +970,7 @@ class _Run:
                                  "entities_count": world.get("entities_count", 0), "observations_count": world.get("observations_total", 0),
                                  "contradictions_count": len(world.get("contradictions", []))},
             "meterless_engines": {"world_model": {"status": "engine_unavailable" if world_down else ("connected" if world else "error"),
+                                                  "backend": None if world_down else getattr(self.world, "backend", None),
                                                   "observations_by_kind": {k: len(v) for k, v in (world.get("observations_by_kind") or {}).items()}},
                                   "scout_intent": eng("scout"), "h_mem": eng("hmem"), "markovian": eng("markovian")},
             "model_registry": self.wf._registry.report(),
@@ -985,7 +986,7 @@ class _Run:
             "supporting_evidence": {}, "candidate_links": [], "contradictions_and_limitations": [],
             "unresolved_questions": [msg] if status == "needs_clarification" else [], "follow_up_actions": [],
             "executive_summary": msg,
-            "integration_status": {"meterless_engines": {"scout_intent": {"status": "connected", "operations": ["detect"], "calls": 1}}},
+            "integration_status": {"meterless_engines": {"scout_intent": self._engine_status("scout")}},
             "retrieval_and_analysis_status": status, "trace_file": str(self.tracer.log_file.name),
             "timestamp": time.time(), "elapsed_seconds": round(time.time() - t_start, 2),
             "intent": route.intent, "route": route.as_dict(), "run_status": status, "stopping_reason": status,

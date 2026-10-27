@@ -1,0 +1,4 @@
+TEST DOUBLES - these are NOT the Meterless Scout Intent / H-MEM / Markovian / World Model engines.
+They are minimal in-repo stand-ins that let the core workflow tests run on a machine without the
+proprietary Nightshift engine directory. Their output is never evidence of the real engines; the
+adapters label every operation served from this directory as backend="test_double".

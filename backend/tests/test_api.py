@@ -256,9 +256,8 @@ def test_investigations_analyze_sample_mode_crowbar():
     tracker = sentinels["operational_tracker"]
     assert tracker["status"] == "PASS"
     assert tracker["passed"] is True
-    assert tracker["latency_ms"] > 0
-    assert "token_usage" in tracker
-    assert tracker["token_usage"]["total_tokens"] > 0
+    assert tracker["latency_ms"] == 0 and tracker["details"]["total_model_calls"] == 0   # demo content: nothing ran
+    assert tracker["token_usage"]["total_tokens"] == 0
     assert len(tracker["query_milestones"]) >= 3
 
     # HackOS Compliance Auditor

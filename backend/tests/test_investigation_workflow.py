@@ -17,6 +17,8 @@ These tests validate:
 from __future__ import annotations
 
 import json
+from pathlib import Path
+
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -27,16 +29,22 @@ from app.config import Settings, settings
 from app.services.investigation_workflow import _extract_json_block
 # These workflow tests cover the LEGACY single-pass pipeline (kept as the evaluation baseline).
 # The iterative multi-agent workflow is covered in test_multiagent_workflow.py.
+from tests.engine_env import engine_settings, requires_node
 from app.services.legacy_pipeline_workflow import LegacyInvestigationWorkflow as InvestigationWorkflow
 
-import shutil
-from pathlib import Path
+# These drive the legacy pipeline through the World Model: the real worldmodel.js when installed, else the labelled
+# test double in tests/stub_engines (engine_env.py). The module-level service is pointed at it for the test.
+requires_world_model = requires_node
 
-# These drive the legacy pipeline through the real World Model engine (proprietary worldmodel.js, never in the repo/image).
-requires_world_model = pytest.mark.skipif(
-    not shutil.which("node") or not (Path(Settings().meterless_world_model_path).exists()
-                                     or (Path(__file__).resolve().parents[1] / "app/services/meterless_world/worldmodel.js").exists()),
-    reason="Node or the Meterless World Model engine (worldmodel.js) is not available")
+
+@pytest.fixture(autouse=True)
+def _world_model_engine(monkeypatch, tmp_path):
+    from app.config import settings as global_settings
+    from app.services import legacy_pipeline_workflow as legacy
+    monkeypatch.setattr(global_settings, "meterless_world_dir", str(tmp_path / "world"))
+    monkeypatch.setattr(legacy.meterless_service, "_engine_path", Path(engine_settings["meterless_world_model_path"]))
+
+
 from app.services.nightshift_client import NightshiftClient, NightshiftResponse
 from app.services.sample_scenarios import SAMPLE_SCENARIOS, get_sample_investigation
 

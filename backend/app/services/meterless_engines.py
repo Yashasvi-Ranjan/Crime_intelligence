@@ -68,6 +68,13 @@ class EngineOp:
 
 
 ENGINE_FILES = {"scout": "scout-intents.js", "hmem": "hmem.js", "markovian": "markovian.js"}
+TEST_DOUBLE_MARKER = "STUB_ENGINES.txt"   # present only in backend/tests/stub_engines/ (never shipped as an engine)
+
+
+def is_test_double(path: str) -> bool:
+    """True when ``path`` (an engine dir or a file inside one) belongs to the labelled test-double directory."""
+    p = Path(path)
+    return (p if p.is_dir() else p.parent).joinpath(TEST_DOUBLE_MARKER).exists()
 
 
 def resolve_engine_backend(cfg: Settings, engine: str) -> Optional[str]:
@@ -122,7 +129,8 @@ def run_engine(cfg: Settings, engine: str, op: str, args: Dict[str, Any], store_
         out = json.loads(proc.stdout)
     except ValueError as exc:
         raise EngineUnavailableError(f"{engine}.{op}: invalid runner output") from exc
-    return out, EngineOp(engine, op, "ok", round(ms, 1), {"backend": backend})
+    label = "test_double" if backend == "mounted" and is_test_double(cfg.meterless_engine_dir) else backend
+    return out, EngineOp(engine, op, "ok", round(ms, 1), {"backend": label})
 
 
 # ── Scout Intent ─────────────────────────────────────────────────────────────

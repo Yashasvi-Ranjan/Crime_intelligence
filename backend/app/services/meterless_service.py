@@ -47,6 +47,12 @@ class MeterlessWorldModelService:
                 self._engine_path = fallback
 
     @property
+    def backend(self) -> str:
+        """"test_double" for the labelled stand-in under backend/tests/stub_engines, else "mounted"."""
+        from app.services.meterless_engines import is_test_double
+        return "test_double" if self._engine_path.exists() and is_test_double(str(self._engine_path)) else "mounted"
+
+    @property
     def world_dir(self) -> Path:
         if self._cfg.meterless_world_dir:
             p = Path(self._cfg.meterless_world_dir)
@@ -409,6 +415,7 @@ class MeterlessWorldModelService:
             return {
                 "status": "connected",
                 "engine": "meterless_world_model",
+                "backend": self.backend,
                 "schema_version": stats.get("schemaVersion", 1),
                 "configured": True,
                 "engine_path": str(self._engine_path),
@@ -417,7 +424,7 @@ class MeterlessWorldModelService:
             }
         except Exception as exc:
             return {
-                "status": "error",
+                "status": "engine_unavailable",
                 "engine": "meterless_world_model",
                 "schema_version": None,
                 "configured": False,

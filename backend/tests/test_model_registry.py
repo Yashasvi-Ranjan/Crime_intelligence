@@ -7,25 +7,19 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.config import Settings
-from app.services.model_registry import (
-    NEMOTRON_MODELS,
-    ROLE_MODEL_PREFERENCES,
-    ModelRegistry,
-    analyze_cctv_frame,
-)
+from app.services.model_registry import ModelRegistry
 from app.services.nightshift_client import (
     NightshiftClient, NightshiftQueryError, NightshiftResponse, NightshiftTimeoutError)
 
 LIGHTNING = "nvidia/nemotron-3.5-lightning-30b-a3b"
 ULTRA = "nvidia/nemotron-3-ultra-550b-a55b"
-SUPER_VL = "nvidia/nemotron-3.5-super-vl-120b-a12b"
 EMBED = "nvidia/nemotron-3-embed-1b"
 
 
 def _cfg(**kw) -> Settings:
     base = dict(nightshift_model=LIGHTNING, nightshift_api_key="test-token", nightshift_model_skeptic=ULTRA,
                 nightshift_model_planner="", nightshift_model_finder="", nightshift_model_reporter="", nightshift_model_embedding=EMBED,
-                model_super_vl=SUPER_VL, nightshift_model_rerank="")
+                nightshift_model_rerank="")
     base.update(kw)
     return Settings(**base)
 
@@ -136,156 +130,21 @@ def test_env_variable_names_in_env_example_actually_load(monkeypatch):
     assert s.workflow_max_iterations == 5
 
 
-def test_nemotron_models_registered_and_returns_super_vl():
-    assert "super-vl-120b" in NEMOTRON_MODELS
-    assert NEMOTRON_MODELS["super-vl-120b"] == SUPER_VL
-    assert NEMOTRON_MODELS["lightning-30b"] == LIGHTNING
-    assert NEMOTRON_MODELS["ultra-550b"] == ULTRA
-    assert NEMOTRON_MODELS["embed-1b"] == EMBED
+def test_report_lists_only_configured_roles_and_models():
+    reg = ModelRegistry(_cfg(), _client([LIGHTNING, ULTRA, EMBED]))
+    rep = reg.report()
+    assert set(rep["roles"]) == {"planner", "finder", "skeptic", "reporter", "embedding", "rerank"}
+    assert "not_served" not in rep
+    configured = {m for a in rep["roles"].values() for m in (a["configured_model"], a["effective_model"]) if m}
+    assert configured <= {LIGHTNING, ULTRA, EMBED}          # nothing the settings do not name
+    assert reg.configured_models() == {"planner": LIGHTNING, "finder": LIGHTNING, "skeptic": ULTRA, "reporter": LIGHTNING}
 
-    reg = ModelRegistry(_cfg(), _client([LIGHTNING, ULTRA, SUPER_VL, EMBED]))
-    assert reg.nemotron_models["super-vl-120b"] == SUPER_VL
 
-
-def test_role_model_preferences_explicitly_represents_quad_models():
-    assert ROLE_MODEL_PREFERENCES["ingestion"] == LIGHTNING
-    assert ROLE_MODEL_PREFERENCES["pii_sanitization"] == LIGHTNING
-    assert ROLE_MODEL_PREFERENCES["report_generation"] == LIGHTNING
-    assert ROLE_MODEL_PREFERENCES["cross_station_planning"] == ULTRA
-    assert ROLE_MODEL_PREFERENCES["adversarial_skeptic"] == ULTRA
-    assert ROLE_MODEL_PREFERENCES["visual_scene_analysis"] == SUPER_VL
-    assert ROLE_MODEL_PREFERENCES["cctv_analysis"] == SUPER_VL
-    assert ROLE_MODEL_PREFERENCES["semantic_mo_embedding"] == EMBED
-
+def test_no_vision_role_or_hardcoded_model_catalogue():
+    import app.services.model_registry as mr
     reg = ModelRegistry(_cfg(), _client([LIGHTNING]))
-    assert reg.role_model_preferences["cctv_analysis"] == SUPER_VL
-
-
-def test_settings_super_vl_configuration(monkeypatch):
-    s = Settings()
-    assert s.model_super_vl == SUPER_VL
-    monkeypatch.setenv("MODEL_SUPER_VL", "nvidia/custom-super-vl")
-    s2 = Settings()
-    assert s2.model_super_vl == "nvidia/custom-super-vl"
-
-
-def test_vision_role_assignment():
-    reg = ModelRegistry(_cfg(), _client([LIGHTNING, SUPER_VL]))
-    v_assign = reg.assignment("vision")
-    assert v_assign.status == "verified"
-    assert v_assign.effective_model == SUPER_VL
-
-    reg_fallback = ModelRegistry(_cfg(), _client([LIGHTNING]))
-    v_fb = reg_fallback.assignment("vision")
-    assert v_fb.status == "fallback"
-    assert v_fb.effective_model == LIGHTNING
-
-
-def test_analyze_cctv_frame_optical_fallback_with_metadata():
-    prompt = (
-        "Optical observation for camera CAM-CEN-04-02: observed dark grey minivan with partial plate 7XYZ89 "
-        "and suspect wearing dark hoodie near back door."
-    )
-    res = analyze_cctv_frame(
-        image_bytes=b"mock_synthetic_frame_bytes",
-        camera_id="CAM-CEN-04-02",
-        prompt=prompt,
-    )
-    assert res["camera_id"] == "CAM-CEN-04-02"
-    assert res["model"] == SUPER_VL
-    assert res["fallback_used"] is True
-    assert isinstance(res["receipt_id"], str) and res["receipt_id"].startswith("rcpt-")
-    assert isinstance(res["description"], str) and len(res["description"]) > 10
-    assert "CAM-CEN-04-02" in res["description"]
-    assert "7XYZ89" in res["description"]
-    assert isinstance(res["entities"], list)
-
-    # Check extracted entities (plate, vehicle, suspect, camera)
-    entities_str = [str(e) for e in res["entities"]]
-    assert any("7XYZ89" in s for s in entities_str)
-    assert any("minivan" in s.lower() for s in entities_str)
-    assert any("hoodie" in s.lower() for s in entities_str)
-    assert any("CAM-CEN-04-02" in s for s in entities_str)
-
-
-def test_analyze_cctv_frame_fallback_json_prompt_parsing():
-    import json
-    json_prompt = json.dumps({
-        "camera_id": "CAM-RIV-02",
-        "partial_plate": "ABC-9999",
-        "vehicle_description": "faded red hatchback",
-        "suspect": "individual in high-vis vest",
-        "observed_entities": ["pallet loading activity"],
-    })
-    res = analyze_cctv_frame(
-        image_bytes=b"test_image_bytes",
-        camera_id="CAM-RIV-02",
-        prompt=json_prompt,
-    )
-    assert res["camera_id"] == "CAM-RIV-02"
-    assert res["fallback_used"] is True
-    assert res["model"] == SUPER_VL
-    assert any("ABC-9999" in str(e) for e in res["entities"])
-    assert any("hatchback" in str(e).lower() for e in res["entities"])
-    assert any("vest" in str(e).lower() for e in res["entities"])
-
-
-def test_analyze_cctv_frame_vision_online_success():
-    mock_resp = NightshiftResponse(
-        content="Optical detection confirmed: silver sedan bearing license plate 2XYZ45 heading westbound.",
-        model=SUPER_VL,
-        provider="nvidia",
-        receipt_id="rcpt_vision_call_001",
-    )
-    c = _client([LIGHTNING, SUPER_VL], generate=lambda **kw: mock_resp)
-    reg = ModelRegistry(_cfg(), c)
-
-    # Non-mock bytes resembling valid image payload (>16 bytes and not mock prefix)
-    valid_bytes = b"\xff\xd8\xff\xe0" + b"\x00" * 32
-    res = reg.analyze_cctv_frame(
-        image_bytes=valid_bytes,
-        camera_id="CAM-NORTH-01",
-        prompt="Identify license plate and vehicle direction",
-    )
-    assert res["camera_id"] == "CAM-NORTH-01"
-    assert res["fallback_used"] is False
-    assert res["model"] == SUPER_VL
-    assert res["receipt_id"] == "rcpt_vision_call_001"
-    assert "Optical detection confirmed" in res["description"]
-    assert any("2XYZ45" in str(e) for e in res["entities"])
-
-
-def test_analyze_cctv_frame_handles_client_failure_gracefully():
-    def _failing_generate(**kw):
-        raise NightshiftQueryError("Nightshift vision API unavailable (HTTP 503)")
-
-    c = _client([LIGHTNING, SUPER_VL], generate=_failing_generate)
-    reg = ModelRegistry(_cfg(), c)
-    valid_bytes = b"\xff\xd8\xff\xe0" + b"\x00" * 32
-    res = reg.analyze_cctv_frame(
-        image_bytes=valid_bytes,
-        camera_id="CAM-NORTH-05",
-        prompt="License plate 8KLM22 observed on dark blue truck",
-    )
-    # Resilient fallback must take over without unhandled exception
-    assert res["camera_id"] == "CAM-NORTH-05"
-    assert res["fallback_used"] is True
-    assert res["model"] == SUPER_VL
-    assert res["receipt_id"].startswith("rcpt-")
-    assert any("8KLM22" in str(e) for e in res["entities"])
-    assert any("truck" in str(e).lower() for e in res["entities"])
-
-
-def test_analyze_cctv_frame_minimal_prompt_and_empty_bytes():
-    res = analyze_cctv_frame(
-        image_bytes=b"",
-        camera_id="CAM-DEF-99",
-        prompt="",
-    )
-    assert res["camera_id"] == "CAM-DEF-99"
-    assert res["fallback_used"] is True
-    assert res["model"] == SUPER_VL
-    assert isinstance(res["entities"], list)
-    assert len(res["entities"]) >= 1  # Camera entity at least
-    assert res["entities"][0].get("id") == "CAM-DEF-99"
-
+    with pytest.raises(ValueError):
+        reg.assignment("vision")
+    for dead in ("NEMOTRON_MODELS", "ROLE_MODEL_PREFERENCES", "analyze_cctv_frame", "CANDIDATES"):
+        assert not hasattr(mr, dead)
+    assert not hasattr(Settings(), "model_super_vl")

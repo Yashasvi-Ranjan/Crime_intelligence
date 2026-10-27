@@ -2,18 +2,15 @@
 End-to-End Verification Test Suite for AEGIS Cross-Station Crime Intelligence
 =============================================================================
 Validates:
-1. Quad-Nemotron model routing and optical fallback (Milestone 1)
-2. Triple Meta-Governance Sentinels (Milestone 2)
-3. Offline sample mode and trace retrieval API (Milestone 3/4)
-4. Anti-disqualification and zero-hallucination compliance
+1. Triple Meta-Governance Sentinels (Milestone 2)
+2. Offline sample mode and trace retrieval API (Milestone 3/4)
+3. Anti-disqualification and zero-hallucination compliance
 """
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.config import settings
-from app.services.model_registry import ModelRegistry, NEMOTRON_MODELS
 from app.services.meta_sentinels import (
     operational_tracker,
     hackos_auditor,
@@ -21,48 +18,6 @@ from app.services.meta_sentinels import (
 )
 
 client = TestClient(app)
-
-
-# ── 1. Quad-Nemotron Model Alignment ──────────────────────────────────────────
-
-def test_quad_nemotron_alignment():
-    """Verify that all 4 canonical NVIDIA Nemotron model lanes are correctly bound."""
-    registry = ModelRegistry(settings)
-    models = registry.nemotron_models
-
-    assert "lightning-30b" in models
-    assert "ultra-550b" in models
-    assert "super-vl-120b" in models
-    assert "embed-1b" in models
-
-    assert "nvidia/" in models["lightning-30b"]
-    assert "nvidia/" in models["ultra-550b"]
-    assert "nvidia/" in models["super-vl-120b"]
-    assert "nvidia/" in models["embed-1b"]
-
-    prefs = registry.role_model_preferences
-    assert prefs["reporter"] == NEMOTRON_MODELS["lightning-30b"]
-    assert prefs["planner"] == NEMOTRON_MODELS["ultra-550b"]
-    assert prefs["vision"] == NEMOTRON_MODELS["super-vl-120b"]
-    assert prefs["embedding"] == NEMOTRON_MODELS["embed-1b"]
-
-
-def test_cctv_optical_fallback_resilience():
-    """Ensure CCTV optical analyzer falls back cleanly when offline or lacking image frames."""
-    registry = ModelRegistry(settings)
-
-    result = registry.analyze_cctv_frame(
-        image_bytes=b"synthetic_cctv_frame_bytes_001",
-        camera_id="CAM-NORTH-0042",
-        prompt="Identify suspicious vehicle and pry tool near loading bay",
-    )
-
-    assert result["camera_id"] == "CAM-NORTH-0042"
-    assert "description" in result
-    assert "entities" in result
-    assert result["fallback_used"] is True
-    assert "receipt_id" in result
-    assert "nvidia/" in result["model"]
 
 
 # ── 2. Triple Meta-Governance Sentinels ───────────────────────────────────────
@@ -92,12 +47,12 @@ def test_meta_sentinels_initialization_and_audit():
         },
         "nightshift_nemotron": {
             "status": "connected",
-            "models_used": [NEMOTRON_MODELS["ultra-550b"]],
+            "models_used": ["nvidia/nemotron-3-ultra-550b-a55b"],
         },
     }
     audit_rep = hackos_auditor.evaluate(
         integration_status=valid_integration,
-        model_calls=[{"reported_model": NEMOTRON_MODELS["ultra-550b"]}],
+        model_calls=[{"reported_model": "nvidia/nemotron-3-ultra-550b-a55b"}],
         candidate_links=[{"stations_involved": ["NORTH", "CENTRAL"]}],
         stations_involved=["NORTH", "CENTRAL"],
     )

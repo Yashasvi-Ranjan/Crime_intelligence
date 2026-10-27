@@ -7,7 +7,13 @@ latencies, and query ids (Zetaris request ids or local-<hash> ids).
   python scripts/judge_compare.py [--url http://localhost:8000] [--examples 1 2 3]
 
 POSTs input_examples/example_N.json to <url>/run and diffs against output_examples/example_N.json.
-Exit code 0 = all match, 1 = a difference, 2 = server unreachable.
+Before posting anything it asks GET <url>/health which engines the server can run and compares that with the
+engines recorded in output_examples/. H-MEM and Markovian run from the vendored reference build; if that build is
+missing on the server's host the check cannot pass, and this script stops and says how to create it:
+
+  sh scripts/build_reference_engines.sh        # Node 20+ and network (npx fetches pinned esbuild once); then restart the backend
+
+Exit code 0 = all match, 1 = a difference, 2 = server unreachable, 3 = required engines are not available.
 """
 
 from __future__ import annotations
@@ -50,12 +56,53 @@ def diff(a: Any, b: Any, path: str = "$") -> list[str]:
     return [] if a == b else [f"{path}: expected {str(a)[:80]!r} got {str(b)[:80]!r}"]
 
 
+HEALTH_KEY = {"scout_intent": "scout", "h_mem": "hmem", "markovian": "markovian", "world_model": "world_model"}
+BUILD_CMD = "sh scripts/build_reference_engines.sh"
+
+
+def engine_preflight(health: dict[str, Any], expected_engines: list[dict[str, Any]]) -> tuple[list[str], list[str]]:
+    """(errors, warnings): engines the examples recorded as connected but the server cannot run, and engines that
+    differ in the other direction (e.g. a mounted Nightshift engine dir changes what a run reports)."""
+    live = health.get("engines") or {}
+    errors, warnings = [], []
+    for e in expected_engines:
+        key = HEALTH_KEY.get(e["engine"], e["engine"])
+        state = (live.get(key) or {}).get("state")
+        if e["status"] == "connected" and state != "live":
+            errors.append(f"{e['engine']}: examples were recorded with it connected (backend {e.get('backend')}), "
+                          f"but the server reports engine_unavailable")
+        elif e["status"] == "engine_unavailable" and state == "live":
+            warnings.append(f"{e['engine']}: examples were recorded with it engine_unavailable, but this server runs it "
+                            f"(backend {live[key].get('backend')}); the diff below will show that. Set METERLESS_ENGINE_DIR=/nonexistent "
+                            f"and METERLESS_WORLD_MODEL_PATH=/nonexistent to reproduce the judge's container.")
+    return errors, warnings
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--url", default="http://localhost:8000")
     ap.add_argument("--examples", nargs="*", type=int, default=[1, 2, 3])
     args = ap.parse_args()
     import httpx
+
+    try:
+        health = httpx.get(f"{args.url.rstrip('/')}/health", timeout=10).json()
+    except (httpx.HTTPError, ValueError) as exc:
+        print(f"cannot reach {args.url}/health: {exc}")
+        return 2
+    expected_engines: list[dict[str, Any]] = []
+    for n in args.examples:
+        expected_engines += json.loads((ROOT / f"output_examples/example_{n}.json").read_text()).get("engines", [])
+    errors, warnings = engine_preflight(health, list({e["engine"]: e for e in expected_engines}.values()))
+    for w in warnings:
+        print(f"WARNING {w}")
+    if errors:
+        print("FAIL: the engines this comparison needs are not available on the server:")
+        for e in errors:
+            print(f"  - {e}")
+        print(f"\nBuild the vendored reference engines on the server's host, then restart the backend and re-run:\n  {BUILD_CMD}\n"
+              "(Needs Node 20+ and network access once; the Docker image already does this at build time.)")
+        return 3
 
     failed = 0
     for n in args.examples:

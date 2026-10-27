@@ -15,10 +15,6 @@ This test suite empirically and adversarially challenges:
    - Contradictory evidence (vehicle color mismatch, witness flags, forensic exclusions, timeline inversions)
    - Rejection/downgrading of ungrounded claims, missing IDs, fabricated quotes, one-sided attributes
    - Non-independent evidence clustering and collapse
-4. model_registry.analyze_cctv_frame
-   - Corrupted, empty, truncated, and random binary image bytes
-   - Optical metadata extraction from structured JSON and regex from raw prompts
-   - Graceful fallback with conforming contract
 """
 
 from __future__ import annotations
@@ -50,13 +46,6 @@ from app.services.evidence_verifier import (
     cluster_independent,
     detect_contradictions,
     verify_link,
-)
-from app.services.model_registry import (
-    NEMOTRON_MODELS,
-    ROLE_MODEL_PREFERENCES,
-    ModelRegistry,
-    _extract_cctv_metadata,
-    analyze_cctv_frame,
 )
 from app.services.sample_scenarios import SAMPLE_SCENARIOS, get_sample_investigation
 
@@ -195,20 +184,14 @@ class TestAdversarialTraceEndpoint:
         assert res.status_code == 200
         data = res.json()
         assert data["run_id"] == run_id
-        assert data["total_events"] >= 5
+        assert data["total_events"] >= 4
         events = data["events"]
 
-        # Verify all 4 Nemotron lanes are represented in trace events
-        models_in_trace = {ev["model"] for ev in events}
-        assert NEMOTRON_MODELS["ultra-550b"] in models_in_trace
-        assert NEMOTRON_MODELS["lightning-30b"] in models_in_trace
-        assert NEMOTRON_MODELS["super-vl-120b"] in models_in_trace
-
-        # Demo-content traces are labelled and carry no (invented) receipt
+        # Demo-content traces are labelled and carry neither an invented receipt nor a model name
         for ev in events:
-            assert ev["receipt_id"] == "" and ev["details"]["demo_content"] is True
-            assert ev["phase"] in ("planning", "retrieval", "vision_analysis", "adversarial_critique", "dossier_synthesis")
-            assert ev["agent"] in ("planner", "finder", "vision_analyst", "skeptic", "reporter")
+            assert ev["receipt_id"] == "" and ev["model"] == "" and ev["details"]["demo_content"] is True
+            assert ev["phase"] in ("planning", "retrieval", "adversarial_critique", "dossier_synthesis")
+            assert ev["agent"] in ("planner", "finder", "skeptic", "reporter")
 
     @pytest.mark.parametrize("arbitrary_run_id", [
         "nonexistent-run-999999",
@@ -486,77 +469,6 @@ class TestDeterministicVerifierStress:
 # SUITE 4: CCTV OPTICAL FALLBACK & CORRUPT FRAME RESILIENCE
 # =============================================================================
 
-class TestCCTVOpticalFallbackStress:
-    """Stress testing model_registry.analyze_cctv_frame with corrupt and adversarial payloads."""
-
-    @pytest.mark.parametrize("corrupt_bytes", [
-        b"",                                      # Zero bytes
-        b"\x00" * 4,                              # Short null bytes (< 16)
-        b"mock_frame_data",                       # Mock indicator
-        b"synthetic_cctv_test_frame",             # Synthetic indicator
-        b"\x89PNG\r\n\x1a\n" + b"\x00" * 2,       # Truncated PNG header
-        b"\xff\xd8\xff\xe0" + b"\x00" * 4,       # Truncated JPEG header
-        b"Corrupt binary string not an image!",  # Text garbage
-        b"\xaa" * 1024,                          # 1KB binary pattern
-    ], ids=["zero", "null4", "mock", "synthetic", "png_trunc", "jpeg_trunc", "garbage_text", "binary_pattern"])
-    def test_cctv_corrupt_payloads_fallback(self, corrupt_bytes: bytes):
-        """Corrupted image bytes must never throw; must trigger resilient local optical fallback."""
-        res = analyze_cctv_frame(
-            image_bytes=corrupt_bytes,
-            camera_id="CAM-STRESS-01",
-            prompt="Suspect in dark jacket observed fleeing in grey minivan license plate 7XK123",
-        )
-        assert isinstance(res, dict)
-        assert res["camera_id"] == "CAM-STRESS-01"
-        assert res["model"] == NEMOTRON_MODELS["super-vl-120b"]
-        assert res["fallback_used"] is True
-        assert res["receipt_id"].startswith("rcpt-opt-")
-        assert len(res["description"]) > 0
-
-        # Optical extraction must have captured entities from prompt
-        entity_values = [str(e) for e in res["entities"]]
-        assert any("7XK123" in v for v in entity_values)
-        assert any("grey minivan" in v.lower() for v in entity_values)
-
-    def test_cctv_structured_json_prompt_extraction(self):
-        """Verify prompt with structured JSON metadata extracts all entities accurately."""
-        json_prompt = json.dumps({
-            "camera_id": "CAM-NORTH-04",
-            "partial_plate": "3ABC890",
-            "vehicle_color": "dark red sedan",
-            "suspect": "individual in high-vis vest",
-            "observed_entities": ["dented bumper", "portable grinder"],
-        })
-        res = analyze_cctv_frame(
-            image_bytes=b"mock_bytes",
-            camera_id="CAM-NORTH-04",
-            prompt=json_prompt,
-        )
-        assert res["fallback_used"] is True
-        entity_values = [str(e) for e in res["entities"]]
-        assert any("3ABC890" in v for v in entity_values)
-        assert any("dark red sedan" in v for v in entity_values)
-        assert any("high-vis vest" in v for v in entity_values)
-
-    @pytest.mark.parametrize("adversarial_prompt", [
-        "",
-        "   ",
-        "'; DROP TABLE cctv_reports; --",
-        "<script>alert(1)</script>",
-        "A" * 8192,
-        "\x00\x00\x00",
-    ])
-    def test_cctv_adversarial_prompts(self, adversarial_prompt: str):
-        """Adversarial prompts must be handled gracefully without exception."""
-        res = analyze_cctv_frame(
-            image_bytes=b"",
-            camera_id="CAM-ADV-01",
-            prompt=adversarial_prompt,
-        )
-        assert isinstance(res, dict)
-        assert res["camera_id"] == "CAM-ADV-01"
-        assert res["fallback_used"] is True
-        assert res["receipt_id"].startswith("rcpt-opt-")
 
 
 if __name__ == "__main__":

@@ -1,42 +1,31 @@
 """
 Meterless World Model Engine Tests
 ==================================
-Tests the real Meterless Engine capability (World Model) powering shared state
-between agents. Verifies entity upsert, observation appending, contradiction
+Tests the Meterless World Model adapter (shared state between agents) against the real worldmodel.js
+when installed, else against the labelled test double in tests/stub_engines. Verifies entity upsert, observation appending, contradiction
 preservation, and agent provenance.
 """
 
-import shutil
 import time
-from pathlib import Path
 
 import pytest
 
 from app.config import Settings
 from app.services.meterless_service import MeterlessWorldModelService
+from tests.engine_env import engine_settings, requires_node
 
-# World Model is Meterless's proprietary worldmodel.js (Nightshift.app); it is never in the repo or the image.
-# Without it these tests skip - they must not fail.
-_WM = Path(Settings().meterless_world_model_path)
-_WM_FALLBACK = Path(__file__).resolve().parents[1] / "app/services/meterless_world/worldmodel.js"
-pytestmark = pytest.mark.skipif(
-    not shutil.which("node") or not (_WM.exists() or _WM_FALLBACK.exists()),
-    reason="Node or the Meterless World Model engine (worldmodel.js) is not available",
-)
+# Runs on the real worldmodel.js when installed, else on the labelled test double (engine_env.py).
+pytestmark = requires_node
 
 
 @pytest.fixture
 def service(tmp_path):
-    # Use temporary directory for isolated test persistence
-    srv = MeterlessWorldModelService()
-    srv._cfg.meterless_world_dir = str(tmp_path)
-    return srv
+    return MeterlessWorldModelService(Settings(**engine_settings, meterless_world_dir=str(tmp_path)))
 
 
-def test_real_meterless_engine_world_operations(service):
+def test_world_model_operations(service):
     """
-    Real Meterless Engine test exercising actual World Model operations
-    through Node runner backed by worldmodel.js.
+    World Model operations through the Node runner (real worldmodel.js if installed, else the test double).
     """
     run_id = f"test_run_{int(time.time())}"
 

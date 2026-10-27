@@ -18,6 +18,11 @@ served by a recorded fixture (replayed) versus the code-only fallback. Aim: 100%
 
 Fixtures hold what a model said about one prompt; they never contain a whole-investigation answer and are never
 keyed to an example. Review `git diff data/sample` before committing: responses are synthetic-data only.
+
+Each live recording also writes that run's trace to submission/live_trace/<name>.live.trace.jsonl, but only if it
+passes `scripts/trace_check.py --require-live` (every model call answered live by Nemotron, with a receipt id).
+That file is the committable evidence of a live run; a trace with replayed or code-only calls is never written there.
+Verify before committing:  python scripts/trace_check.py --fixtures && python scripts/trace_check.py --require-live submission/live_trace/*.jsonl
 """
 
 from __future__ import annotations
@@ -40,7 +45,23 @@ from app.services.run_service import run_investigation  # noqa: E402
 from app.services.sample_mode.fixtures import FixtureStore  # noqa: E402
 from app.services.sample_mode.local_investigation import LocalInvestigationService  # noqa: E402
 from app.services.sample_mode.registries import RecordingModelRegistry  # noqa: E402
+from app.services.trace_logger import resolve_logs_dir  # noqa: E402
 from app.services.zetaris_investigation_service import ZetarisInvestigationService  # noqa: E402
+from trace_check import check_live  # noqa: E402  (scripts/ is on sys.path when this file is run as a script)
+
+LIVE_TRACE_DIR = ROOT / "submission" / "live_trace"
+
+
+def save_live_trace(trace_file: str, name: str) -> str:
+    """Copy a live run's trace into submission/live_trace/ if (and only if) it proves live Nemotron calls."""
+    src = resolve_logs_dir() / trace_file
+    problems = check_live(src)
+    if problems:
+        return f"{name}: NOT saved as a live trace: " + "; ".join(problems[:4])
+    LIVE_TRACE_DIR.mkdir(parents=True, exist_ok=True)
+    dst = LIVE_TRACE_DIR / f"{name}.live.trace.jsonl"
+    shutil.copyfile(src, dst)
+    return f"{name}: live trace saved to {dst.relative_to(ROOT)}"
 
 
 def preflight(local_retrieval: bool) -> list[str]:
@@ -80,7 +101,7 @@ def record(payload: dict, store: FixtureStore, local_retrieval: bool) -> dict:
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return {"status": res["run_status"], "stopping_reason": res["stopping_reason"], "model_calls": len(res.get("model_calls", [])),
-            "recorded": registry.recorded}
+            "recorded": registry.recorded, "trace_file": res.get("trace_file")}
 
 
 def main() -> int:
@@ -110,6 +131,7 @@ def main() -> int:
         print("ad-hoc: recording live ...", flush=True)
         r = record(payload, store, a.local_retrieval)
         print(f"ad-hoc: live run {r['status']} / {r['stopping_reason']}; {r['recorded']} response(s) recorded", flush=True)
+        print(save_live_trace(r["trace_file"], "adhoc"), flush=True)
         out = run_investigation(None, payload, True)
         sources: dict = {}
         for line in (ROOT / out["log_file"]).read_text().splitlines():
@@ -124,6 +146,7 @@ def main() -> int:
             print(f"example_{n}: recording live ...", flush=True)
             r = record(payload, store, a.local_retrieval)
             print(f"example_{n}: live run {r['status']} / {r['stopping_reason']}; {r['recorded']} response(s) recorded", flush=True)
+            print(save_live_trace(r["trace_file"], f"example_{n}"), flush=True)
         out = run_investigation(None, payload, True)
         sources = {}
         for line in (ROOT / out["log_file"]).read_text().splitlines():
