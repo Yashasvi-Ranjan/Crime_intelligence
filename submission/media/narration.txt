@@ -8,7 +8,7 @@ A burglar pries open an office safe at the North station on Monday, and another 
 A detective asks one plain-language question. A Planner decides what to retrieve. Retrieval is plain SQL through Zetaris, never a model. A Finder proposes links. A deterministic verifier re-checks every ID and quote in code. A separate Skeptic model attacks the result, and can send the Planner back for more evidence. Only then does the Reporter write, and its citations are checked again.
 
 [overview]
-This is the real application, connected to live Zetaris: ten thousand synthetic records, across three stations and five sources.
+This is the real application, filmed in offline sample mode, as the badge in the corner says. It runs over ten thousand synthetic records, across three stations and five sources. With credentials it reads the same data live from Zetaris.
 
 [query]
 Here I ask whether the catalytic converter thefts in Central and Riverside could be one series.

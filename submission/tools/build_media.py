@@ -286,7 +286,7 @@ NARRATION = [
     ("title", "Crime doesn't stop at a station boundary. Records do. This is AEGIS, cross-station crime intelligence, built for the Solving Fragmented Intelligence track."),
     ("problem", "A burglar pries open an office safe at the North station on Monday, and another at Central on Thursday. Each station files one incident, and each holds its own camera footage, witness statements and forensic reports. Almost none of it is linked, so the pattern only shows to someone who reads everything. And real evidence conflicts, with look-alike decoys mixed in."),
     ("pipeline", "A detective asks one plain-language question. A Planner decides what to retrieve. Retrieval is plain SQL through Zetaris, never a model. A Finder proposes links. A deterministic verifier re-checks every ID and quote in code. A separate Skeptic model attacks the result, and can send the Planner back for more evidence. Only then does the Reporter write, and its citations are checked again."),
-    ("overview", "This is the real application, connected to live Zetaris: ten thousand synthetic records, across three stations and five sources."),
+    ("overview", "This is the real application, filmed in offline sample mode, as the badge in the corner says. It runs over ten thousand synthetic records, across three stations and five sources. With credentials it reads the same data live from Zetaris."),
     ("query", "Here I ask whether the catalytic converter thefts in Central and Riverside could be one series."),
     ("graph", "The knowledge graph draws only what the result contains: incidents, the evidence they cite, and the links the Finder proposed. Nothing is invented to fill the picture."),
     ("result", "Each link comes back labelled by the verifier, here weak, with zero independent sources, and a score that is marked uncalibrated, not a probability. Contradictions, limitations and follow-up steps are listed. Nothing is presented as a verdict."),
@@ -303,7 +303,7 @@ def build_video(frames: Path, out: Path, api_data: dict) -> Path:
     vf.mkdir(parents=True, exist_ok=True)
     scenes = {
         "title": title_frame(), "problem": problem_frame(), "pipeline": pipeline_frame(),
-        "overview": screen_frame("Live data layer: Zetaris", "Real dashboard, live Zetaris: 10,000 synthetic records, 3 stations, 5 sources", shot(frames, "01_overview")),
+        "overview": screen_frame("The dashboard, in offline sample mode", "Real app on local synthetic data (LOCAL FALLBACK badge): 3,000 incidents + 7,000 evidence records, 3 stations, 5 sources", shot(frames, "01_overview")),
         "query": screen_frame("Ask one plain-language question", "Investigation Workbench: Planner, Finder, Skeptic and Reporter agents", shot(frames, "05_investigation_query")),
         "graph": screen_frame("Knowledge graph of the result", "Only incidents, cited evidence and Finder links from the response are drawn; percentages are uncalibrated heuristics",
                               shot(frames, "09_scroll_1")),

@@ -2,7 +2,7 @@
 
 | # | Deliverable | Where | Status |
 |---|---|---|---|
-| 1 | Demo video, 1 to 4 min | `media/AEGIS_Demo_Video.mp4` (narration text in `media/narration.txt`) | Generated; **not committed** (binary, see below). Upload it to the portal. |
+| 1 | Demo video, 1 to 4 min | `media/AEGIS_Demo_Video.mp4` (narration text in `media/narration.txt`) | Generated and committed (about 6.7 MB); upload it to the portal. |
 | 2 | Slide deck covering the 8 required points | `media/AEGIS_Slide_Deck.pptx` (14 slides; each footer says which required point it covers) | Generated and committed. Check the point list against the portal's wording. |
 | 3 | Public GitHub repo with README | this repo; [`../README.md`](../README.md) opens with an accurate summary and the Docker quick start | Repo is ready; **publishing is yours** (nothing is pushed). See the checklist below. |
 | 4 | Sponsor technology explanation (Zetaris, each Meterless engine and its test, Nightshift, NVIDIA, what is unique) | [`SPONSOR_TECHNOLOGY.md`](SPONSOR_TECHNOLOGY.md) | Done |
@@ -28,7 +28,7 @@ SAMPLE_MODE=true (cd backend && python -m uvicorn app.main:app --port 8000) &   
 /tmp/sv/bin/python submission/tools/build_media.py --frames <screenshot dir> --out submission/media
 ```
 
-The `.mp4` is large and binary, so `submission/media/*.mp4` and `submission/media/video_frames/` are gitignored; the `.pptx` is committed.
+The `.mp4` and the `.pptx` are committed; the intermediate `submission/media/video_frames/` is gitignored.
 
 ## Corrections made while preparing these deliverables
 Filming the real app exposed content that the code did not support. These were fixed (and tests updated) rather than shown:
