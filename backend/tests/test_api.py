@@ -342,7 +342,8 @@ def test_get_investigation_trace_sample_mode():
         assert "agent" in ev
         assert "model" in ev
         assert "receipt_id" in ev
-        assert ev["receipt_id"].startswith("rcpt-")
+        assert ev["receipt_id"] == ""                  # demo content: no real Nightshift call, so no receipt
+        assert ev["details"]["demo_content"] is True
         assert "details" in ev
         assert isinstance(ev["details"], dict)
 
@@ -381,11 +382,10 @@ def test_get_investigation_trace_live_logger_roundtrip(tmp_path):
 
 
 def test_get_investigation_trace_unflushed_or_unknown_fallback():
-    # An unknown or unflushed run_id should safely fall back to synthetic events
+    # An unknown or unflushed run_id returns NO events: a trace is only what a run recorded, never invented.
     response = client.get("/api/investigations/inv_unknown_fallback_99999/trace")
     assert response.status_code == 200
     data = response.json()
     assert data["run_id"] == "inv_unknown_fallback_99999"
-    assert data["total_events"] >= 4
-    assert all("receipt_id" in ev for ev in data["events"])
+    assert data["total_events"] == 0 and data["events"] == []
 

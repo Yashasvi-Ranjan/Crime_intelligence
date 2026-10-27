@@ -188,8 +188,9 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "phase": "planning",
             "agent": "planner",
             "model": "nvidia/nemotron-3-ultra-550b-a55b",
-            "receipt_id": f"rcpt-ultra-{run_id}-001",
+            "receipt_id": "",
             "details": {
+                "demo_content": True,
                 "step": "intent_and_partitioning",
                 "target_stations": stations,
                 "crime_type": sc.get("crime_type", "BURGLARY"),
@@ -204,8 +205,9 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "phase": "retrieval",
             "agent": "finder",
             "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
-            "receipt_id": f"rcpt-lightning-{run_id}-002",
+            "receipt_id": "",
             "details": {
+                "demo_content": True,
                 "step": "federated_sql_pushdown",
                 "tables_queried": [
                     "police_incidents",
@@ -226,8 +228,9 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "phase": "vision_analysis",
             "agent": "vision_analyst",
             "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
-            "receipt_id": f"rcpt-supervl-{run_id}-003",
+            "receipt_id": "",
             "details": {
+                "demo_content": True,
                 "step": "optical_scene_inspection",
                 "target_evidence": [
                     c.get("cctv_report_id") for c in sc.get("supporting_evidence", {}).get("cctv_reports", [])
@@ -241,8 +244,9 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "phase": "adversarial_critique",
             "agent": "skeptic",
             "model": "nvidia/nemotron-3-ultra-550b-a55b",
-            "receipt_id": f"rcpt-ultra-{run_id}-004",
+            "receipt_id": "",
             "details": {
+                "demo_content": True,
                 "step": "adversarial_grounding_audit",
                 "unsupported_claims_rejected": 0,
                 "contradictions_evaluated": sc.get("contradictions_and_limitations", [])[:2],
@@ -257,8 +261,9 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "phase": "dossier_synthesis",
             "agent": "reporter",
             "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
-            "receipt_id": f"rcpt-lightning-{run_id}-005",
+            "receipt_id": "",
             "details": {
+                "demo_content": True,
                 "step": "court_dossier_compilation",
                 "dossier_ready": True,
                 "facts_grounded_count": len(sc.get("candidate_links", [{}])[0].get("supporting_evidence_ids", [])),
@@ -299,17 +304,23 @@ async def get_investigation_trace(run_id: str) -> InvestigationTraceResponse:
                 iso_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
             provider_meta = ev.get("provider_meta") or {}
-            model_name = (
-                provider_meta.get("reported_model")
-                or ev.get("model")
-                or "nvidia/nemotron-3.5-lightning-30b-a3b"
-            )
+            # Only what the trace file recorded: no default model and no invented receipt. A step that made no
+            # Nightshift call (routing, retrieval, verification, engine ops) has an empty model and receipt.
+            model_name = provider_meta.get("reported_model") or ev.get("model") or ""
             agent_name = ev.get("agent") or "system"
-            receipt_id = (
-                provider_meta.get("receipt_id")
-                or ev.get("receipt_id")
-                or f"rcpt-{agent_name}-{run_id}-{idx + 1:03d}"
-            )
+            receipt_id = provider_meta.get("receipt_id") or ev.get("receipt_id") or ""
+            details = dict(ev.get("details") or {})
+            if provider_meta:
+                details.update({"latency_ms": provider_meta.get("latency_ms"), "source": provider_meta.get("source"),
+                                "requested_model": provider_meta.get("requested_model"),
+                                "fallback_reason": provider_meta.get("fallback_reason")})
+            if ev.get("engine_meta"):
+                details["engine"] = ev["engine_meta"]
+            if ev.get("sql_meta"):
+                details["sql"] = ev["sql_meta"]
+            details["status"] = ev.get("status")
+            if ev.get("error"):
+                details["error"] = ev["error"]
 
             formatted_events.append(
                 TraceEvent(
@@ -318,13 +329,13 @@ async def get_investigation_trace(run_id: str) -> InvestigationTraceResponse:
                     agent=agent_name,
                     model=model_name,
                     receipt_id=receipt_id,
-                    details=ev.get("details") or {},
+                    details=details,
                 )
             )
 
-    if not formatted_events:
-        synthetic = generate_sample_trace_events(run_id)
-        formatted_events = [TraceEvent(**ev) for ev in synthetic]
+    if not formatted_events and run_id.startswith("sample-"):
+        # Only the pre-built DEMO scenarios have no trace file; their events are labelled demo_content and carry no receipt.
+        formatted_events = [TraceEvent(**ev) for ev in generate_sample_trace_events(run_id)]
 
     return InvestigationTraceResponse(
         run_id=run_id,

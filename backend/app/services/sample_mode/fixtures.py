@@ -70,4 +70,5 @@ class FixtureStore:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(obj, f, indent=1, ensure_ascii=False, sort_keys=True)
             f.write("\n")
+        os.chmod(tmp, 0o644)          # mkstemp creates 0600; the non-root container user must be able to read fixtures
         os.replace(tmp, path)

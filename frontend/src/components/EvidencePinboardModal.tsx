@@ -267,7 +267,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>EVIDENTIARY AUDIT STATUS:</span>
-              <strong style={{ color: '#10b981' }}>100% Grounded (Zero Hallucinated Records)</strong>
+              <strong style={{ color: '#10b981' }}>Records retrieved from the data layer; links carry their own verifier status</strong>
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>SKEPTIC REVIEW STATUS:</span>

@@ -2,9 +2,10 @@
 """
 Evaluate the iterative multi-agent system against the original Lightning-only pipeline.
 
-Runs both systems against real Zetaris + Nightshift when configured, with genuine
-offline local fallbacks for development/CI environments where external services are
-not deployed. Ground truth (data/evaluation/ground_truth.json) is read ONLY here,
+Runs both systems against real Zetaris + Nightshift when configured. Otherwise it uses a
+SCRIPTED offline stand-in (OfflineModelRegistry: hand-written planner/finder/skeptic/reporter
+logic over data/generated, no model involved). Results from that path test the pipeline, the
+verifier and the scoring, NOT model quality, and must not be presented as a Nemotron benchmark. Ground truth (data/evaluation/ground_truth.json) is read ONLY here,
 for scoring; the application never loads it.
 
 Usage:  python scripts/evaluate_agents.py [--cases 001,002,...] [--out evaluation/results.json] [--skip-baseline]

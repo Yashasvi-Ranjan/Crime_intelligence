@@ -29,6 +29,8 @@ COPY scripts ./scripts
 COPY input_examples ./input_examples
 COPY output_examples ./output_examples
 COPY third_party/meterless/LICENSE third_party/meterless/NOTICE.md ./third_party/meterless/
+# Whatever permissions the build context had (e.g. files written with 0600), the non-root user must be able to read them.
+RUN chmod -R a+rX /app
 COPY --from=engines /src/third_party/meterless/build ./third_party/meterless/build
 
 # Defaults for a container that reaches Zetaris / Nightshift on the Docker HOST. Override with -e / --env-file.

@@ -97,3 +97,27 @@ def test_fixture_replay_is_keyed_by_prompt_and_labelled(tmp_path):
     assert hit.source == "replayed" and hit.reported_model == target and resp.content == "{}"
     _, other = reg.generate("planner", [*msgs[:1], {"role": "user", "content": "different"}])
     assert other.source == "code_fallback"          # a different prompt never matches
+
+
+def test_trace_endpoint_shows_only_what_was_recorded():
+    body = _run(Q)
+    ev = client.get(f"/api/investigations/{body['run_id']}/trace").json()["events"]
+    raw = _trace(body)
+    assert len(ev) == len(raw)
+    for api_ev, rec in zip(ev, raw):
+        pm = rec.get("provider_meta") or {}
+        assert api_ev["model"] == (pm.get("reported_model") or "")          # no default model on non-model steps
+        assert api_ev["receipt_id"] == (pm.get("receipt_id") or "")         # no invented receipt
+        if not pm:
+            assert api_ev["model"] == "" and api_ev["receipt_id"] == ""
+        else:
+            assert api_ev["details"]["source"] in ("replayed", "code_fallback")
+
+
+def test_recorded_fixtures_are_world_readable(tmp_path):
+    # mkstemp makes 0600 files; a root-built image would then hide them from the non-root container user
+    store = FixtureStore(tmp_path)
+    store.put("abc", {"content": "x"})
+    store.put_catalog(["m"])
+    for p in tmp_path.glob("*.json"):
+        assert p.stat().st_mode & 0o044 == 0o044, p

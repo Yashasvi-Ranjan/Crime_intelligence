@@ -311,8 +311,8 @@ class TestTier1CategoryPartition:
         assert trace_data["run_id"] == run_id
         assert trace_data["total_events"] > 0
         events = trace_data["events"]
-        receipts = [ev["receipt_id"] for ev in events]
-        assert all(r.startswith("rcpt-") for r in receipts)
+        # demo content: labelled, no invented receipts
+        assert all(ev["receipt_id"] == "" and ev["details"]["demo_content"] is True for ev in events)
 
 
 # ============================================================================

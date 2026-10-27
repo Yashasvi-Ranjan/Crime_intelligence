@@ -89,6 +89,10 @@ def main() -> int:
     ap.add_argument("--local-retrieval", action="store_true")
     ap.add_argument("--outputs-only", action="store_true")
     ap.add_argument("--clean", action="store_true", help="delete existing fixtures first")
+    ap.add_argument("--query", help="record ONE ad-hoc question (e.g. the exact request the dashboard sends) instead of the examples; "
+                                    "fixtures only, no output_examples/ are written")
+    ap.add_argument("--stations", nargs="*", default=None, help="station_ids for --query (e.g. NORTH CENTRAL RIVERSIDE)")
+    ap.add_argument("--crime-type", default=None, help="crime_type for --query")
     a = ap.parse_args()
 
     store = FixtureStore(settings.sample_fixture_path)
@@ -101,6 +105,19 @@ def main() -> int:
             shutil.rmtree(store.dir)
 
     rc = 0
+    if a.query:
+        payload = {"query": a.query, "station_ids": a.stations, "crime_type": a.crime_type}
+        print("ad-hoc: recording live ...", flush=True)
+        r = record(payload, store, a.local_retrieval)
+        print(f"ad-hoc: live run {r['status']} / {r['stopping_reason']}; {r['recorded']} response(s) recorded", flush=True)
+        out = run_investigation(None, payload, True)
+        sources: dict = {}
+        for line in (ROOT / out["log_file"]).read_text().splitlines():
+            pm = json.loads(line).get("provider_meta")
+            if pm:
+                sources[pm["source"]] = sources.get(pm["source"], 0) + 1
+        print(f"ad-hoc: replay {out['status']} / {out['output']['stopping_reason']}; model calls by source: {sources or 'none'}")
+        return 1 if sources.get("code_fallback") else 0
     for n in a.examples:
         payload = json.loads((ROOT / f"input_examples/example_{n}.json").read_text())["input"]
         if not a.outputs_only:

@@ -1,28 +1,31 @@
-# AEGIS: Autonomous Enterprise Governance & Investigative System
-> **Cross-Station Crime Intelligence Platform**  
-> *Track 1: Solving Fragmented Intelligence* | **Open Agent Hackathon 2026** & **DGX Spark Award Contender**
+# AEGIS: Cross-Station Crime Intelligence
+> *Track: Solving Fragmented Intelligence* | **Open Agent Hackathon 2026**
 
----
+Agents that link crimes across police stations, and show the evidence, the doubts and the missing pieces behind every link.
+Three stations hold related cases in separate silos (incidents, CCTV, witness statements, forensic reports, press). A detective asks one
+plain-language question; a **Planner, Finder, Skeptic and Reporter** search five Zetaris-federated sources with NVIDIA Nemotron through
+Meterless Nightshift, a **deterministic verifier** re-checks every ID, quotation and attribute they cite, and the answer is a set of
+*leads, not verdicts* - which can be "no supportable link". All data is synthetic.
 
-### Executive Architecture & Competitive Advantage
-AEGIS is an enterprise Level 4 SaaS intelligence platform designed to eliminate multi-jurisdictional crime blindness across isolated police station silos (North, Central, Riverside). While legacy architectures struggle with unverified claims, vision pipeline 404s, and static traces, AEGIS introduces:
+**Try it with only Docker (no credentials, no network):**
+```bash
+docker build -t oah-submission .
+docker run --rm -p 8000:8000 -e SAMPLE_MODE=true oah-submission
+curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_1.json
+```
+Details, live mode, engines and the judge checklist: [Run with Docker](#run-with-docker). Submission documents (project text, sponsor technology,
+pre-existing components, responsible AI, judge access, slide deck, demo video): [`submission/`](submission/README.md).
 
-1. **Full Quad-Nemotron Alignment via Nightshift**:
-   - `nvidia/nemotron-3.5-lightning-30b-a3b`: High-throughput query formulation, ingestion, PII sanitization, and structured hypothesis generation.
-   - `nvidia/nemotron-3-ultra-550b-a55b`: Deep multi-jurisdiction strategic orchestration and adversarial Skeptic critique.
-   - `nvidia/nemotron-3.5-super-vl-120b-a12b`: Visual forensic and optical surveillance analysis with resilient CCTV metadata fallback.
-   - `nvidia/nemotron-3-embed-1b`: Semantic modus operandi vector similarity indexing across federated incident narratives.
-2. **Autonomous Triple Meta-Governance Sentinels**:
-   - **Operational Tracker**: Real-time token consumption, per-station query budgets, and latency monitoring.
-   - **HackOS Compliance Auditor**: Continuous verification of load-bearing Zetaris queries, Meterless engines, and multi-station coverage.
-   - **Anti-Disqualification Sentinel**: Strict scanning preventing secret leakage, destructive mutations (`DROP`/`DELETE`), and ungrounded hallucinations.
-3. **Gotham-Grade L4 SaaS Investigative Interface**:
-   - **Interactive Cross-Station Knowledge Graph**: Dynamic SVG canvas visualizing suspects, vehicles, incidents, and forensic links across precincts.
-   - **Execution Trace Drawer**: Verifiable model receipts (`rcpt-*`), engine timings, and token metrics.
-   - **Evidence Pinboard & Court Dossier**: One-click evidence staging with printable, court-admissible forensic dossiers.
-4. **100% Deterministic Grounding & Verification**:
-   - Every claim is validated against the 5 Zetaris federated tables (`police_incidents`, `cctv_reports`, `witness_reports`, `forensic_reports`, `newspaper_reports`).
-   - Zero-credential offline demonstration (`sample_mode=true`) allowing judges and reviewers to explore full scenario graphs without setup friction.
+### What it does
+- **Models propose, code verifies, a Skeptic attacks.** Retrieval is read-only SQL through Zetaris (never a model). The verifier checks that cited IDs exist and match
+  their source, quotes are verbatim, shared attributes appear in records tied to **both** incidents, and stations/timelines agree. Duplicate reports are never counted as independent corroboration.
+- **Models, per role:** `nvidia/nemotron-3.5-lightning-30b-a3b` (Planner, Finder, Reporter) and `nvidia/nemotron-3-ultra-550b-a55b` (Skeptic), all through Nightshift.
+  Every call records the requested model, the model that answered, receipt id, latency and whether a fallback happened.
+- **Meterless engines:** H-MEM and Markovian run in the image from the open Apache-2.0 reference implementations (vendored unmodified, `third_party/meterless`); World Model and Scout Intent
+  run when the Nightshift engine directory is mounted and are otherwise traced `engine_unavailable`, never faked.
+- **Auditable:** one JSONL trace per run (`logs/trace-<run_id>.jsonl`): routing, agents, handoffs, the Skeptic branch, query ids, engine events, requested and answering model.
+- **Honest about limits:** scores are uncalibrated heuristics; embeddings, reranking and vision are **not** used (the Nightshift build in use returned 404 for `/v1/embeddings` and does not serve rerank);
+  `evaluation/results.json` came from a scripted offline stand-in for the models and is **not** a model benchmark. See [`submission/RESPONSIBLE_AI.md`](submission/RESPONSIBLE_AI.md).
 
 ---
 
@@ -506,7 +509,8 @@ cd frontend && npm install && npm run dev
 cd backend && python -m pytest -q
 # LIVE integration tests (real Zetaris SQL, Nightshift calls, engines); the full-investigation test takes minutes
 cd backend && RUN_LIVE_TESTS=1 python -m pytest -m live -v
-# Baseline-vs-multi-agent evaluation (live; writes evaluation/results.json)
+# Baseline-vs-multi-agent evaluation (writes evaluation/results.json). With Zetaris + Nightshift configured it calls them; otherwise it uses a SCRIPTED
+# offline stand-in for the models, which tests the pipeline/verifier/scoring mechanics, not model quality (the committed results.json is of this kind)
 python scripts/evaluate_agents.py
 
 # Verify integrations by hand

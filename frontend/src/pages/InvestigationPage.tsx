@@ -128,7 +128,7 @@ export const InvestigationPage: React.FC = () => {
         query: query.trim(),
         station_ids: selectedStations,
         crime_type: crimeType !== 'ALL' ? crimeType : undefined,
-        sample_mode: false,
+        // sample_mode is left to the server (SAMPLE_MODE env); demo_content is the pre-built, labelled scenario
         demo_content: useSampleMode,
         scenario_id: useSampleMode ? selectedScenarioId : undefined,
       });
@@ -439,6 +439,23 @@ export const InvestigationPage: React.FC = () => {
                   {station}
                 </button>
               ))}
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.6rem' }}>Crime type:</span>
+              <select
+                value={crimeType}
+                onChange={(e) => setCrimeType(e.target.value)}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                {['ALL', 'BICYCLE_THEFT', 'BURGLARY', 'CARGO_THEFT', 'FRAUD', 'IDENTITY_THEFT', 'PROPERTY_DAMAGE', 'ROBBERY', 'SHOPLIFTING', 'VANDALISM', 'VEHICLE_THEFT'].map((c) => (
+                  <option key={c} value={c}>{c === 'ALL' ? 'Any' : c}</option>
+                ))}
+              </select>
             </div>
 
             {/* Mode selection toggle */}
@@ -458,7 +475,7 @@ export const InvestigationPage: React.FC = () => {
                   checked={useSampleMode}
                   onChange={(e) => setUseSampleMode(e.target.checked)}
                 />
-                Sample Mode (Planted Scenarios)
+                Demo content (pre-built, no agents run)
               </label>
 
               <span
@@ -472,7 +489,7 @@ export const InvestigationPage: React.FC = () => {
                   border: useSampleMode ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
                 }}
               >
-                {useSampleMode ? 'SIMULATED DATA' : 'LIVE ZETARIS + NIGHTSHIFT'}
+                {useSampleMode ? 'DEMO CONTENT' : 'AGENT LOOP: SOURCES SHOWN IN TRACE'}
               </span>
             </div>
           </div>
