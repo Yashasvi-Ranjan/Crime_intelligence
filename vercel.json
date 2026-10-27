@@ -14,11 +14,11 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://cabinet-calling-sample-rug.trycloudflare.com/api/$1"
+      "destination": "https://aegis-backend-1ino.onrender.com/api/$1"
     },
     {
       "source": "/api",
-      "destination": "https://cabinet-calling-sample-rug.trycloudflare.com/api"
+      "destination": "https://aegis-backend-1ino.onrender.com/api"
     }
   ]
 }
