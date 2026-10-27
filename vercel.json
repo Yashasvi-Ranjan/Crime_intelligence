@@ -14,11 +14,11 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://escape-photographic-fountain-parent.trycloudflare.com/api/$1"
+      "destination": "https://scotia-leonard-east-yet.trycloudflare.com/api/$1"
     },
     {
       "source": "/api",
-      "destination": "https://escape-photographic-fountain-parent.trycloudflare.com/api"
+      "destination": "https://scotia-leonard-east-yet.trycloudflare.com/api"
     }
   ]
 }
