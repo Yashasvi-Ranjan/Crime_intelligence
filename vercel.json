@@ -3,17 +3,12 @@
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/index.py": {
-      "includeFiles": "frontend/dist/**,data/generated/**,backend/**"
+      "includeFiles": "data/generated/**,data/sample/**,backend/**",
+      "maxDuration": 60
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py?_route=$1"
-    },
-    {
-      "source": "/api",
-      "destination": "/api/index.py?_route="
-    }
+    { "source": "/api/(.*)", "destination": "/api/index.py?_route=$1" },
+    { "source": "/api", "destination": "/api/index.py?_route=" }
   ]
 }
