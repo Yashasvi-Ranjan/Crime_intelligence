@@ -14,11 +14,11 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://flag-running-ppc-nitrogen.trycloudflare.com/api/$1"
+      "destination": "https://cabinet-calling-sample-rug.trycloudflare.com/api/$1"
     },
     {
       "source": "/api",
-      "destination": "https://flag-running-ppc-nitrogen.trycloudflare.com/api"
+      "destination": "https://cabinet-calling-sample-rug.trycloudflare.com/api"
     }
   ]
 }
