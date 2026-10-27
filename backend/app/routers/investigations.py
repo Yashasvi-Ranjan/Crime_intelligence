@@ -187,7 +187,7 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_time)),
             "phase": "planning",
             "agent": "planner",
-            "model": "nvidia/nemotron-3-ultra-550b-a55b",
+            "model": "",
             "receipt_id": "",
             "details": {
                 "demo_content": True,
@@ -204,7 +204,7 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_time + 4)),
             "phase": "retrieval",
             "agent": "finder",
-            "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+            "model": "",
             "receipt_id": "",
             "details": {
                 "demo_content": True,
@@ -224,26 +224,10 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             },
         },
         {
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_time + 8)),
-            "phase": "vision_analysis",
-            "agent": "vision_analyst",
-            "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
-            "receipt_id": "",
-            "details": {
-                "demo_content": True,
-                "step": "optical_scene_inspection",
-                "target_evidence": [
-                    c.get("cctv_report_id") for c in sc.get("supporting_evidence", {}).get("cctv_reports", [])
-                ],
-                "surveillance_metadata": "Low-light surveillance frames analyzed via Super-VL optical feature extraction",
-                "vehicle_profile_extracted": True,
-            },
-        },
-        {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_time + 12)),
             "phase": "adversarial_critique",
             "agent": "skeptic",
-            "model": "nvidia/nemotron-3-ultra-550b-a55b",
+            "model": "",
             "receipt_id": "",
             "details": {
                 "demo_content": True,
@@ -260,7 +244,7 @@ def generate_sample_trace_events(run_id: str) -> List[Dict[str, Any]]:
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_time + 16)),
             "phase": "dossier_synthesis",
             "agent": "reporter",
-            "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+            "model": "",
             "receipt_id": "",
             "details": {
                 "demo_content": True,
@@ -384,7 +368,7 @@ async def engines_health() -> Dict[str, Any]:
             _, op = fn()
             out[name] = {**op.as_dict(), "status": "connected"}
         except EngineUnavailableError as exc:
-            out[name] = {"status": "error", "message": str(exc)}
+            out[name] = {"status": "engine_unavailable", "message": str(exc)}
     return out
 
 

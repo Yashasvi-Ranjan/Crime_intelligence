@@ -4,7 +4,7 @@ Meterless Engine adapter tests - LOCAL ENGINE tests.
 These execute the REAL engine modules installed with Nightshift.app (scout-intents.js,
 hmem.js, markovian.js) through Node, against temp storage. They are not mocks, but they
 are also not Meterless's own conformance suites (none ship in the app bundle).
-Skipped automatically when Node or Nightshift.app is absent.
+Skipped (with an explicit reason) when Node or Nightshift.app is absent; test doubles never stand in here.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from app.services.meterless_engines import (
 CFG = Settings()
 pytestmark = pytest.mark.skipif(
     not shutil.which("node") or not Path(CFG.meterless_engine_dir, "hmem.js").exists(),
-    reason="Node or Nightshift engine modules not installed")
+    reason="real Nightshift engine modules not installed (METERLESS_ENGINE_DIR); the labelled test doubles are covered by test_stub_engines.py")
 
 
 def _cfg(tmp_path) -> Settings:

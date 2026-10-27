@@ -63,12 +63,6 @@ from app.services.evidence_verifier import (
     detect_contradictions,
     verify_link,
 )
-from app.services.model_registry import (
-    NEMOTRON_MODELS,
-    ROLE_MODEL_PREFERENCES,
-    ModelRegistry,
-    _extract_cctv_metadata,
-)
 from app.services.sample_scenarios import SAMPLE_SCENARIOS, get_sample_investigation
 from app.services.trace_logger import TraceLogger
 
@@ -119,48 +113,7 @@ class TestTier1CategoryPartition:
     deterministic verifiers, sentinels, and workspace contracts.
     """
 
-    def test_partition_f4_f5_f6_f7_nemotron_model_lanes(self):
-        """Partition A: Verify all 4 Quad-Nemotron model lanes are properly registered."""
-        # Lane 1: Lightning 30B
-        assert NEMOTRON_MODELS["lightning-30b"] == "nvidia/nemotron-3.5-lightning-30b-a3b"
-        # Lane 2: Ultra 550B
-        assert NEMOTRON_MODELS["ultra-550b"] == "nvidia/nemotron-3-ultra-550b-a55b"
-        # Lane 3: Super-VL 120B
-        assert NEMOTRON_MODELS["super-vl-120b"] == "nvidia/nemotron-3.5-super-vl-120b-a12b"
-        # Lane 4: Embed 1B
-        assert NEMOTRON_MODELS["embed-1b"] == "nvidia/nemotron-3-embed-1b"
 
-        # Verify role dispatch mappings
-        assert ROLE_MODEL_PREFERENCES["reporter"] == NEMOTRON_MODELS["lightning-30b"]
-        assert ROLE_MODEL_PREFERENCES["planner"] == NEMOTRON_MODELS["ultra-550b"]
-        assert ROLE_MODEL_PREFERENCES["skeptic"] == NEMOTRON_MODELS["ultra-550b"]
-        assert ROLE_MODEL_PREFERENCES["cctv_analysis"] == NEMOTRON_MODELS["super-vl-120b"]
-        assert ROLE_MODEL_PREFERENCES["semantic_mo_embedding"] == NEMOTRON_MODELS["embed-1b"]
-
-    def test_partition_f6_super_vl_optical_fallback_contract(self):
-        """Partition A: Verify Super-VL optical analysis contract with resilient fallback."""
-        registry = ModelRegistry(settings)
-        # Test optical extraction on surveillance prompt
-        test_prompt = (
-            "CCTV feed at LOC-NORTH-01 captured a dark grey minivan with license plate 7XK-9021 "
-            "and two unidentified suspects wearing dark hoodie jackets and balaclava."
-        )
-        res = registry.analyze_cctv_frame(
-            image_bytes=b"synthetic_cctv_frame_bytes_for_testing",
-            camera_id="CAM-NORTH-04",
-            prompt=test_prompt,
-        )
-        assert res["camera_id"] == "CAM-NORTH-04"
-        assert res["model"] == NEMOTRON_MODELS["super-vl-120b"]
-        assert res["receipt_id"].startswith("rcpt-")
-        assert res["fallback_used"] is True or res["fallback_used"] is False
-        assert isinstance(res["entities"], list)
-        assert len(res["entities"]) > 0
-
-        # Verify entity extraction details
-        extracted_text = " ".join(str(e) for e in res["entities"])
-        assert "7XK-9021" in extracted_text or "7XK" in extracted_text
-        assert "minivan" in extracted_text.lower() or "dark grey" in extracted_text.lower()
 
     def test_partition_f3_deterministic_evidence_verifier(self):
         """Partition B: Verify pure-Python deterministic citation verifier logic."""
@@ -381,17 +334,6 @@ class TestTier2BoundaryValueAnalysis:
         # Should gracefully return empty list if not written to disk yet
         assert isinstance(events, list)
 
-    def test_bva_cctv_empty_bytes_and_invalid_images(self):
-        """BVA 5: CCTV analysis with zero-byte input, small mock bytes, and huge prompt."""
-        registry = ModelRegistry(settings)
-        # Empty bytes
-        res = registry.analyze_cctv_frame(b"", "CAM-EMPTY", "Zero byte test")
-        assert res["camera_id"] == "CAM-EMPTY"
-        assert res["fallback_used"] is True
-
-        # Malformed byte sequence
-        res_malformed = registry.analyze_cctv_frame(b"\x00\x01\x02\x03\xff", "CAM-MALFORMED", "Malformed test")
-        assert res_malformed["camera_id"] == "CAM-MALFORMED"
 
 
 # ============================================================================
@@ -443,21 +385,6 @@ class TestTier3PairwiseCombinatorial:
         assert res["sentinels"]["hackos_auditor"]["passed"] is True
         assert res["sentinels"]["disqualification_sentinel"]["zero_secrets_leakage"] is True
 
-    @pytest.mark.parametrize(
-        "role,expected_lane",
-        [
-            ("planner", "ultra-550b"),
-            ("finder", "lightning-30b"),
-            ("skeptic", "ultra-550b"),
-            ("reporter", "lightning-30b"),
-            ("cctv_analysis", "super-vl-120b"),
-            ("semantic_mo_embedding", "embed-1b"),
-        ],
-    )
-    def test_pairwise_role_lane_dispatch_combinations(self, role: str, expected_lane: str):
-        """Pairwise 3: Verify each role deterministically pairs with its required Nemotron lane."""
-        assigned_model = ROLE_MODEL_PREFERENCES[role]
-        assert assigned_model == NEMOTRON_MODELS[expected_lane]
 
 
 # ============================================================================

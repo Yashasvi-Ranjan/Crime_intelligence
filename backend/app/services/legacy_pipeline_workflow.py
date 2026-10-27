@@ -528,7 +528,7 @@ Return a JSON object:
         )
 
         winning_route = last_model_meta.get("meterless_meta", {}).get("winning_route", {})
-        reported_model = last_model_meta.get("reported_model") or self._cfg.nightshift_model
+        reported_model = last_model_meta.get("reported_model")   # only what a response reported; never the configured name
 
         return {
             "investigation_id": run_id,
@@ -558,7 +558,7 @@ Return a JSON object:
                     ],
                 },
                 "nightshift_nemotron": {
-                    "status": "connected",
+                    "status": "connected" if reported_model else "no_model_calls",
                     "mode": "nightshift_live",
                     "model": reported_model,
                     "provider": winning_route.get("provider") or "nvidia",

@@ -9,9 +9,6 @@ Skipped when Node / Nightshift engine modules are unavailable.
 
 from __future__ import annotations
 
-import shutil
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -21,12 +18,12 @@ from app.services.agents import AgentOutputError
 from app.services.meterless_engines import HMemService, MarkovianService, ScoutIntentService
 from app.services.meterless_service import MeterlessWorldModelService
 from app.services.trace_logger import TraceLogger
+from tests.engine_env import engine_settings, requires_node
 from tests.fakes import (CCTV_A, CCTV_A_DUP, EMPTY_EV, FOR_A, FOR_B, INC_A, INC_B, INC_C, PLAN_KEYWORDS, REPORT_OK, SKEPTIC_OK,
                          WIT_B, FakeData, FakeRegistry, good_link)
 
-pytestmark = pytest.mark.skipif(
-    not shutil.which("node") or not Path(Settings().meterless_engine_dir, "hmem.js").exists(),
-    reason="Node or Nightshift engine modules not installed")
+# Runs on the real engines when installed, else on the labelled test doubles in tests/stub_engines (engine_env.py).
+pytestmark = requires_node
 
 EV = {"forensic_reports": [FOR_A, FOR_B], "cctv_reports": [], "witness_reports": [], "newspaper_reports": []}
 FINDER_OK = {"links": [good_link()]}
@@ -36,7 +33,7 @@ QUERY = "Are the safe burglaries across NORTH and CENTRAL linked by a chisel-tip
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    cfg = Settings(state_dir=str(tmp_path / "state"), meterless_world_dir=str(tmp_path / "world"), hmem_scope="wf-test",
+    cfg = Settings(**engine_settings, state_dir=str(tmp_path / "state"), meterless_world_dir=str(tmp_path / "world"), hmem_scope="wf-test",
                    workflow_max_iterations=3, workflow_max_model_calls=24, workflow_time_budget_seconds=300,
                    zetaris_enabled=True)
     monkeypatch.setattr(iw, "TraceLogger", lambda run_id: TraceLogger(run_id, tmp_path / "logs"))
