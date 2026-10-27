@@ -495,12 +495,16 @@ class _Run:
             if r.get("incident_id"):
                 self.incidents.setdefault(r["incident_id"], r)
         self._drain_data_events()
-        self.tracer.log_event(tracer_step, "analyst", f"zetaris_sql:{rq.kind}", status="ok",
+        self.tracer.log_event(tracer_step, "analyst", f"{self._sql_label()}:{rq.kind}", status="ok",
                               sql_meta={"queries": data.query_count - q0, "incident_rows": len(found),
                                         "source": getattr(data, "source", "zetaris_live"), "query_ids": self._query_ids(),
                                         "tables": [self.cfg.table_fqn("police_incidents")] if rq.kind != "related_records" else
                                         [self.cfg.table_fqn(t) for t in ("forensic_reports", "cctv_reports", "witness_reports", "newspaper_reports")]},
                               details={"incident_ids": [r.get("incident_id") for r in found][:20], "reason": rq.reason[:160]})
+
+    def _sql_label(self) -> str:
+        """Trace action prefix: only rows that really came from Zetaris are called zetaris_sql."""
+        return "local_sample_sql" if getattr(self.wf._data, "source", "zetaris_live") == "local_sample" else "zetaris_sql"
 
     def _query_ids(self) -> List[str]:
         take = getattr(self.wf._data, "take_query_ids", None)
@@ -531,7 +535,7 @@ class _Run:
         for e in data.errors[err0:]:
             self._fail("zetaris.evidence", e)
         self._drain_data_events()
-        self.tracer.log_event("retrieval", "analyst", "zetaris_sql:supporting_evidence", sql_meta={
+        self.tracer.log_event("retrieval", "analyst", f"{self._sql_label()}:supporting_evidence", sql_meta={
             "queries": data.query_count - q0, "source": getattr(data, "source", "zetaris_live"), "query_ids": self._query_ids(),
             **{k: len(v) for k, v in self.evidence.items()}},
             details={"incident_ids": todo})
