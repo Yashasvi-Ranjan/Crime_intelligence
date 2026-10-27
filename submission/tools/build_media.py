@@ -171,7 +171,7 @@ def terminal_frame(api_data: dict) -> Image.Image:
         if shown >= 17:
             break
     line("  ...", MUTED)
-    line("$ python scripts/judge_compare.py   # all three examples match output_examples/  (also with --network none)", GREEN, True)
+    line("$ python scripts/judge_compare.py   # diffs each example against output_examples/ (re-record fixtures first; see JUDGE_ACCESS.md)", GREEN, True)
     return im
 
 
