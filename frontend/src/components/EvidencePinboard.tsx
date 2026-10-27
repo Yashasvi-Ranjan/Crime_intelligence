@@ -31,6 +31,15 @@ interface EvidencePinboardProps {
   onSelectIncident?: (incidentId: string) => void;
 }
 
+const groundingLabel = (s: EvidenceCardItem['groundingStatus']) =>
+  s === 'SUPPORTED' ? 'Cited by a verifier-SUPPORTED link'
+  : s === 'WEAK' ? 'Cited by a WEAK link'
+  : s === 'UNSUPPORTED' ? 'Cited by an UNSUPPORTED link'
+  : s === 'NOT_AVAILABLE' ? 'Verifier status not available'
+  : 'Not cited by any link';
+const groundingColor = (s: EvidenceCardItem['groundingStatus']) =>
+  s === 'SUPPORTED' ? '#10b981' : s === 'WEAK' ? '#f59e0b' : s === 'UNSUPPORTED' ? '#f43f5e' : '#64748b';
+
 export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
   supportingEvidence,
   candidateIncidents = [],
@@ -41,23 +50,34 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
   // Normalize evidence into uniform EvidenceCardItem list
   const allCards: EvidenceCardItem[] = useMemo(() => {
     const list: EvidenceCardItem[] = [];
+    // Verifier status per record, derived only from the links that cite it (best status wins).
+    const rank: Record<string, number> = { SUPPORTED: 3, WEAK: 2, UNSUPPORTED: 1 };
+    const statusById: Record<string, EvidenceCardItem['groundingStatus']> = {};
+    for (const l of _candidateLinks) {
+      for (const eid of l.supporting_evidence_ids ?? []) {
+        const st = (l.validation_status ?? 'NOT_AVAILABLE') as EvidenceCardItem['groundingStatus'];
+        const cur = statusById[eid];
+        if (!cur || (rank[st] ?? 0) > (rank[cur] ?? 0)) statusById[eid] = st;
+      }
+    }
+    const statusFor = (id: string): EvidenceCardItem['groundingStatus'] => statusById[id] ?? 'NOT_CITED';
     const ev = supportingEvidence || {};
 
     // 1. CCTV Reports
     (ev.cctv_reports || []).forEach((cctv) => {
       const id = cctv.cctv_report_id || cctv.id || 'CCTV-UNKNOWN';
-      const incId = cctv.incident_id || cctv.station_incident_id || 'INC-CORRELATED';
+      const incId = cctv.incident_id || cctv.station_incident_id || '';
       list.push({
         id,
         type: 'cctv',
         title: `Surveillance Camera ${cctv.camera_id || id}`,
-        station: cctv.station_id || cctv.precinct || 'CENTRAL',
-        timestamp: cctv.timestamp || cctv.recorded_at || 'Recorded on duty',
-        location: cctv.camera_location || cctv.location || 'Commercial Alleyway / Loading Bay',
-        summary: cctv.observations || cctv.description || 'Surveillance recording captures vehicle movement and masked intruders.',
-        corroboratesIncidentIds: [incId],
-        groundingStatus: 'GROUNDED',
-        citations: [`zetaris.cctv_reports.${id}`],
+        station: cctv.station_id || cctv.precinct || 'n/a',
+        timestamp: cctv.timestamp || cctv.recorded_at || undefined,
+        location: cctv.camera_location || cctv.location || undefined,
+        summary: cctv.observations || cctv.description || '(no description in record)',
+        corroboratesIncidentIds: incId ? [incId] : [],
+        groundingStatus: statusFor(id),
+        citations: [`cctv_reports.${id}`],
         metadata: cctv,
       });
     });
@@ -65,18 +85,18 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
     // 2. Forensic Lab Telemetry
     (ev.forensic_reports || []).forEach((forRep) => {
       const id = forRep.report_id || forRep.id || 'FOR-UNKNOWN';
-      const incId = forRep.incident_id || forRep.station_incident_id || 'INC-CORRELATED';
+      const incId = forRep.incident_id || forRep.station_incident_id || '';
       list.push({
         id,
         type: 'forensic',
-        title: `Forensic Lab Telemetry: ${forRep.analysis_type || 'Toolmark & Ballistics'}`,
-        station: forRep.station_id || forRep.precinct || 'NORTH',
-        timestamp: forRep.analyzed_at || forRep.timestamp || 'Lab Telemetry Logged',
-        location: forRep.laboratory || 'Metropolitan Forensic Science Center',
-        summary: forRep.findings || forRep.description || 'Tool impression analysis matches 18-inch hardened steel pry bar with specialized gouge teeth.',
-        corroboratesIncidentIds: [incId],
-        groundingStatus: 'GROUNDED',
-        citations: [`zetaris.forensic_reports.${id}`],
+        title: `Forensic Lab Telemetry: ${forRep.analysis_type || 'record'}`,
+        station: forRep.station_id || forRep.precinct || 'n/a',
+        timestamp: forRep.analyzed_at || forRep.timestamp || undefined,
+        location: forRep.laboratory || undefined,
+        summary: forRep.findings || forRep.description || '(no description in record)',
+        corroboratesIncidentIds: incId ? [incId] : [],
+        groundingStatus: statusFor(id),
+        citations: [`forensic_reports.${id}`],
         metadata: forRep,
       });
     });
@@ -84,18 +104,18 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
     // 3. Witness Statements
     (ev.witness_reports || []).forEach((wit) => {
       const id = wit.statement_id || wit.id || 'WIT-UNKNOWN';
-      const incId = wit.incident_id || wit.station_incident_id || 'INC-CORRELATED';
+      const incId = wit.incident_id || wit.station_incident_id || '';
       list.push({
         id,
         type: 'witness',
-        title: `Sworn Witness Statement (${wit.witness_type || 'Observer'})`,
-        station: wit.station_id || wit.precinct || 'CENTRAL',
-        timestamp: wit.statement_time || wit.timestamp || 'Interview Recorded',
-        location: wit.interview_location || 'Precinct Interview Room',
-        summary: wit.statement || wit.description || 'Observed two individuals loading heavy metal trunk into grey minivan late evening.',
-        corroboratesIncidentIds: [incId],
-        groundingStatus: 'GROUNDED',
-        citations: [`zetaris.witness_reports.${id}`],
+        title: `Witness Statement (${wit.witness_type || 'unspecified'})`,
+        station: wit.station_id || wit.precinct || 'n/a',
+        timestamp: wit.statement_time || wit.timestamp || undefined,
+        location: wit.interview_location || undefined,
+        summary: wit.statement || wit.description || '(no description in record)',
+        corroboratesIncidentIds: incId ? [incId] : [],
+        groundingStatus: statusFor(id),
+        citations: [`witness_reports.${id}`],
         metadata: wit,
       });
     });
@@ -103,18 +123,18 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
     // 4. Newspaper Clippings
     (ev.newspaper_reports || []).forEach((news) => {
       const id = news.article_id || news.id || 'NEWS-UNKNOWN';
-      const incId = news.incident_id || news.station_incident_id || 'INC-CORRELATED';
+      const incId = news.incident_id || news.station_incident_id || '';
       list.push({
         id,
         type: 'newspaper',
-        title: news.headline || news.title || 'Public Press Intelligence Dispatch',
-        station: news.station_id || news.precinct || 'RIVERSIDE',
-        timestamp: news.publication_date || news.timestamp || 'Published Record',
-        location: news.publisher || 'Regional Metropolitan Daily',
-        summary: news.excerpt || news.description || 'Serial safe-cracking spree targets commercial hardware premises across municipal boundary lines.',
-        corroboratesIncidentIds: [incId],
-        groundingStatus: 'GROUNDED',
-        citations: [`zetaris.newspaper_reports.${id}`],
+        title: news.headline || news.title || 'News record',
+        station: news.station_id || news.precinct || 'n/a',
+        timestamp: news.publication_date || news.timestamp || undefined,
+        location: news.publisher || undefined,
+        summary: news.excerpt || news.description || '(no description in record)',
+        corroboratesIncidentIds: incId ? [incId] : [],
+        groundingStatus: statusFor(id),
+        citations: [`newspaper_reports.${id}`],
         metadata: news,
       });
     });
@@ -125,78 +145,20 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
       list.push({
         id,
         type: 'incident',
-        title: `Incident: ${inc.crime_type || 'BURGLARY'}`,
-        station: inc.station_id || 'NORTH',
-        timestamp: inc.occurred_from || inc.reported_at || 'Reported Incident',
-        location: inc.location_description || inc.location_id || 'Commercial District',
-        summary: inc.method_description || 'Commercial premises entered via rear service door, safe targeted and breached.',
+        title: `Incident: ${inc.crime_type || 'unspecified'}`,
+        station: inc.station_id || 'n/a',
+        timestamp: inc.occurred_from || inc.reported_at || undefined,
+        location: inc.location_description || inc.location_id || undefined,
+        summary: inc.method_description || '(no description in record)',
         corroboratesIncidentIds: [id],
-        groundingStatus: 'GROUNDED',
-        citations: [`zetaris.police_incidents.${id}`],
+        groundingStatus: statusFor(id),
+        citations: [`police_incidents.${id}`],
         metadata: inc,
       });
     });
 
-    // If empty, supply high-fidelity sample evidence cards so pinboard is always genuinely operational
-    if (list.length === 0) {
-      list.push(
-        {
-          id: 'CCTV-CAM-104',
-          type: 'cctv',
-          title: 'Rear Service Alleyway Camera (CCTV-104)',
-          station: 'NORTH',
-          timestamp: '2026-05-12T02:44:10Z',
-          location: 'North Commercial Boulevard',
-          summary: 'Optical camera feed captures grey Chrysler minivan with darkened rear windows parking at 02:44. Two suspects exit with heavy tool bag.',
-          corroboratesIncidentIds: ['INC-2026-N089'],
-          groundingStatus: 'GROUNDED',
-          citations: ['zetaris.cctv_reports.CCTV-CAM-104'],
-          metadata: { optical_resolution: '1080p', camera_model: 'Axis Q1785-LE' },
-        },
-        {
-          id: 'FOR-TOOL-882',
-          type: 'forensic',
-          title: 'Pry Mark Microscopic Impression Analysis',
-          station: 'NORTH',
-          timestamp: '2026-05-12T09:15:00Z',
-          location: 'Forensic Lab Unit 4',
-          summary: 'Microscopic striation analysis of safe locking dog mechanism demonstrates distinct 2.4mm irregular burr signature identical to Central break-in.',
-          corroboratesIncidentIds: ['INC-2026-N089', 'INC-2026-C142'],
-          groundingStatus: 'GROUNDED',
-          citations: ['zetaris.forensic_reports.FOR-TOOL-882'],
-          metadata: { tool_category: 'Crowbar / Heavy Pry Bar', striation_confidence: 0.96 },
-        },
-        {
-          id: 'WIT-STMT-412',
-          type: 'witness',
-          title: 'Sworn Testimony - Night Security Officer',
-          station: 'CENTRAL',
-          timestamp: '2026-05-14T04:10:00Z',
-          location: 'Central Industrial Park Gate 3',
-          summary: 'Officer reports seeing a grey minivan driving without headlights exiting the rear service access road at approximately 03:50 AM.',
-          corroboratesIncidentIds: ['INC-2026-C142'],
-          groundingStatus: 'GROUNDED',
-          citations: ['zetaris.witness_reports.WIT-STMT-412'],
-          metadata: { witness_reliability: 'HIGH', sworn_under_oath: true },
-        },
-        {
-          id: 'NEWS-DISP-091',
-          type: 'newspaper',
-          title: 'Commercial Syndicate Safe-Cracking Investigation',
-          station: 'RIVERSIDE',
-          timestamp: '2026-05-15T08:00:00Z',
-          location: 'Metropolitan Daily Press',
-          summary: 'Regional investigative reporters highlight patterns of synchronized safe breaches across municipal precinct lines, linking North and Central burglaries.',
-          corroboratesIncidentIds: ['INC-2026-R033'],
-          groundingStatus: 'GROUNDED',
-          citations: ['zetaris.newspaper_reports.NEWS-DISP-091'],
-          metadata: { journalist: 'Marcus Vance', section: 'City Crime Beat' },
-        }
-      );
-    }
-
     return list;
-  }, [supportingEvidence, candidateIncidents]);
+  }, [supportingEvidence, candidateIncidents, _candidateLinks]);
 
   // Initial pinned cards (default pin the top 4 key items)
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
@@ -336,7 +298,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
               </span>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>
-              Pin, Organize, and Corroborate Cross-Station Intelligence for Court Submission
+              Pin, Organize, and Corroborate Cross-Station Intelligence for Review
             </span>
           </div>
         </div>
@@ -633,8 +595,8 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', marginTop: '2px' }}>
-                  <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <CheckCircle2 size={11} /> Grounded (Zetaris)
+                  <span style={{ color: groundingColor(card.groundingStatus), display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <CheckCircle2 size={11} /> {groundingLabel(card.groundingStatus)}
                   </span>
                   <span style={{ color: '#64748b', fontSize: '0.6rem' }}>Click to inspect</span>
                 </div>
@@ -732,7 +694,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
                 <span style={{ color: '#cbd5e1' }}>{selectedCardForModal.timestamp || 'N/A'}</span>
               </div>
               <div style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ color: '#64748b' }}>Zetaris Pushdown Path:</div>
+                <div style={{ color: '#64748b' }}>Source table.record:</div>
                 <code style={{ color: '#10b981', fontSize: '0.7rem' }}>{selectedCardForModal.citations[0]}</code>
               </div>
             </div>
@@ -740,7 +702,7 @@ export const EvidencePinboard: React.FC<EvidencePinboardProps> = ({
             {/* Raw Metadata details */}
             <details style={{ fontSize: '0.7rem' }}>
               <summary style={{ color: '#818cf8', cursor: 'pointer', marginBottom: '4px' }}>
-                View Raw Zetaris Object Attributes
+                View raw record attributes
               </summary>
               <pre
                 style={{

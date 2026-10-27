@@ -35,25 +35,22 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
       })
     : new Date().toLocaleString();
 
-  // Extract facts with fallback
-  const verifiedFacts = result.report?.facts || [
-    {
-      statement: 'Commercial safe breaches across North and Central precincts share identical 18-inch hardened pry-tool striation profiles.',
-      source_ids: ['FOR-TOOL-882', 'INC-2026-N089', 'INC-2026-C142'],
-    },
-    {
-      statement: 'Charcoal grey minivan captured on low-light CCTV egressing rear service alleyway at both incident locations within 20 minutes of entry alarms.',
-      source_ids: ['CCTV-CAM-104', 'CCTV-CAM-209'],
-    },
-    {
-      statement: 'Sworn testimony from night security personnel confirms two masked operators loading heavy metallic container into grey minivan.',
-      source_ids: ['WIT-STMT-412'],
-    },
-    {
-      statement: 'Metropolitan newspaper investigative reports highlight syndicated safe-cracking targeting hardware and jewelry commercial premises across precinct boundaries.',
-      source_ids: ['NEWS-DISP-091'],
-    },
-  ];
+  // Facts exactly as returned by the Reporter; nothing is substituted when the response has none.
+  const facts = result.report?.facts ?? [];
+  const links = result.candidate_links ?? [];
+  const nSupported = links.filter((l) => l.validation_status === 'SUPPORTED').length;
+  const nWeak = links.filter((l) => l.validation_status === 'WEAK').length;
+  const nUnsupported = links.filter((l) => l.validation_status === 'UNSUPPORTED').length;
+  const nNoVerifier = links.filter((l) => !l.validation_status).length;
+  const objections = result.skeptic?.objections ?? [];
+  const ungroundedObjections = objections.filter((o) => !o.grounded).length;
+  const unverifiedStatements = result.report?.unverified_statements ?? [];
+  const skepticStatus = result.skeptic?.review_status || 'not_run';
+  const models = Array.from(new Set((result.agents ?? []).flatMap((a) => a.reported_models)));
+  const engineOps = (result.engine_operations ?? []).reduce<Record<string, number>>((acc, o) => {
+    acc[o.engine] = (acc[o.engine] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div
@@ -147,10 +144,10 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             </div>
             <div>
               <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: '#f8fafc', letterSpacing: '0.02em' }}>
-                OFFICIAL COURT-ADMISSIBLE INTELLIGENCE DOSSIER
+                AEGIS INVESTIGATION REPORT
               </h2>
               <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                Prosecutorial Evidentiary Bundle · Exhibit A-1 · Certified Chain of Custody
+                Machine-generated analyst aid · not legal evidence · every claim must be checked against source records
               </span>
             </div>
           </div>
@@ -173,7 +170,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
               }}
             >
-              <Printer size={15} /> Print / Export Official PDF
+              <Printer size={15} /> Print / Export PDF
             </button>
             <button
               onClick={onClose}
@@ -212,10 +209,10 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             }}
           >
             <div style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.15em', color: '#94a3b8', textTransform: 'uppercase' }}>
-              STATE OF METROPOLITAN JURISDICTION · TASK FORCE INTELLIGENCE COMMAND
+              AEGIS CROSS-STATION CRIME INTELLIGENCE
             </div>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '6px 0', color: '#f8fafc', letterSpacing: '0.04em' }}>
-              CERTIFIED EVIDENTIARY DOSSIER FOR PROSECUTORIAL REVIEW
+              INVESTIGATION REPORT (ANALYST DRAFT)
             </h1>
             <div
               style={{
@@ -231,7 +228,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 marginTop: '4px',
               }}
             >
-              RESTRICTED // LAW ENFORCEMENT SENSITIVE // COURT EXHIBIT
+              {result.is_sample ? 'SAMPLE / REPLAYED DATA' : 'GENERATED FROM LIVE RUN'} · {result.data_mode}
             </div>
           </div>
 
@@ -255,23 +252,25 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>PARTICIPATING PRECINCTS:</span>
-              <strong style={{ color: '#f8fafc' }}>{result.stations_involved.join(', ')} PRECINCTS</strong>
+              <strong style={{ color: '#f8fafc' }}>{result.stations_involved.length ? result.stations_involved.join(', ') : 'not available'}</strong>
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>DATA INTEGRATION LAYER:</span>
-              <strong style={{ color: '#10b981' }}>Zetaris NDP (Zero-Copy Virtual Federation)</strong>
+              <strong style={{ color: '#38bdf8' }}>{result.data_mode}{result.is_sample ? ' (not live Zetaris data)' : ''}</strong>
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>DATE OF GENERATION:</span>
               <span style={{ color: '#cbd5e1' }}>{generatedDate}</span>
             </div>
             <div>
-              <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>EVIDENTIARY AUDIT STATUS:</span>
-              <strong style={{ color: '#10b981' }}>Records retrieved from the data layer; links carry their own verifier status</strong>
+              <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>LINK VERIFIER RESULTS:</span>
+              <strong style={{ color: '#cbd5e1' }}>
+                {links.length === 0 ? 'no links' : `${nSupported} supported, ${nWeak} weak, ${nUnsupported} unsupported, ${nNoVerifier} without verifier result`}
+              </strong>
             </div>
             <div>
               <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem' }}>SKEPTIC REVIEW STATUS:</span>
-              <strong style={{ color: '#38bdf8' }}>{result.skeptic?.review_status || 'CLEARED_GROUNDED'}</strong>
+              <strong style={{ color: '#38bdf8' }}>{skepticStatus}</strong>
             </div>
           </div>
 
@@ -289,7 +288,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 gap: '6px',
               }}
             >
-              <FileText size={16} /> 1. EXECUTIVE MODUS OPERANDI (MO) SYNTHESIS
+              <FileText size={16} /> 1. EXECUTIVE SUMMARY
             </h3>
             <div
               style={{
@@ -320,10 +319,13 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 gap: '6px',
               }}
             >
-              <CheckCircle2 size={16} /> 2. GROUNDED EVIDENTIARY CITATIONS ({verifiedFacts.length} Verified Facts)
+              <CheckCircle2 size={16} /> 2. REPORTER FACTS WITH CITED RECORD IDS ({facts.length})
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {verifiedFacts.map((fact, idx) => (
+              {facts.length === 0 && (
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>No facts available in this response.</div>
+              )}
+              {facts.map((fact, idx) => (
                 <div
                   key={idx}
                   className="print-border"
@@ -340,7 +342,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                     <strong>§2.{idx + 1}</strong> {fact.statement}
                   </p>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.7rem' }}>
-                    <span style={{ color: '#64748b' }}>Cited Zetaris Source Records:</span>
+                    <span style={{ color: '#64748b' }}>Cited source records:</span>
                     {fact.source_ids.map((sid) => (
                       <span
                         key={sid}
@@ -356,9 +358,6 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                         {sid}
                       </span>
                     ))}
-                    <span style={{ marginLeft: 'auto', color: '#10b981', fontWeight: 600 }}>
-                      ✓ Verified Admissible
-                    </span>
                   </div>
                 </div>
               ))}
@@ -379,7 +378,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 gap: '6px',
               }}
             >
-              <ShieldCheck size={16} /> 3. ADVERSARIAL SKEPTIC & DISQUALIFICATION SENTINEL AUDIT
+              <ShieldCheck size={16} /> 3. SKEPTIC REVIEW
             </h3>
             <div
               className="print-border"
@@ -395,22 +394,17 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Skeptic Review Classification:</span>
-                <strong style={{ color: '#10b981' }}>{result.skeptic?.review_status || 'CLEARED_GROUNDED'}</strong>
+                <span>Skeptic review status:</span>
+                <strong style={{ color: skepticStatus === 'not_run' ? '#64748b' : '#38bdf8' }}>{skepticStatus}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Ungrounded Claims Rejected:</span>
-                <strong style={{ color: '#38bdf8' }}>0 (100% Citation Grounding Adherence)</strong>
+                <span>Objections citing unknown record ids / Reporter statements without support:</span>
+                <strong style={{ color: '#38bdf8' }}>{result.skeptic ? ungroundedObjections : 'not available'} / {result.report ? unverifiedStatements.length : 'not available'}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Anti-Disqualification Guardian Scan:</span>
-                <strong style={{ color: '#10b981' }}>PASSED — Zero Credential/Secret Leakage</strong>
-              </div>
-
               {/* Skeptic Objections & Review Status */}
               <div style={{ marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '6px' }}>
                 <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>
-                  Adversarial Skeptic Challenge Log ({result.skeptic?.objections?.length || 0} Objections Evaluated):
+                  Skeptic objections ({objections.length}):
                 </span>
                 {result.skeptic?.objections && result.skeptic.objections.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
@@ -434,11 +428,11 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                               fontSize: '0.65rem',
                               padding: '1px 5px',
                               borderRadius: 'var(--radius-sm)',
-                              background: obj.grounded ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
-                              color: obj.grounded ? '#10b981' : '#f43f5e',
+                              background: obj.open ? 'rgba(244, 63, 94, 0.2)' : 'rgba(148, 163, 184, 0.2)',
+                              color: obj.open ? '#f43f5e' : '#94a3b8',
                             }}
                           >
-                            {obj.grounded ? 'RESOLVED / GROUNDED' : 'CHALLENGED'}
+                            {obj.open ? 'OPEN' : 'SUPERSEDED'}{obj.grounded ? '' : ' · cites unknown ids'}
                           </span>
                         </div>
                         {obj.cited_ids?.length > 0 && (
@@ -450,15 +444,15 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '3px' }}>
-                    ✓ Zero open objections. All physical toolmark striations, CCTV timestamps, and witness statements verified.
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '3px' }}>
+                    {result.skeptic ? 'No objections recorded.' : 'Skeptic did not run (not_run); no review is available.'}
                   </div>
                 )}
               </div>
 
               {result.contradictions_and_limitations?.length > 0 && (
                 <div style={{ marginTop: '4px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '6px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Resolved Contradictions / Nuances:</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Contradictions and limitations:</span>
                   <ul style={{ margin: '4px 0 0 16px', padding: 0, color: '#cbd5e1', fontSize: '0.75rem' }}>
                     {result.contradictions_and_limitations.map((c, i) => (
                       <li key={i}>{c}</li>
@@ -483,7 +477,7 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
                 gap: '6px',
               }}
             >
-              <Cpu size={16} /> 4. PINNED NEMOTRON LANES & METERLESS ENGINES
+              <Cpu size={16} /> 4. MODELS AND ENGINES REPORTED IN THIS RUN
             </h3>
             <div
               className="print-border"
@@ -499,21 +493,22 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
               }}
             >
               <div>
-                <strong style={{ color: '#f8fafc' }}>NVIDIA Nemotron Models Invoked:</strong>
+                <strong style={{ color: '#f8fafc' }}>Models that answered (per agent, from the response):</strong>
                 <ul style={{ margin: '4px 0 0 16px', padding: 0, color: '#94a3b8' }}>
-                  <li>nvidia/nemotron-3-ultra-550b-a55b (Planning & Skeptic)</li>
-                  <li>nvidia/nemotron-3.5-lightning-30b-a3b (Ingestion & Reporting)</li>
-                  <li>nvidia/nemotron-3.5-super-vl-120b-a12b (CCTV Scene Optical)</li>
-                  <li>nvidia/nemotron-3-embed-1b (MO Vector Space)</li>
+                  {(result.agents ?? []).length === 0 && <li>not available</li>}
+                  {(result.agents ?? []).map((a) => (
+                    <li key={a.agent}>{a.reported_models.join(', ') || 'none recorded'} ({a.agent}{a.fallback_used ? ', fallback used' : ''})</li>
+                  ))}
                 </ul>
+                {models.length === 0 && <div style={{ color: '#64748b' }}>No model calls reported.</div>}
               </div>
               <div>
-                <strong style={{ color: '#f8fafc' }}>Meterless Architectural Engines:</strong>
+                <strong style={{ color: '#f8fafc' }}>Engine operations recorded:</strong>
                 <ul style={{ margin: '4px 0 0 16px', padding: 0, color: '#94a3b8' }}>
-                  <li>Meterless World Model (Zero-copy entity state)</li>
-                  <li>Meterless H-MEM (Adversarial long-horizon reasoning)</li>
-                  <li>Meterless Markovian Checkpoints (Deterministic state transitions)</li>
-                  <li>Meterless Scout Intent (Cross-precinct decomposition)</li>
+                  {Object.keys(engineOps).length === 0 && <li>not available</li>}
+                  {Object.entries(engineOps).map(([e, n]) => (
+                    <li key={e}>{e}: {n} op(s)</li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -531,33 +526,10 @@ export const EvidencePinboardModal: React.FC<PinboardModalProps> = ({
             }}
           >
             <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.5', fontStyle: 'italic' }}>
-              <strong>LEGAL CHAIN OF CUSTODY NOTICE:</strong> This intelligence dossier was synthesized under automated
-              adversarial supervision by the AEGIS Crime Intelligence Platform. All queries were executed as read-only federated
-              pushdowns directly against the Zetaris NDP Virtual Data Layer. Zero unverified or hallucinated identifiers were
-              introduced. This document is admissible as probable cause corroboration under Metropolitan Judicial Rule 404(b).
-            </div>
-
-            {/* Signature Block */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '2rem',
-                marginTop: '1rem',
-                paddingTop: '1rem',
-                borderTop: '1px dashed rgba(255, 255, 255, 0.15)',
-              }}
-            >
-              <div>
-                <div style={{ borderBottom: '1px solid #94a3b8', width: '80%', height: '32px', marginBottom: '6px' }} />
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>LEAD INVESTIGATING OFFICER / TASK FORCE COMMANDER</div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Badge #: 7741-METRO · Central Precinct</div>
-              </div>
-              <div>
-                <div style={{ borderBottom: '1px solid #94a3b8', width: '80%', height: '32px', marginBottom: '6px' }} />
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>FORENSIC SENTINEL VERIFICATION OFFICER</div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>AEGIS L4 Sentinel Protocol · Certified Admissible</div>
-              </div>
+              <strong>NOTICE:</strong> This report was generated by the AEGIS analyst-assist pipeline. It is an investigative
+              lead aid, not evidence and not a legal certification. Link verifier results, Skeptic status and model names above
+              are taken from this run&apos;s response; where a value is not available it is shown as such. Every cited record id
+              should be checked against the source system before any action is taken.
             </div>
           </div>
         </div>

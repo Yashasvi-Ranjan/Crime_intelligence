@@ -8,7 +8,7 @@ export const OfflineBanner: React.FC = () => {
   if (!offline) return null;
   return (
     <div role="status" className="banner warning" style={{ margin: 0, border: 0, borderBottom: '1px solid rgba(245,177,76,.35)', borderLeft: 0, justifyContent: 'center' }}>
-      [WARN] Live backend unreachable: showing the OFFLINE DEMO (bundled synthetic data and recorded Nemotron responses). This is not live Zetaris or live model output.
+      [WARN] Live backend unreachable: showing the OFFLINE DEMO (bundled synthetic data and recorded model responses). This is not live Zetaris or live model output.
     </div>
   );
 };

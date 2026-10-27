@@ -2,10 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   X,
   Activity,
-  CheckCircle2,
   BrainCircuit,
   Search,
-  Camera,
   ShieldCheck,
   ShieldAlert,
   FileText,
@@ -122,6 +120,33 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
     }
     return Object.values(acc);
   }, [traceData]);
+
+  // Agent filter options come from the agents present in the trace.
+  const agentNames = useMemo(
+    () => ['ALL', ...Array.from(new Set((traceData?.events ?? []).map((e) => e.agent).filter(Boolean)))],
+    [traceData],
+  );
+
+  // Zetaris queries and Nightshift receipts recorded in the trace.
+  const zetarisQueries = useMemo(() => {
+    const rows: Array<{ step: string; source: string; queries: number | null; ids: string[]; tables: string[] }> = [];
+    for (const ev of traceData?.events ?? []) {
+      const sql = ev.details?.sql;
+      if (!sql) continue;
+      rows.push({
+        step: ev.phase,
+        source: String(sql.source ?? 'unknown'),
+        queries: typeof sql.queries === 'number' ? sql.queries : null,
+        ids: Array.isArray(sql.query_ids) ? sql.query_ids.map(String) : [],
+        tables: Array.isArray(sql.tables) ? sql.tables.map(String) : [],
+      });
+    }
+    return rows;
+  }, [traceData]);
+  const receipts = useMemo(
+    () => (traceData?.events ?? []).filter((e) => e.receipt_id).map((e) => ({ id: e.receipt_id, agent: e.agent, model: e.model })),
+    [traceData],
+  );
 
   if (!isOpen) return null;
 
@@ -277,7 +302,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           </div>
         </div>
 
-        {/* ── Pinned Nemotron Model Lanes Banner ─────────────────────────────── */}
+        {/* ── Models recorded in the trace ─────────────────────────────── */}
         <div
           style={{
             padding: '0.75rem 1.5rem',
@@ -309,6 +334,32 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           </div>
         </div>
 
+        {/* ── Zetaris query ids & receipts (from the trace, not hard-coded) ──── */}
+        {traceData && (
+          <details style={{ margin: '0.6rem 1.5rem 0', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', padding: '6px 10px', fontSize: '0.7rem' }}>
+            <summary style={{ cursor: 'pointer', color: '#38bdf8', fontWeight: 700 }}>
+              Zetaris queries ({zetarisQueries.reduce((n, r) => n + r.ids.length, 0)} query id(s)) &amp; model receipts ({receipts.length})
+            </summary>
+            <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px', fontFamily: 'monospace', color: '#94a3b8' }}>
+              {zetarisQueries.length === 0 && <div>No SQL retrieval step recorded in this trace.</div>}
+              {zetarisQueries.map((r, i) => (
+                <div key={i}>
+                  <strong style={{ color: '#f8fafc' }}>{r.step}</strong> · source: {r.source}
+                  {r.queries !== null ? ` · ${r.queries} query(ies)` : ''}
+                  {r.tables.length > 0 && <div>tables: {r.tables.join(', ')}</div>}
+                  <div>query ids: {r.ids.length ? r.ids.join(', ') : 'not recorded'}</div>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+                {receipts.length === 0 && <div>No model receipts recorded.</div>}
+                {receipts.map((r, i) => (
+                  <div key={i}>{r.agent} · {r.model || 'model not recorded'} · receipt {r.id}</div>
+                ))}
+              </div>
+            </div>
+          </details>
+        )}
+
         {traceError && (
           <div style={{ margin: '0 1.5rem', padding: '8px 12px', borderRadius: 'var(--radius-md)', background: 'rgba(244, 63, 94, 0.12)', color: '#fda4af', fontSize: '0.75rem' }}>
             Trace could not be loaded ({traceError}). Nothing is shown rather than a made-up trace.
@@ -328,7 +379,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
           }}
         >
           <div style={{ display: 'flex', gap: '4px' }}>
-            {['ALL', 'planner', 'finder', 'vision_analyst', 'skeptic', 'reporter'].map((ag) => (
+            {agentNames.map((ag) => (
               <button
                 key={ag}
                 onClick={() => setSelectedAgentFilter(ag)}
@@ -497,8 +548,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                       fontFamily: 'monospace',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981' }}>
-                      <CheckCircle2 size={12} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: ev.receipt_id ? '#10b981' : '#64748b' }}>
                       <span style={{ color: '#94a3b8' }}>Receipt:</span>
                       <strong style={{ color: '#f8fafc' }}>{ev.receipt_id || 'none (no Nightshift call at this step)'}</strong>
                     </div>
@@ -559,6 +609,16 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                           >
                             {ev.details.meterless_engine}
                           </span>
+                        </div>
+                      )}
+
+                      {ev.details?.sql && (
+                        <div style={{ fontFamily: 'monospace', fontSize: '0.68rem', color: '#94a3b8' }}>
+                          <span>Zetaris query ids: </span>
+                          <strong style={{ color: '#f8fafc' }}>
+                            {Array.isArray(ev.details.sql.query_ids) && ev.details.sql.query_ids.length ? ev.details.sql.query_ids.join(', ') : 'not recorded'}
+                          </strong>
+                          <span> · source: {String(ev.details.sql.source ?? 'unknown')}</span>
                         </div>
                       )}
 
@@ -669,9 +729,6 @@ function getAgentBadge(agent: string) {
   }
   if (ag.includes('finder')) {
     return { border: '#38bdf8', fill: 'rgba(56, 189, 248, 0.2)', text: '#7dd3fc', icon: Search };
-  }
-  if (ag.includes('vision') || ag.includes('cctv')) {
-    return { border: '#06b6d4', fill: 'rgba(6, 182, 212, 0.2)', text: '#67e8f9', icon: Camera };
   }
   if (ag.includes('skeptic')) {
     return { border: '#f43f5e', fill: 'rgba(244, 63, 94, 0.2)', text: '#fda4af', icon: ShieldAlert };
