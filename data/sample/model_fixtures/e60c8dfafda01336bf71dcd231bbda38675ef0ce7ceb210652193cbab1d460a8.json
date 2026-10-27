@@ -1,0 +1,20 @@
+{
+ "content": "{\n  \"links\": [],\n  \"withdrawn_link_ids\": [\"LINK-01\"],\n  \"notes\": \"All previously proposed cross-station links have been withdrawn due to explicit objections regarding location mismatches, property discrepancies, and insufficient forensic evidence. No new cross-station links are supportable with the current records.\"\n}",
+ "fallback_reason": null,
+ "fallback_used": false,
+ "finish_reason": "stop",
+ "latency_ms": 1409.7831670001142,
+ "provider": "nvidia",
+ "receipt_id": "rcpt_req_afua1l6h",
+ "recorded_at": "2026-10-27",
+ "recorded_from": "live Nightshift /v1/chat/completions",
+ "reported_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "requested_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "role": "finder",
+ "routed_as_requested": true,
+ "usage": {
+  "completion_tokens": 69,
+  "prompt_tokens": 6683,
+  "total_tokens": 6752
+ }
+}

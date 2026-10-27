@@ -1,0 +1,390 @@
+{
+  "agents": [
+    {
+      "agent": "planner",
+      "avg_latency_ms": 2985.1,
+      "calls": 1,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ]
+    },
+    {
+      "agent": "finder",
+      "avg_latency_ms": 18432.9,
+      "calls": 1,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ]
+    },
+    {
+      "agent": "skeptic",
+      "avg_latency_ms": 22270.9,
+      "calls": 1,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ]
+    },
+    {
+      "agent": "reporter",
+      "avg_latency_ms": 22156.4,
+      "calls": 1,
+      "errors": [],
+      "fallback_reasons": [],
+      "fallback_used": false,
+      "providers": [
+        "nvidia"
+      ],
+      "reported_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "requested_models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ]
+    }
+  ],
+  "engines": [
+    {
+      "backend": [],
+      "calls": 1,
+      "engine": "scout_intent",
+      "operations": [
+        "detect"
+      ],
+      "status": "engine_unavailable"
+    },
+    {
+      "backend": [
+        "reference"
+      ],
+      "calls": 1,
+      "engine": "h_mem",
+      "operations": [
+        "retrieve"
+      ],
+      "status": "connected"
+    },
+    {
+      "backend": [
+        "reference"
+      ],
+      "calls": 3,
+      "engine": "markovian",
+      "operations": [
+        "efficiency",
+        "extract_carryover",
+        "validate"
+      ],
+      "status": "connected"
+    },
+    {
+      "backend": [],
+      "calls": 0,
+      "engine": "world_model",
+      "operations": [],
+      "status": "engine_unavailable"
+    }
+  ],
+  "execution_time_seconds": 0.109,
+  "log_file": "logs/trace-inv_1793072447_61dc8b.jsonl",
+  "output": {
+    "candidate_incident_ids": [
+      "INC-CENTRAL-1310",
+      "INC-CENTRAL-2738",
+      "INC-CENTRAL-2073",
+      "INC-CENTRAL-1187",
+      "INC-CENTRAL-2717",
+      "INC-RIVERSIDE-1478",
+      "INC-RIVERSIDE-0764",
+      "INC-RIVERSIDE-2764",
+      "INC-RIVERSIDE-0460",
+      "INC-RIVERSIDE-0005"
+    ],
+    "clarification": null,
+    "counts": {
+      "iterations": 1,
+      "model_calls": 4,
+      "sql_queries": 10
+    },
+    "data_mode": "local_sample",
+    "intent": "CROSS_STATION_SEARCH",
+    "is_sample": true,
+    "links": [
+      {
+        "confidence_rationale": "Uncalibrated Finder heuristic; not a probability. Exact method match on a specific catalytic converter target; temporal gap of 5 days; forensic evidence is incident-specific, not shared",
+        "confidence_score": 0.78,
+        "contradictions": [],
+        "differences_or_inconsistencies": "INC-CENTRAL-2738 status: OPEN; INC-RIVERSIDE-2764 status: CLOSED; INC-CENTRAL-2738 data_quality: MEDIUM; INC-RIVERSIDE-2764 data_quality: HIGH; INC-CENTRAL-2738 occurred_from: 2026-06-06T15:53:09Z; INC-RIVERSIDE-2764 occurred_from: 2026-06-11T18:50:54Z",
+        "independent_source_count": 0,
+        "link_id": "LINK-01",
+        "missing_evidence": [
+          "No shared forensic evidence reports linking these two incidents directly",
+          "No shared CCTV or witness reports connecting the incidents"
+        ],
+        "rejected_ids": [
+          "FOR-0491 (DNA exclusion for INC-RIVERSIDE-2764)",
+          "FOR-1143 (toolmark match confirmed for INC-CENTRAL-2738)"
+        ],
+        "revision": 1,
+        "shared_attributes": [
+          {
+            "attribute": "method",
+            "match_type": "exact",
+            "source_ids": [
+              "INC-CENTRAL-2738",
+              "INC-RIVERSIDE-2764"
+            ],
+            "value": "Exhaust manifold severed with battery reciprocating saw for catalytic converter"
+          },
+          {
+            "attribute": "property",
+            "match_type": "exact",
+            "source_ids": [
+              "INC-CENTRAL-2738",
+              "INC-RIVERSIDE-2764"
+            ],
+            "value": "Toyota Prius exhaust catalytic assembly"
+          }
+        ],
+        "similarity_basis": "Both incidents involve catalytic converter theft using an exhaust manifold severed with a battery reciprocating saw. Both target Toyota Prius exhaust catalytic assemblies.",
+        "source_incident_id": "INC-CENTRAL-2738",
+        "stations_involved": [
+          "CENTRAL",
+          "RIVERSIDE"
+        ],
+        "supporting_evidence_ids": [],
+        "target_incident_id": "INC-RIVERSIDE-2764",
+        "validation_explanation": "Passes hard checks but only 0 independent corroborating source(s).",
+        "validation_status": "WEAK",
+        "withdrawn": false
+      },
+      {
+        "confidence_rationale": "Uncalibrated Finder heuristic; not a probability. Exact method match but different vehicle targets and temporal gap of 6 days; vehicle type difference weakens series linkage",
+        "confidence_score": 0.55,
+        "contradictions": [],
+        "differences_or_inconsistencies": "INC-CENTRAL-1187 property: Honda Civic sedan, personal tool kit in trunk; INC-RIVERSIDE-0460 property: Range Rover Sport, vehicle registration documents; INC-CENTRAL-1187 occurred_from: 2026-05-31T03:42:23Z; INC-RIVERSIDE-0460 occurred_from: 2026-06-06T18:16:55Z; INC-CENTRAL-1187 data_quality: HIGH; INC-RIVERSIDE-0460 data_quality: MEDIUM",
+        "independent_source_count": 0,
+        "link_id": "LINK-02",
+        "missing_evidence": [
+          "No shared forensic evidence reports linking these two incidents directly",
+          "No shared CCTV or witness reports connecting the incidents"
+        ],
+        "rejected_ids": [],
+        "revision": 1,
+        "shared_attributes": [
+          {
+            "attribute": "method",
+            "match_type": "exact",
+            "source_ids": [
+              "INC-CENTRAL-1187",
+              "INC-RIVERSIDE-0460"
+            ],
+            "value": "Exhaust manifold severed with battery reciprocating saw for catalytic converter"
+          }
+        ],
+        "similarity_basis": "Both incidents involve catalytic converter theft using an exhaust manifold severed with a battery reciprocating saw. Both involve different vehicle types (Honda Civic sedan vs Range Rover Sport).",
+        "source_incident_id": "INC-CENTRAL-1187",
+        "stations_involved": [
+          "CENTRAL",
+          "RIVERSIDE"
+        ],
+        "supporting_evidence_ids": [],
+        "target_incident_id": "INC-RIVERSIDE-0460",
+        "validation_explanation": "Passes hard checks but only 0 independent corroborating source(s).",
+        "validation_status": "WEAK",
+        "withdrawn": false
+      },
+      {
+        "confidence_rationale": "Uncalibrated Finder heuristic; not a probability. Shared Toyota Prius target but fundamentally different methods (electronic vs distraction); high temporal gap; low data quality on Riverside incident",
+        "confidence_score": 0.32,
+        "contradictions": [],
+        "differences_or_inconsistencies": "INC-CENTRAL-2073 method: CAN-bus gateway injection via headlight wiring harness; INC-RIVERSIDE-0764 method: Suspect used distraction technique on staff or occupants; INC-CENTRAL-2073 occurred_from: 2026-05-31T03:42:23Z; INC-RIVERSIDE-0764 occurred_from: 2026-06-21T04:59:43Z; INC-CENTRAL-2073 data_quality: MEDIUM; INC-RIVERSIDE-0764 data_quality: LOW",
+        "independent_source_count": 0,
+        "link_id": "LINK-03",
+        "missing_evidence": [
+          "No shared forensic evidence reports linking these two incidents directly",
+          "No shared CCTV or witness reports connecting the incidents"
+        ],
+        "rejected_ids": [],
+        "revision": 1,
+        "shared_attributes": [
+          {
+            "attribute": "property",
+            "match_type": "exact",
+            "source_ids": [
+              "INC-CENTRAL-2073",
+              "INC-RIVERSIDE-0764"
+            ],
+            "value": "Toyota Prius exhaust catalytic assembly"
+          }
+        ],
+        "similarity_basis": "Both incidents involve catalytic converter theft methods targeting Toyota Prius. INC-CENTRAL-2073 uses CAN-bus gateway injection; INC-RIVERSIDE-0764 uses distraction technique.",
+        "source_incident_id": "INC-CENTRAL-2073",
+        "stations_involved": [
+          "CENTRAL",
+          "RIVERSIDE"
+        ],
+        "supporting_evidence_ids": [],
+        "target_incident_id": "INC-RIVERSIDE-0764",
+        "validation_explanation": "Passes hard checks but only 0 independent corroborating source(s).",
+        "validation_status": "WEAK",
+        "withdrawn": false
+      }
+    ],
+    "partial_failures": [],
+    "report": {
+      "contradictions_and_limitations": [
+        "INC-CENTRAL-2738's method_description contradicts the shared method claim of battery reciprocating saw severance (records towing with forged municipal parking notice).",
+        "INC-RIVERSIDE-0764's property_involved ('OEM platinum-rhodium catalytic converter') contradicts the shared property attribute of 'Toyota Prius exhaust catalytic assembly' in LINK-03.",
+        "INC-CENTRAL-1187's occurred_from date (2026-05-12T16:14:39Z) is misaligned in LINK-02 differences, which cite 2026-05-31T03:42:23Z (matching INC-CENTRAL-2073).",
+        "No shared forensic evidence reports, CCTV footage, or witness statements connect any of the linked incidents.",
+        "Heuristic scores (uncalibrated) range from 0.32 to 0.78 but are not probabilities and do not establish linkage.",
+        "The skeptic review status is 'rejected' due to multiple high-severity contradictions and missing evidence.",
+        "[skeptic] INC-CENTRAL-2738 method_description is 'Towed target vehicle onto flatbed with forged municipal parking notice', not 'Exhaust manifold severed with battery reciprocating saw for catalytic converter'. The shared method attribute is contradicted by the incident record.",
+        "[skeptic] INC-CENTRAL-1187 occurred_from 2026-05-12T16:14:39Z, but the link differences state 2026-05-31T03:42:23Z (which matches INC-CENTRAL-2073). The timeline in the link is inaccurate.",
+        "[skeptic] INC-RIVERSIDE-0764 property_involved is 'OEM platinum-rhodium catalytic converter', not 'Toyota Prius exhaust catalytic assembly'. The shared property attribute is contradicted by the incident record.",
+        "[skeptic objection, high] INC-CENTRAL-2738 method_description is 'Towed target vehicle onto flatbed with forged municipal parking notice', not 'Exhaust manifold severed with battery reciprocating saw for catalytic converter'. The shared method attribute is contradicted by the incident record.",
+        "[skeptic objection, high] Supporting evidence FOR-1143 is a toolmark match for INC-CENTRAL-2738 (towing method) and FOR-0491 is a DNA exclusion for INC-RIVERSIDE-2764. Neither links the two incidents together.",
+        "[skeptic objection, high] INC-CENTRAL-1187 occurred_from 2026-05-12T16:14:39Z, but the link differences state 2026-05-31T03:42:23Z (which matches INC-CENTRAL-2073). The timeline in the link is inaccurate.",
+        "[skeptic objection, medium] Battery reciprocating saw theft of catalytic converters is a common, widely known method. Different vehicle targets (Honda Civic vs Range Rover) and locations 5 days apart suggest independent offenders using a common technique rather than a linked series.",
+        "[skeptic objection, high] INC-RIVERSIDE-0764 property_involved is 'OEM platinum-rhodium catalytic converter', not 'Toyota Prius exhaust catalytic assembly'. The shared property attribute is contradicted by the incident record.",
+        "[skeptic objection, medium] Methods are fundamentally different (CAN-bus gateway injection vs distraction technique). Targeting Toyota Prius catalytic converters is common due to high precious metal content; different methods 21 days apart at different stations indicate separate offenders.",
+        "[skeptic missing evidence, high] No forensic, CCTV, or witness evidence connects the two incidents. FOR-1143 and FOR-0491 are unrelated to each other. The link relies solely on a method claim that is contradicted by INC-CENTRAL-2738's actual method.",
+        "[skeptic missing evidence, high] No forensic, CCTV, or witness evidence connects the two incidents. Supporting evidence list is empty. The only commonality is a widely used theft method.",
+        "[skeptic missing evidence, high] No forensic, CCTV, or witness evidence connects the two incidents. Supporting evidence list is empty. The only commonality (Toyota Prius target) is contradicted for INC-RIVERSIDE-0764.",
+        "[verifier] LINK-01 is WEAK: Passes hard checks but only 0 independent corroborating source(s).",
+        "[verifier] LINK-02 is WEAK: Passes hard checks but only 0 independent corroborating source(s).",
+        "[verifier] LINK-03 is WEAK: Passes hard checks but only 0 independent corroborating source(s)."
+      ],
+      "differences": [
+        "INC-CENTRAL-2738 method (towing with forged notice) contradicts the battery reciprocating saw method attributed in LINK-01.",
+        "INC-CENTRAL-1187 and INC-RIVERSIDE-0460 involve different vehicle types (Honda Civic sedan vs. Range Rover Sport).",
+        "INC-CENTRAL-2073 and INC-RIVERSIDE-0764 involve fundamentally different methods (CAN-bus gateway injection vs. distraction technique) and different property descriptions.",
+        "Incident dates range from 2026-05-12 to 2026-06-21, spanning 40 days with no temporal clustering.",
+        "Data quality varies from LOW to HIGH across incidents, affecting reliability of shared attributes."
+      ],
+      "executive_summary": "Two incident pairs share the method of battery reciprocating saw severance of exhaust manifolds for Toyota Prius catalytic converter removal. However, significant contradictions and missing evidence prevent establishing a single series. One pair is directly contradicted by primary incident records; the other pair involves different vehicle types and lacks forensic linkage. No shared forensic, CCTV, or witness evidence connects any incidents.",
+      "facts": [
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-CENTRAL-2738"
+          ],
+          "statement": "INC-CENTRAL-2738 occurred on 2026-06-06 and involved a Toyota Prius exhaust catalytic assembly; its method_description records 'Towed target vehicle onto flatbed with forged municipal parking notice', contradicting the shared method claim of battery reciprocating saw severance."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-RIVERSIDE-2764"
+          ],
+          "statement": "INC-RIVERSIDE-2764 occurred on 2026-06-11 and involved a Toyota Prius exhaust catalytic assembly; method_description records 'Exhaust manifold severed with battery reciprocating saw for catalytic converter'."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-CENTRAL-1187"
+          ],
+          "statement": "INC-CENTRAL-1187 occurred on 2026-05-12 and involved a Honda Civic sedan; method_description records 'Exhaust manifold severed with battery reciprocating saw for catalytic converter'."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-RIVERSIDE-0460"
+          ],
+          "statement": "INC-RIVERSIDE-0460 occurred on 2026-06-06 and involved a Range Rover Sport; method_description records 'Exhaust manifold severed with battery reciprocating saw for catalytic converter'."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-CENTRAL-2073"
+          ],
+          "statement": "INC-CENTRAL-2073 occurred on 2026-05-31 and involved a Toyota Prius exhaust catalytic assembly; method_description records 'CAN-bus gateway injection via headlight wiring harness'."
+        },
+        {
+          "dropped_unknown_ids": [],
+          "source_ids": [
+            "INC-RIVERSIDE-0764"
+          ],
+          "statement": "INC-RIVERSIDE-0764 occurred on 2026-06-21 and involved an OEM platinum-rhodium catalytic converter; method_description records 'Suspect used distraction technique on staff or occupants'."
+        }
+      ],
+      "follow_up_actions": [
+        "Request forensic toolmark analysis on exhaust manifold cuts from INC-RIVERSIDE-2764 and INC-RIVERSIDE-0460 to determine if a common tool or technique was used.",
+        "Obtain and review all available CCTV footage from the locations and times of INC-CENTRAL-2738, INC-RIVERSIDE-2764, INC-CENTRAL-1187, and INC-RIVERSIDE-0460.",
+        "Verify the method_description field in INC-CENTRAL-2738 to confirm whether towing with a forged parking notice occurred, and if so, reassess the LINK-01 methodology shared attribute.",
+        "Cross-reference vehicle registration and service records for Toyota Prius, Honda Civic, and Range Rover Sport in the CENTRAL and RIVERSIDE jurisdictions to identify common ownership or service patterns.",
+        "Maintain separate case files for each incident pending resolution of contradictions; do not consolidate into a single series without new corroborating evidence."
+      ],
+      "hypotheses": [
+        {
+          "link_id": "LINK-01",
+          "statement": "INC-CENTRAL-2738 and INC-RIVERSIDE-2764 may share a series based on Toyota Prius catalytic converter targeting, but the method contradiction (towing vs. saw severance) and absence of forensic linkage weaken this hypothesis."
+        },
+        {
+          "link_id": "LINK-02",
+          "statement": "INC-CENTRAL-1187 and INC-RIVERSIDE-0460 may share a series based on battery reciprocating saw method, but differing vehicle types (Honda Civic vs. Range Rover), a 5-day gap, and lack of forensic evidence suggest independent offenders using a common technique."
+        },
+        {
+          "link_id": "LINK-03",
+          "statement": "INC-CENTRAL-2073 and INC-RIVERSIDE-0764 may share a series based on Toyota Prius targeting, but fundamentally different methods (CAN-bus injection vs. distraction technique) and a 21-day gap indicate separate offenders."
+        }
+      ],
+      "model_generated": true,
+      "similarities": [
+        "Both CENTRAL and RIVERSIDE stations report catalytic converter theft incidents.",
+        "LINK-01 and LINK-02 share the attribute of battery reciprocating saw use for exhaust manifold severance.",
+        "LINK-01 and LINK-03 share the attribute of Toyota Prius exhaust catalytic assembly property involvement (though contradicted for INC-RIVERSIDE-0764 and INC-CENTRAL-2738)."
+      ],
+      "title": "Catalytic Converter Theft Linkage Assessment: CENTRAL and RIVERSIDE",
+      "unresolved_questions": [
+        "What specific tools or entry methods were used in INC-CENTRAL-2738 versus INC-RIVERSIDE-2764?",
+        "Were converters removed from the same vehicle types across the incidents?",
+        "Is there any CCTV, forensic, or witness evidence not yet recorded that could link these incidents?",
+        "Do the differing methods (saw severance, towing, CAN-bus injection, distraction technique) indicate distinct offender capabilities or copycat behavior?",
+        "What specific tools or entry methods were used? Were converters removed from same vehicle types?"
+      ],
+      "unverified_statements": []
+    },
+    "skeptic": {
+      "history": [
+        "rejected"
+      ],
+      "review_status": "rejected"
+    },
+    "stations_involved": [
+      "CENTRAL",
+      "RIVERSIDE"
+    ],
+    "stopping_reason": "evidence_sufficient",
+    "summary": "Two incident pairs share the method of battery reciprocating saw severance of exhaust manifolds for Toyota Prius catalytic converter removal. However, significant contradictions and missing evidence prevent establishing a single series. One pair is directly contradicted by primary incident records; the other pair involves different vehicle types and lacks forensic linkage. No shared forensic, CCTV, or witness evidence connects any incidents."
+  },
+  "run_id": "inv_1793072447_61dc8b",
+  "status": "completed",
+  "trace_id": "inv_1793072447_61dc8b"
+}

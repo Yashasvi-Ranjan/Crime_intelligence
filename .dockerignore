@@ -1,0 +1,26 @@
+# secrets and local state: never in the build context, so never in an image layer
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.state
+logs
+.git
+.github
+.vscode
+.idea
+.DS_Store
+# proprietary Meterless engine copy - must never enter the image
+**/worldmodel.js
+**/Nightshift.app
+# build artefacts / caches
+**/node_modules
+**/dist
+**/__pycache__
+**/*.pyc
+.pytest_cache
+**/.pytest_cache
+third_party/meterless/build
+frontend

@@ -236,7 +236,7 @@ def test_sample_scenarios_list():
 def test_investigations_analyze_sample_mode_crowbar():
     payload = {
         "query": "Investigate safe burglaries involving crowbars",
-        "sample_mode": True,
+        "demo_content": True,
         "scenario_id": "crowbar_safe_cracking",
     }
     response = client.post("/api/investigations/analyze", json=payload)
@@ -245,7 +245,7 @@ def test_investigations_analyze_sample_mode_crowbar():
 
     # Core sample mode flags
     assert data["is_sample"] is True
-    assert data["data_mode"] == "sample_mode"
+    assert data["data_mode"] == "demo_content"
     assert data["scenario_id"] == "crowbar_safe_cracking"
 
     # Sentinels verification (Milestone 2 requirement)
@@ -305,7 +305,7 @@ def test_investigations_analyze_sample_mode_crowbar():
 
 def test_investigations_analyze_sample_mode_all_scenarios():
     for sc_id in ["catalytic_converter", "keyless_suv_relay"]:
-        payload = {"query": f"test query for {sc_id}", "sample_mode": True, "scenario_id": sc_id}
+        payload = {"query": f"test query for {sc_id}", "demo_content": True, "scenario_id": sc_id}
         resp = client.post("/api/investigations/analyze", json=payload)
         assert resp.status_code == 200
         res = resp.json()
@@ -342,7 +342,8 @@ def test_get_investigation_trace_sample_mode():
         assert "agent" in ev
         assert "model" in ev
         assert "receipt_id" in ev
-        assert ev["receipt_id"].startswith("rcpt-")
+        assert ev["receipt_id"] == ""                  # demo content: no real Nightshift call, so no receipt
+        assert ev["details"]["demo_content"] is True
         assert "details" in ev
         assert isinstance(ev["details"], dict)
 
@@ -381,11 +382,10 @@ def test_get_investigation_trace_live_logger_roundtrip(tmp_path):
 
 
 def test_get_investigation_trace_unflushed_or_unknown_fallback():
-    # An unknown or unflushed run_id should safely fall back to synthetic events
+    # An unknown or unflushed run_id returns NO events: a trace is only what a run recorded, never invented.
     response = client.get("/api/investigations/inv_unknown_fallback_99999/trace")
     assert response.status_code == 200
     data = response.json()
     assert data["run_id"] == "inv_unknown_fallback_99999"
-    assert data["total_events"] >= 4
-    assert all("receipt_id" in ev for ev in data["events"])
+    assert data["total_events"] == 0 and data["events"] == []
 

@@ -34,6 +34,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
   const [copiedReceipt, setCopiedReceipt] = useState<string | null>(null);
   const [selectedAgentFilter, setSelectedAgentFilter] = useState<string>('ALL');
   const [searchFilter, setSearchFilter] = useState<string>('');
+  const [traceError, setTraceError] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Record<number, boolean>>({ 0: true });
 
   // Fetch trace on open or runId change
@@ -52,14 +53,15 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
       })
       .then((data) => {
         if (!isMounted) return;
+        setTraceError(null);
         setTraceData(data);
       })
       .catch((err) => {
         if (!isMounted) return;
-        console.warn('Trace API fetch failed, activating sample trace generator:', err);
-        // Resilient fallback with canonical model lanes and verifiable receipt IDs
-        const fallbackTrace = generateOfflineTrace(runId);
-        setTraceData(fallbackTrace);
+        // Never invent a trace: show that it could not be loaded.
+        console.warn('Trace API fetch failed:', err);
+        setTraceData(null);
+        setTraceError(String(err?.message || err));
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -106,6 +108,20 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
       return true;
     });
   }, [traceData, selectedAgentFilter, searchFilter]);
+
+  // Models that actually answered, from the recorded events only
+  const usedModels = useMemo(() => {
+    const acc: Record<string, { key: string; model: string; source: string; agents: string[]; calls: number }> = {};
+    for (const ev of traceData?.events ?? []) {
+      if (!ev.model) continue;
+      const source = String(ev.details?.source ?? 'live');
+      const key = `${ev.model}|${source}`;
+      acc[key] = acc[key] ?? { key, model: ev.model, source, agents: [], calls: 0 };
+      acc[key].calls += 1;
+      if (!acc[key].agents.includes(ev.agent)) acc[key].agents.push(ev.agent);
+    }
+    return Object.values(acc);
+  }, [traceData]);
 
   if (!isOpen) return null;
 
@@ -186,11 +202,11 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                 }}
               >
-                L4 VERIFIED
+                RECORDED TRACE
               </span>
             </div>
             <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
-              Chronological Multi-Agent Timeline · Pinned Nemotron Lanes · Verifiable Cryptographic Receipts
+              Chronological multi-agent timeline, read from logs/trace-{'<run_id>'}.jsonl
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
               <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Run ID:</span>
@@ -225,9 +241,12 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
               onClick={() => {
                 setLoading(true);
                 fetch(`/api/investigations/${encodeURIComponent(runId)}/trace`)
-                  .then((res) => res.json())
-                  .then(setTraceData)
-                  .catch(() => setTraceData(generateOfflineTrace(runId)))
+                  .then((res) => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                  })
+                  .then((d) => { setTraceError(null); setTraceData(d); })
+                  .catch((e) => { setTraceData(null); setTraceError(String(e?.message || e)); })
                   .finally(() => setLoading(false));
               }}
               title="Refresh Trace"
@@ -271,31 +290,30 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#38bdf8', letterSpacing: '0.05em' }}>
-              PINNED NVIDIA NEMOTRON MODEL LANES (METERLESS NIGHTSHIFT):
+              MODELS THAT ANSWERED IN THIS RUN (FROM THE TRACE):
             </span>
             <span style={{ fontSize: '0.65rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={12} /> 4 Lanes Active & Receipted
+              {usedModels.length} model(s) recorded
             </span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '0.65rem' }}>
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-              <span style={{ color: '#a855f7', fontWeight: 700 }}>Lane 1:</span> nvidia/nemotron-3-ultra-550b-a55b
-              <div style={{ color: '#64748b' }}>Role: Deep Cross-Station Planner & Skeptic</div>
-            </div>
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-              <span style={{ color: '#10b981', fontWeight: 700 }}>Lane 2:</span> nvidia/nemotron-3.5-lightning-30b-a3b
-              <div style={{ color: '#64748b' }}>Role: Ingestion, PII & Court Report Synthesis</div>
-            </div>
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
-              <span style={{ color: '#06b6d4', fontWeight: 700 }}>Lane 3:</span> nvidia/nemotron-3.5-super-vl-120b-a12b
-              <div style={{ color: '#64748b' }}>Role: CCTV Visual & Optical Scene Analysis</div>
-            </div>
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-              <span style={{ color: '#f59e0b', fontWeight: 700 }}>Lane 4:</span> nvidia/nemotron-3-embed-1b
-              <div style={{ color: '#64748b' }}>Role: Semantic MO Vector Representation</div>
-            </div>
+            {usedModels.length === 0 && (
+              <div style={{ color: '#64748b' }}>No model calls recorded for this run.</div>
+            )}
+            {usedModels.map((m) => (
+              <div key={m.key} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                <span style={{ color: '#a5b4fc', fontWeight: 700 }}>{m.model}</span>
+                <div style={{ color: '#64748b' }}>{m.agents.join(', ')} · {m.source}{m.calls > 1 ? ` · ${m.calls} calls` : ''}</div>
+              </div>
+            ))}
           </div>
         </div>
+
+        {traceError && (
+          <div style={{ margin: '0 1.5rem', padding: '8px 12px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.12)', color: '#fda4af', fontSize: '0.75rem' }}>
+            Trace could not be loaded ({traceError}). Nothing is shown rather than a made-up trace.
+          </div>
+        )}
 
         {/* ── Filters & Search ───────────────────────────────────────────────── */}
         <div
@@ -440,10 +458,9 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                         <div style={{ fontSize: '0.65rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                           <Clock size={11} /> {ev.timestamp}
                           {ev.details?.latency_ms ? (
-                            <span style={{ color: '#38bdf8' }}>• Latency: {ev.details.latency_ms}ms</span>
-                          ) : (
-                            <span style={{ color: '#38bdf8' }}>• Latency: ~{(idx + 1) * 320}ms</span>
-                          )}
+                            <span style={{ color: '#38bdf8' }}>• Latency: {Math.round(Number(ev.details.latency_ms))}ms</span>
+                          ) : null}
+                          {ev.details?.source ? <span style={{ color: '#a5b4fc' }}>• {String(ev.details.source)}</span> : null}
                         </div>
                       </div>
                     </div>
@@ -461,7 +478,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                           fontWeight: 600,
                         }}
                       >
-                        {ev.model}
+                        {ev.model || 'no model call'}
                       </span>
                       {isExpanded ? <ChevronDown size={16} color="#94a3b8" /> : <ChevronRight size={16} color="#94a3b8" />}
                     </div>
@@ -483,12 +500,12 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981' }}>
                       <CheckCircle2 size={12} />
                       <span style={{ color: '#94a3b8' }}>Receipt:</span>
-                      <strong style={{ color: '#f8fafc' }}>{ev.receipt_id}</strong>
+                      <strong style={{ color: '#f8fafc' }}>{ev.receipt_id || 'none (no Nightshift call at this step)'}</strong>
                     </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCopy(ev.receipt_id);
+                        if (ev.receipt_id) handleCopy(ev.receipt_id);
                       }}
                       style={{
                         background: 'transparent',
@@ -621,7 +638,7 @@ export const ExecutionTraceDrawer: React.FC<ExecutionTraceDrawerProps> = ({
         >
           <div style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ShieldCheck size={14} color="#10b981" />
-            <span>Cryptographic Auditing Active · Zero Hallucinations</span>
+            <span>Models, receipts and latencies are shown only where the run recorded them</span>
           </div>
           <button
             onClick={onClose}
@@ -663,95 +680,4 @@ function getAgentBadge(agent: string) {
     return { border: '#10b981', fill: 'rgba(16, 185, 129, 0.2)', text: '#6ee7b7', icon: FileText };
   }
   return { border: '#6366f1', fill: 'rgba(99, 102, 241, 0.2)', text: '#a5b4fc', icon: Activity };
-}
-
-// Helper: Resilient Offline Trace Generator (mirrors backend router)
-function generateOfflineTrace(runId: string): InvestigationTraceResponse {
-  const baseTime = 1747365300;
-  return {
-    run_id: runId,
-    total_events: 5,
-    events: [
-      {
-        timestamp: new Date(baseTime * 1000).toISOString(),
-        phase: 'planning',
-        agent: 'planner',
-        model: 'nvidia/nemotron-3-ultra-550b-a55b',
-        receipt_id: `rcpt-ultra-${runId}-001`,
-        details: {
-          step: 'intent_and_partitioning',
-          target_stations: ['NORTH', 'CENTRAL', 'RIVERSIDE'],
-          crime_type: 'COMMERCIAL_BURGLARY',
-          meterless_engine: 'scout_intent',
-          action: 'cross_station_decomposition',
-          notes: 'Partitioned search space across jurisdictions to uncover fragmented syndicate MO',
-        },
-      },
-      {
-        timestamp: new Date((baseTime + 4) * 1000).toISOString(),
-        phase: 'retrieval',
-        agent: 'finder',
-        model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-        receipt_id: `rcpt-lightning-${runId}-002`,
-        details: {
-          step: 'federated_sql_pushdown',
-          tables_queried: [
-            'police_incidents',
-            'forensic_reports',
-            'cctv_reports',
-            'witness_reports',
-            'newspaper_reports',
-          ],
-          meterless_engine: 'world_model',
-          candidate_incidents_found: 4,
-          notes: 'Zetaris virtual federated pushdown across multi-jurisdiction tables',
-        },
-      },
-      {
-        timestamp: new Date((baseTime + 8) * 1000).toISOString(),
-        phase: 'vision_analysis',
-        agent: 'vision_analyst',
-        model: 'nvidia/nemotron-3.5-super-vl-120b-a12b',
-        receipt_id: `rcpt-supervl-${runId}-003`,
-        details: {
-          step: 'optical_scene_inspection',
-          target_evidence: ['CCTV-CAM-104', 'CCTV-CAM-209'],
-          surveillance_metadata: 'Low-light surveillance frames analyzed via Super-VL optical feature extraction',
-          vehicle_profile_extracted: true,
-          vehicle_identified: 'Grey Minivan (Chrysler/Dodge, partial plate 7XYZ99)',
-        },
-      },
-      {
-        timestamp: new Date((baseTime + 12) * 1000).toISOString(),
-        phase: 'adversarial_critique',
-        agent: 'skeptic',
-        model: 'nvidia/nemotron-3-ultra-550b-a55b',
-        receipt_id: `rcpt-ultra-${runId}-004`,
-        details: {
-          step: 'adversarial_grounding_audit',
-          unsupported_claims_rejected: 0,
-          contradictions_evaluated: ['Minor discrepancy in witness timestamps resolved by CCTV telemetry'],
-          skeptic_status: 'CLEARED_GROUNDED',
-          grounding_ratio: 1.0,
-          meterless_engine: 'h_mem',
-          decision: 'All candidate links verified directly against Zetaris virtual records with zero hallucinated IDs',
-        },
-      },
-      {
-        timestamp: new Date((baseTime + 16) * 1000).toISOString(),
-        phase: 'dossier_synthesis',
-        agent: 'reporter',
-        model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-        receipt_id: `rcpt-lightning-${runId}-005`,
-        details: {
-          step: 'court_dossier_compilation',
-          dossier_ready: true,
-          facts_grounded_count: 5,
-          unsupported_claims_count: 0,
-          meterless_engine: 'markovian',
-          action: 'finalize_intelligence_dossier',
-        },
-      },
-    ],
-  };
 }

@@ -1,0 +1,45 @@
+# docker compose build && docker compose up        ->  API http://localhost:8000   web http://localhost:3001
+# Offline, no credentials:  SAMPLE_MODE=true docker compose up
+#
+# Configuration: <repo root>/.env (optional - the stack starts without it). Zetaris and Nightshift run on the HOST;
+# host.docker.internal reaches them on macOS/Windows and, via the extra_hosts entry below, on Linux.
+# Optional add-ons:  -f docker-compose.engine.yml  (mount the host Meterless engines)
+#                    -f docker-compose.token-file.yml  (Nightshift token from a mounted file)
+services:
+  permissions:                       # one-shot: lets the non-root api user write the bind-mounted dirs on Linux
+    image: busybox:1.37
+    command: ["sh", "-c", "chmod -R a+rwX /logs /state"]
+    volumes: ["./logs:/logs", "./.state:/state"]
+    restart: "no"
+
+  api:
+    build: { context: ., dockerfile: Dockerfile }
+    image: oah-submission
+    ports: ["8000:8000"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SAMPLE_MODE: ${SAMPLE_MODE:-false}
+      # In a container these must point at the host, not at the container's own loopback.
+      NIGHTSHIFT_BASE_URL: ${DOCKER_NIGHTSHIFT_BASE_URL:-http://host.docker.internal:8088/v1}
+      ZETARIS_BASE_URL: ${DOCKER_ZETARIS_BASE_URL:-http://host.docker.internal:8888}
+      ZETARIS_AUTH_URL: ${DOCKER_ZETARIS_AUTH_URL:-http://host.docker.internal:8889}
+      ZETARIS_JDBC_HOST: host.docker.internal
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ./logs:/app/logs
+      - ./.state:/app/.state
+    depends_on:
+      permissions: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  web:
+    build: { context: ., dockerfile: Dockerfile.web }
+    image: crime-intel-web
+    ports: ["3001:3001"]
+    environment:
+      API_UPSTREAM: http://api:8000
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped

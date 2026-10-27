@@ -1,0 +1,74 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: pip install -r requirements.txt
+      - name: Build the vendored reference engines (their tests skip, not fail, without this)
+        run: sh scripts/build_reference_engines.sh
+      - name: Backend + root tests (engine/live tests skip when the engine/service is unavailable)
+        run: |
+          python -m pytest -q backend/tests
+          python -m pytest -q tests
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t oah-submission .
+      - run: docker build -f Dockerfile.web -t crime-intel-web .
+      - run: docker compose build
+
+  judge-path:
+    name: judge path (SAMPLE_MODE, no credentials)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install httpx==0.28.1
+      - run: docker build -t oah-submission .
+      - name: Start with no .env, no credentials, no Zetaris/Nightshift
+        run: |
+          test ! -e .env
+          docker run -d --name api -p 8000:8000 -e SAMPLE_MODE=true oah-submission
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 2; done
+      - name: POST all three examples and compare with output_examples/
+        run: python scripts/judge_compare.py --url http://localhost:8000
+      - name: Trace evidence (routing, agents, handoff, branch, query id, engine event, models)
+        run: |
+          docker exec api sh -c 'ls logs/trace-*.jsonl | head -3'
+          docker exec api python scripts/trace_check.py
+      - if: failure()
+        run: docker logs api | tail -80
+
+  offline:
+    name: offline (--network none)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t oah-submission .
+      - name: Run with no network and answer all three examples
+        run: |
+          docker run -d --network none --name offline -e SAMPLE_MODE=true oah-submission
+          for i in $(seq 1 30); do docker exec offline python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)" && break; sleep 2; done
+          docker exec offline python scripts/judge_compare.py --url http://127.0.0.1:8000
+      - if: failure()
+        run: docker logs offline | tail -80
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh scripts/secret_scan.sh
+      - run: docker build -t oah-submission .
+      - run: sh scripts/secret_scan.sh --image oah-submission

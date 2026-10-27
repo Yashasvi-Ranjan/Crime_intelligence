@@ -6,10 +6,23 @@ between agents. Verifies entity upsert, observation appending, contradiction
 preservation, and agent provenance.
 """
 
+import shutil
 import time
+from pathlib import Path
+
 import pytest
 
+from app.config import Settings
 from app.services.meterless_service import MeterlessWorldModelService
+
+# World Model is Meterless's proprietary worldmodel.js (Nightshift.app); it is never in the repo or the image.
+# Without it these tests skip - they must not fail.
+_WM = Path(Settings().meterless_world_model_path)
+_WM_FALLBACK = Path(__file__).resolve().parents[1] / "app/services/meterless_world/worldmodel.js"
+pytestmark = pytest.mark.skipif(
+    not shutil.which("node") or not (_WM.exists() or _WM_FALLBACK.exists()),
+    reason="Node or the Meterless World Model engine (worldmodel.js) is not available",
+)
 
 
 @pytest.fixture

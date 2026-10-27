@@ -94,7 +94,7 @@ def test_hmem_refuses_low_confidence_and_secrets(tmp_path):
     h = HMemService(_cfg(tmp_path))
     ok, _ = h.store_verified_summary("q about burglaries", "A sufficiently long unverified hypothesis about a burglary series.", 0.3, "m", None, [])
     assert ok is False                                    # below H-MEM's own confidence floor
-    ok, _ = h.store_verified_summary("q about keys", "The api_key: sk-abcdefghijklmnopqrstuvwxyz was found at the scene.", 0.9, "m", None, [])
+    ok, _ = h.store_verified_summary("q about keys", "The api_key: " + "sk" + "-abcdefghijklmnopqrstuvwxyz was found at the scene.", 0.9, "m", None, [])
     assert ok is False                                    # H-MEM's secret write-gate
     assert h.stats()[0]["records"] == 0
 

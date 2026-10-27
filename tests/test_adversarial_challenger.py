@@ -80,7 +80,7 @@ class TestAdversarialAnalyzeEndpoint:
         payload = {
             "query": f"investigate {scenario_key}",
             "scenario_id": scenario_key,
-            "sample_mode": True,
+            "demo_content": True,
         }
         res = client.post("/api/investigations/analyze", json=payload)
         assert res.status_code == 200, f"Failed for scenario {scenario_key}: {res.text}"
@@ -88,7 +88,7 @@ class TestAdversarialAnalyzeEndpoint:
 
         # Contract checks
         assert data["is_sample"] is True
-        assert data["data_mode"] == "sample_mode"
+        assert data["data_mode"] == "demo_content"
         assert len(data["candidate_incidents"]) >= 2
         assert len(data["candidate_links"]) >= 1
 
@@ -119,7 +119,7 @@ class TestAdversarialAnalyzeEndpoint:
         """Verify query-based scenario dispatch without explicit scenario_id."""
         payload = {
             "query": query,
-            "sample_mode": True,
+            "demo_content": True,
         }
         res = client.post("/api/investigations/analyze", json=payload)
         assert res.status_code == 200
@@ -143,7 +143,7 @@ class TestAdversarialAnalyzeEndpoint:
         """Submit hostile, malformed, and injection queries. Must never crash with 500."""
         payload = {
             "query": adversarial_query,
-            "sample_mode": True,
+            "demo_content": True,
         }
         res = client.post("/api/investigations/analyze", json=payload)
         # 200 (graceful fallback) or 422 (validation error) are acceptable; NEVER 500.
@@ -204,9 +204,9 @@ class TestAdversarialTraceEndpoint:
         assert NEMOTRON_MODELS["lightning-30b"] in models_in_trace
         assert NEMOTRON_MODELS["super-vl-120b"] in models_in_trace
 
-        # Verify receipt IDs
+        # Demo-content traces are labelled and carry no (invented) receipt
         for ev in events:
-            assert ev["receipt_id"].startswith("rcpt-"), f"Invalid receipt ID: {ev['receipt_id']}"
+            assert ev["receipt_id"] == "" and ev["details"]["demo_content"] is True
             assert ev["phase"] in ("planning", "retrieval", "vision_analysis", "adversarial_critique", "dossier_synthesis")
             assert ev["agent"] in ("planner", "finder", "vision_analyst", "skeptic", "reporter")
 
@@ -216,14 +216,12 @@ class TestAdversarialTraceEndpoint:
         "arbitrary_custom_trace_01",
     ])
     def test_trace_nonexistent_run_id_returns_synthetic_trace(self, arbitrary_run_id: str):
-        """Non-existent run IDs should gracefully return structured synthetic trace without 404/500."""
+        """Non-existent run IDs return an empty trace (200), never a fabricated one."""
         res = client.get(f"/api/investigations/{arbitrary_run_id}/trace")
         assert res.status_code == 200
         data = res.json()
         assert data["run_id"] == arbitrary_run_id
-        assert data["total_events"] > 0
-        for ev in data["events"]:
-            assert ev["receipt_id"].startswith("rcpt-")
+        assert data["total_events"] == 0 and data["events"] == []
 
     @pytest.mark.parametrize("hostile_run_id", [
         "..%2F..%2Fetc%2Fpasswd",

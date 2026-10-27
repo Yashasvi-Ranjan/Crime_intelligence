@@ -1,0 +1,20 @@
+{
+ "content": "{\n  \"links\": [],\n  \"withdrawn_link_ids\": [\"LINK-01\"],\n  \"notes\": \"The keyless relay attack method appears across 6 incidents at both stations (INC-NORTH-0501, INC-NORTH-1686, INC-NORTH-1637, INC-RIVERSIDE-1478, INC-RIVERSIDE-0977, INC-RIVERSIDE-0036), but this is a widely used common technique, not a unique offender signature. The Toyota Prius catalytic converter target is similarly common (INC-NORTH-1637, INC-RIVERSIDE-1478). The 26-day temporal gap (2026-05-28 vs 2026-06-24), different stations (NORTH vs RIVERSIDE), and different locations (LOC-NORTH-20 vs LOC-RIV-05) with no connecting forensic, CCTV, or witness evidence further undermine series linkage. The only shared attribute is the method description, which is semantically similar but not a unique signature. No forensic reports, CCTV, or witness reports link INC-NORTH-1686 to INC-RIVERSIDE-1478 specifically. The prior LINK-01 is withdrawn due to insufficient independent corroboration and the common-method objection.\"\n}",
+ "fallback_reason": null,
+ "fallback_used": false,
+ "finish_reason": "stop",
+ "latency_ms": 7126.212874999965,
+ "provider": "nvidia",
+ "receipt_id": "rcpt_req_meawzweg",
+ "recorded_at": "2026-10-27",
+ "recorded_from": "live Nightshift /v1/chat/completions",
+ "reported_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "requested_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "role": "finder",
+ "routed_as_requested": true,
+ "usage": {
+  "completion_tokens": 308,
+  "prompt_tokens": 11119,
+  "total_tokens": 11427
+ }
+}

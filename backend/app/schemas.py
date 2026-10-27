@@ -257,7 +257,8 @@ class InvestigationRequest(BaseModel):
     date_from: Optional[str] = None
     date_to: Optional[str] = None
     scenario_id: Optional[str] = None
-    sample_mode: Optional[bool] = None
+    sample_mode: Optional[bool] = None      # run the real loop offline (local data + replayed model responses)
+    demo_content: Optional[bool] = None     # return a pre-built DEMO scenario; no agent, model or query runs
     continue_from: Optional[str] = None   # resume a saved, unfinished investigation
 
 

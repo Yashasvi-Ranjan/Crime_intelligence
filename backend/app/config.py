@@ -14,9 +14,14 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 class Settings(BaseSettings):
+    # The documented location is <repo root>/.env (copied from .env.example). backend/.env is still
+    # read if present (older checkouts); the root file wins. Real environment variables win over both.
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(str(REPO_ROOT / "backend" / ".env"), str(REPO_ROOT / ".env")),
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
@@ -58,6 +63,7 @@ class Settings(BaseSettings):
     # ── Nightshift / AI Provider (OpenAI-compatible) ─────────────────────────
     nightshift_base_url: str = "http://127.0.0.1:8088/v1"
     nightshift_api_key: str = ""          # token/key; never logged
+    nightshift_api_key_file: str = ""     # path to a file holding the token (Docker/K8s secret mount); never logged
     nightshift_model: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
     nightshift_app_name: str = "crime-intel"
     nightshift_timeout_seconds: int = 60
@@ -89,12 +95,20 @@ class Settings(BaseSettings):
     hmem_enabled: bool = True
     hmem_scope: str = "crime-intel"
 
+    # Engine backend per engine: "mounted" = the host's Nightshift engine directory (METERLESS_ENGINE_DIR),
+    # "reference" = the vendored Apache-2.0 Meterless reference implementations (H-MEM, Markovian) built into the
+    # image, "auto" = mounted when its file exists, else reference when one exists, else the engine is unavailable.
+    meterless_engine_backend: str = "auto"
+    meterless_reference_dir: str = ""     # built reference engines; defaults to <repo>/third_party/meterless/build
+
     # ── Meterless Engine / World Model ──────────────────────────────────────
     meterless_world_model_path: str = "/Applications/Nightshift.app/Contents/Resources/engine/js/engine/worldmodel.js"
     meterless_world_dir: str = ""         # Defaults to ~/Library/Application Support/ai.meterless.runtime/world
 
     # ── Sample Mode Toggle ──────────────────────────────────────────────────
     sample_mode: bool = False
+    # Recorded Nightshift responses replayed in sample mode (see scripts/record_fixtures.py).
+    sample_fixture_dir: str = "../data/sample/model_fixtures"
 
     # ── Derived helpers ──────────────────────────────────────────────────────
     @property
@@ -143,10 +157,26 @@ class Settings(BaseSettings):
         )
 
     @property
+    def sample_fixture_path(self) -> Path:
+        return (Path(__file__).parent.parent / self.sample_fixture_dir).resolve()
+
+    @property
+    def reference_engine_path(self) -> Path:
+        if self.meterless_reference_dir:
+            return Path(self.meterless_reference_dir).resolve()
+        return REPO_ROOT / "third_party" / "meterless" / "build"
+
+    @property
     def resolved_nightshift_token(self) -> str:
-        """Retrieve Nightshift token from environment or local proxy-token file."""
+        """Nightshift token: NIGHTSHIFT_API_KEY, else the file named by NIGHTSHIFT_API_KEY_FILE, else the
+        local Nightshift proxy-token file (macOS host install)."""
         if self.nightshift_api_key:
             return self.nightshift_api_key
+        if self.nightshift_api_key_file:
+            try:
+                return Path(self.nightshift_api_key_file).read_text(encoding="utf-8").strip()
+            except OSError:
+                return ""
         token_path = Path.home() / "Library/Application Support/ai.meterless.runtime/proxy-token"
         if token_path.exists():
             try:

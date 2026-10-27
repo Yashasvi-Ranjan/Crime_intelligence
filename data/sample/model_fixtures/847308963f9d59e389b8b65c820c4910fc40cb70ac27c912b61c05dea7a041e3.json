@@ -1,0 +1,20 @@
+{
+ "content": "{\n  \"action\": \"retrieve\",\n  \"rationale\": \"Identify commercial safe burglaries across NORTH and CENTRAL stations that reference the same heavy pry bar or crowbar as the entry method.\",\n  \"evidence_needed\": [\"method_description field values referencing pry bars, crowbars, or heavy tools\"],\n  \"retrieval_requests\": [\n    {\n      \"kind\": \"keyword_search\",\n      \"keywords\": [\"heavy pry bar\", \"crowbar\", \"crow bar\", \"heavy tool\", \"pry bar\"],\n      \"crime_types\": [\"BURGLARY\"],\n      \"station_ids\": [\"NORTH\", \"CENTRAL\"],\n      \"date_from\": null,\n      \"date_to\": null,\n      \"reason\": \"Link commercial safe burglaries by shared entry tool description\"\n    }\n  ],\n  \"outstanding_questions\": [\"None\"]\n}",
+ "fallback_reason": null,
+ "fallback_used": false,
+ "finish_reason": "stop",
+ "latency_ms": 2851.2938749995556,
+ "provider": "nvidia",
+ "receipt_id": "rcpt_req_xyg4fk1v",
+ "recorded_at": "2026-10-27",
+ "recorded_from": "live Nightshift /v1/chat/completions",
+ "reported_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "requested_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+ "role": "planner",
+ "routed_as_requested": true,
+ "usage": {
+  "completion_tokens": 194,
+  "prompt_tokens": 461,
+  "total_tokens": 655
+ }
+}

@@ -5,7 +5,7 @@ Provides deterministic, isolated sample scenarios for offline exploration,
 testing, and demonstrations.
 
 Requirements:
-- Clearly labelled as sample data (data_mode='sample_mode', is_sample=True).
+- Clearly labelled as sample data (data_mode='demo_content', is_sample=True).
 - Never claims Zetaris, Nightshift, or Meterless Engine ran if they did not.
 - Isolated from live integration path.
 - Includes 3 distinct cross-station scenarios.
@@ -598,9 +598,9 @@ def get_sample_investigation(scenario_id: Optional[str] = None, query: Optional[
     return {
         "investigation_id": run_id,
         "is_sample": True,
-        "data_mode": "sample_mode",
+        "data_mode": "demo_content",
         "scenario_id": actual_scenario_id,
-        "title": scenario["title"],
+        "title": "[DEMO CONTENT - pre-built, no agents ran] " + scenario["title"],
         "query": scenario["query"],
         "stations_involved": scenario["target_stations"],
         "candidate_incidents": scenario["candidate_incidents"],
@@ -615,9 +615,9 @@ def get_sample_investigation(scenario_id: Optional[str] = None, query: Optional[
             f"All findings represent synthetic investigative leads requiring independent operational verification."
         ),
         "integration_status": {
-            "zetaris": {"status": "simulated", "mode": "sample_mode", "note": "Sample mode active; live Zetaris was not queried"},
-            "nightshift_nemotron": {"status": "simulated", "mode": "sample_mode", "model": "sample/nemotron-simulated"},
-            "meterless_engine": {"status": "simulated", "mode": "sample_mode", "feature": "world_model_simulated"},
+            "zetaris": {"status": "simulated", "mode": "demo_content", "note": "Sample mode active; live Zetaris was not queried"},
+            "nightshift_nemotron": {"status": "simulated", "mode": "demo_content", "model": "sample/nemotron-simulated"},
+            "meterless_engine": {"status": "simulated", "mode": "demo_content", "feature": "world_model_simulated"},
         },
         "sentinels": sentinels,
         "report": report_data,

@@ -25,6 +25,7 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
   }
 
   const { tracker, compliance, anti_disqualification } = sentinels;
+  const notVerified = [tracker, compliance, anti_disqualification].filter((x) => x?.status !== 'VERIFIED').length;
 
   const renderBadge = (status?: string, score?: number) => {
     const isOk = status === 'VERIFIED';
@@ -75,8 +76,8 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
         </div>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>STATUS:</span>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>
-            ALL SENTINELS GREEN
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: notVerified === 0 ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
+            {notVerified === 0 ? 'ALL SENTINELS GREEN' : `${notVerified} OF 3 SENTINELS NEED ATTENTION`}
           </span>
         </div>
       </div>
@@ -129,9 +130,9 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
             Verifies load-bearing use of Zetaris, Meterless, and NVIDIA Nemotron.
           </p>
           <div style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div>Zetaris Virtual Layer: <strong style={{ color: 'var(--accent-emerald)' }}>Load-Bearing (5 Tables)</strong></div>
-            <div>NVIDIA Nemotron: <strong style={{ color: 'var(--accent-blue)' }}>DGX Spark Eligible</strong></div>
-            <div>Cross-Station Reasoning: <strong style={{ color: 'var(--accent-purple)' }}>Verified (Multi-Jurisdiction)</strong></div>
+            <div>Zetaris data layer: <strong style={{ color: compliance?.details?.zetaris_load_bearing ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>{compliance?.details?.zetaris_load_bearing ? `Used (${compliance?.details?.tables_federated_count ?? 0} tables queried)` : 'Not used in this run (local sample data)'}</strong></div>
+            <div>NVIDIA Nemotron: <strong style={{ color: compliance?.details?.nvidia_nemotron_verified ? 'var(--accent-blue)' : 'var(--accent-amber)' }}>{compliance?.details?.nvidia_nemotron_verified ? 'A Nemotron model answered (see trace)' : 'No Nemotron answer in this run'}</strong></div>
+            <div>Cross-station reasoning: <strong style={{ color: 'var(--accent-purple)' }}>{compliance?.details?.multi_station_intelligence ? 'Links span more than one station' : 'No cross-station link in this result'}</strong></div>
           </div>
         </div>
 
@@ -155,8 +156,8 @@ export const AegisSentinelsPanel: React.FC<AegisSentinelsProps> = ({ sentinels }
           </p>
           <div style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div>Secret Leak Scan: <strong style={{ color: 'var(--accent-emerald)' }}>PASS (Zero Keys Detected)</strong></div>
-            <div>Hallucinated IDs: <strong style={{ color: 'var(--accent-emerald)' }}>0 (100% Grounded in Zetaris)</strong></div>
-            <div>Integrity Status: <strong style={{ color: 'var(--accent-emerald)' }}>Clean For Submission</strong></div>
+            <div>Ungrounded IDs: <strong style={{ color: anti_disqualification?.details?.hallucinated_incidents_count ? 'var(--accent-rose, #f43f5e)' : 'var(--accent-emerald)' }}>{anti_disqualification?.details?.hallucinated_incidents_count ?? 0} (cited IDs checked against retrieved records)</strong></div>
+            <div>Integrity check: <strong style={{ color: anti_disqualification?.passed ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>{anti_disqualification?.passed ? 'No violations found' : 'Violations found'}</strong></div>
           </div>
         </div>
       </div>

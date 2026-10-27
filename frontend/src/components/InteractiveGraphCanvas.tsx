@@ -185,8 +185,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             station: item.station_id || item.precinct || defaultStation,
             crimeType: category.toUpperCase(),
             description: item.description || item.observations || item.statement || item.headline || 'Corroborating record',
-            status: 'VERIFIED_ZETARIS',
-            confidence: 0.95,
+            status: 'RETRIEVED_RECORD',
+            confidence: 0,
             metadata: { ...item, category },
           };
           nodeList.push(evNode);
@@ -201,9 +201,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             source: connectedIncidentId,
             target: evId,
             type: 'supported_by_evidence',
-            confidence: 0.95,
+            confidence: 0,
             status: 'SUPPORTED',
-            basis: `Grounded in Zetaris ${category}_reports`,
+            basis: `Retrieved ${category} record that cites this incident`,
           });
         }
 
@@ -218,9 +218,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   source: link.source_incident_id,
                   target: evId,
                   type: 'supported_by_evidence',
-                  confidence: 0.95,
+                  confidence: 0,
                   status: 'SUPPORTED',
-                  basis: `Corroborates cross-station link: ${link.link_id}`,
+                  basis: `Cited as supporting evidence for ${link.link_id} (verifier status is on the link)`,
                 });
               }
             }
@@ -232,9 +232,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
                   source: link.target_incident_id,
                   target: evId,
                   type: 'supported_by_evidence',
-                  confidence: 0.95,
+                  confidence: 0,
                   status: 'SUPPORTED',
-                  basis: `Corroborates cross-station link: ${link.link_id}`,
+                  basis: `Cited as supporting evidence for ${link.link_id} (verifier status is on the link)`,
                 });
               }
             }
@@ -248,58 +248,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
     addEvidenceNodes(evidence.witness_reports, 'witness', 'statement_id', 'WIT', 'CENTRAL');
     addEvidenceNodes(evidence.newspaper_reports, 'newspaper', 'article_id', 'NEWS', 'RIVERSIDE');
 
-    // 4. Fallback entities if graph has only incidents
-    const hasEntities = nodeList.some((n) => n.type === 'suspect' || n.type === 'vehicle');
-    if (!hasEntities && allIncidents.length > 0) {
-      // Synthesize primary MO actors for Palantir Gotham deep visual intelligence
-      const suspectNode: GraphEntityNode = {
-        id: 'SUSP-SYNDICATE-01',
-        type: 'suspect',
-        label: 'Crowbar Syndicate Operator',
-        station: 'MULTI-STATION',
-        description: "Male suspect, ~5'11, dark tactical hoodie, specialised commercial pry-tool",
-        status: 'IDENTIFIED_PATTERN',
-        confidence: 0.92,
-        metadata: { modus_operandi: 'Commercial Safe Cracking', threat_level: 'HIGH' },
-      };
-      nodeList.push(suspectNode);
-      nodeMap.set(suspectNode.id, suspectNode);
-
-      const vehicleNode: GraphEntityNode = {
-        id: 'VEH-MINIVAN-99',
-        type: 'vehicle',
-        label: 'Grey Minivan (Late Model)',
-        station: 'CROSS-PRECINCT',
-        description: 'Grey minivan observed in low-light alleyway feeds with switched plates',
-        status: 'CORRELATED_ASSET',
-        confidence: 0.88,
-        metadata: { make: 'Chrysler/Dodge', color: 'Charcoal Grey', role: 'Getaway & Transport' },
-      };
-      nodeList.push(vehicleNode);
-      nodeMap.set(vehicleNode.id, vehicleNode);
-
-      allIncidents.forEach((inc) => {
-        const incId = inc.incident_id || String(inc.id);
-        edgeList.push({
-          id: `edge-${incId}-${suspectNode.id}`,
-          source: incId,
-          target: suspectNode.id,
-          type: 'involves_suspect',
-          confidence: 0.92,
-          status: 'SUPPORTED',
-          basis: 'Shared MO & tool marks across crime scenes',
-        });
-        edgeList.push({
-          id: `edge-${incId}-${vehicleNode.id}`,
-          source: incId,
-          target: vehicleNode.id,
-          type: 'involves_vehicle',
-          confidence: 0.88,
-          status: 'SUPPORTED',
-          basis: 'Correlated surveillance presence at entry/egress points',
-        });
-      });
-    }
+    // No entities are invented: only incidents, evidence and links present in the response are drawn.
 
     return { nodes: nodeList, edges: edgeList };
   }, [allIncidents, allLinks, evidence]);
@@ -1175,7 +1124,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
         }}
       >
         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', marginBottom: '0.4rem' }}>
-          VERIFIED CORRELATION PATHWAYS ({filteredEdges.length} Grounded Connections):
+          CONNECTIONS IN THIS RESULT ({filteredEdges.length}); percentages are the Finder's uncalibrated heuristic, shown only on links:
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {filteredEdges.map((e) => (
@@ -1197,7 +1146,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphProps> = ({
             >
               <strong>{e.source}</strong> ↔ <strong>{e.target}</strong>
               <span style={{ color: getEdgeStroke(e), fontWeight: 700 }}>
-                ({Math.round(e.confidence * 100)}%)
+                {e.confidence > 0 ? `(${Math.round(e.confidence * 100)}%)` : ''}
               </span>
             </span>
           ))}

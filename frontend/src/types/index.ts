@@ -228,7 +228,7 @@ export interface IntegrationStatus {
 export interface InvestigationResponse {
   investigation_id: string;
   is_sample: boolean;
-  data_mode: 'zetaris_live' | 'sample_mode';
+  data_mode: 'zetaris_live' | 'sample_mode' | 'local_sample' | 'local_fallback' | 'demo_content';
   scenario_id?: string | null;
   title: string;
   query: string;
@@ -280,6 +280,7 @@ export interface InvestigationRequest {
   date_to?: string;
   scenario_id?: string;
   sample_mode?: boolean;
+  demo_content?: boolean;
   continue_from?: string;
 }
 

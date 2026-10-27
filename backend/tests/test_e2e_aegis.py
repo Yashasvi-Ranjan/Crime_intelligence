@@ -120,7 +120,7 @@ def test_meta_sentinels_initialization_and_audit():
 
 def test_anti_disqualification_catches_secret_leakage():
     """Sentinel must strictly fail if simulated secret tokens are present."""
-    leaked_payload = "Session initialized with token nvapi-secretkey1234567890abcdef123"
+    leaked_payload = "Session initialized with token " + "nvapi" + "-secretkey1234567890abcdef123"
     report = disqualification_sentinel.evaluate(
         full_payload_dump=leaked_payload,
         candidate_links=[],
@@ -150,7 +150,7 @@ def test_api_sample_investigation_run():
     """Verify executing investigation with sample_mode=true succeeds and returns sentinels."""
     payload = {
         "query": "Investigate safe cracking burglaries across North and Central",
-        "sample_mode": True,
+        "demo_content": True,
         "scenario_id": "crowbar_safe_cracking",
     }
     response = client.post("/api/investigations/analyze", json=payload)
@@ -158,7 +158,7 @@ def test_api_sample_investigation_run():
     data = response.json()
 
     assert data["is_sample"] is True
-    assert data["data_mode"] == "sample_mode"
+    assert data["data_mode"] == "demo_content"
     assert len(data["candidate_incidents"]) >= 2
     assert len(data["candidate_links"]) >= 1
     assert "sentinels" in data

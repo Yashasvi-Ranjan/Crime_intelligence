@@ -251,6 +251,9 @@ class CallRecord:
     routed_as_requested: Optional[bool] = None
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
+    # live = answered by Nightshift now; replayed = a recorded live response matched by prompt hash;
+    # code_fallback = no model answered (documented code-only fallback; reported_model stays None).
+    source: str = "live"
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
