@@ -14,11 +14,11 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://oxide-packages-textiles-carrier.trycloudflare.com/api/$1"
+      "destination": "https://escape-photographic-fountain-parent.trycloudflare.com/api/$1"
     },
     {
       "source": "/api",
-      "destination": "https://oxide-packages-textiles-carrier.trycloudflare.com/api"
+      "destination": "https://escape-photographic-fountain-parent.trycloudflare.com/api"
     }
   ]
 }
