@@ -18,6 +18,7 @@ import json
 from typing import Any, Dict, List, Optional, Set
 
 from app.config import Settings, settings
+from app.services.candidate_ranking import row_text, expand_terms, pool_score, pool_size, rank_candidates
 from app.services.local_data_loader import LocalDataLoader
 from app.services.zetaris_investigation_service import ZetarisInvestigationService, _parse_json_field, _sanitize_term
 
@@ -75,12 +76,13 @@ class LocalInvestigationService(ZetarisInvestigationService):
         if date_to:
             dt = _sanitize_term(date_to)
             rows = [r for r in rows if (r.get("reported_at") or "") <= dt]
-        if kws:
-            def hit(r: Dict[str, Any]) -> bool:
-                method = (r.get("method_description") or "").lower()
-                prop = json.dumps(r.get("property_involved") or []).lower()   # SQL LIKEs the stringified array
-                return any(k in method or k in prop for k in kws)
-            rows = [r for r in rows if hit(r)]
+        terms = expand_terms(kws)
+        if terms:
+            # Same plan as the SQL: any-term filter, bounded pool by term hits + corroboration, then scored top-k.
+            rows = [self._normalise(r) for r in rows]
+            rows = [r for r in rows if any(t in row_text(r) for t in terms)]
+            rows = sorted(rows, key=lambda r: (-pool_score(r, terms), r.get("incident_id") or ""))[: pool_size(limit)]
+            return rank_candidates(rows, terms, limit)
         rows = sorted(rows, key=lambda r: r.get("reported_at") or "", reverse=True)[: int(limit)]
         return [self._normalise(r) for r in rows]
 
