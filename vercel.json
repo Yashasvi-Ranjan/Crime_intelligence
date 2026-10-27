@@ -14,11 +14,11 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://scotia-leonard-east-yet.trycloudflare.com/api/$1"
+      "destination": "https://flag-running-ppc-nitrogen.trycloudflare.com/api/$1"
     },
     {
       "source": "/api",
-      "destination": "https://scotia-leonard-east-yet.trycloudflare.com/api"
+      "destination": "https://flag-running-ppc-nitrogen.trycloudflare.com/api"
     }
   ]
 }
