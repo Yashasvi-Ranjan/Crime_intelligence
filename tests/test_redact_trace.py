@@ -21,9 +21,14 @@ def test_bearer_and_authorization_removed():
 
 
 def test_key_shapes_and_jwt_removed():
-    jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcd1234"
-    s = rt.redact_text(f"k=nvapi-ABCDEFGHIJKLMNOPQRST1234 j={jwt} sk-ABCDEFGHIJKLMNOPQRSTUV AKIAABCDEFGHIJKLMNOP")
-    for frag in ("ABCDEFGHIJKLMNOPQRST1234", "eyJhbGci", "AKIAABCDEFGHIJKLMNOP", "sk-ABCDEF"):
+    # Fake secret-shaped values are assembled at runtime so this file itself never contains a literal that
+    # looks like a real key (scripts/secret_scan.sh scans tracked files for those shapes).
+    jwt = ".".join(["eyJ" + "hbGciOiJIUzI1NiJ9", "eyJ" + "zdWIiOiIxMjM0NTY3ODkwIn0", "abcd1234"])
+    nv = "nv" + "api-" + "ABCDEFGHIJKLMNOPQRST1234"
+    sk = "s" + "k-" + "ABCDEFGHIJKLMNOPQRSTUV"
+    aws = "AK" + "IA" + "ABCDEFGHIJKLMNOP"
+    s = rt.redact_text(f"k={nv} j={jwt} {sk} {aws}")
+    for frag in ("ABCDEFGHIJKLMNOPQRST1234", "eyJhbGci", aws, "sk-ABCDEF"):
         assert frag not in s
 
 

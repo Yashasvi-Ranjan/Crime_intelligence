@@ -22,7 +22,7 @@ pytestmark = requires_node
 
 
 def _cfg(tmp_path, **kw) -> Settings:
-    base = dict(meterless_engine_dir=str(STUB_DIR), meterless_world_model_path=str(STUB_DIR / "worldmodel.js"),
+    base = dict(meterless_engine_dir=str(STUB_DIR), meterless_world_model_path=str(STUB_DIR / "worldmodel_test_double.js"),
                 meterless_engine_backend="mounted", state_dir=str(tmp_path), meterless_world_dir=str(tmp_path / "world"), hmem_scope="stub")
     base.update(kw)
     return Settings(**base)

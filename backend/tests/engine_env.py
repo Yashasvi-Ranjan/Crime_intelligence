@@ -22,7 +22,7 @@ REAL_ENGINES = bool(shutil.which("node")) and Path(_real.meterless_engine_dir, "
 REAL_WORLD_MODEL = bool(shutil.which("node")) and Path(_real.meterless_world_model_path).exists()
 
 ENGINE_DIR = _real.meterless_engine_dir if REAL_ENGINES else str(STUB_DIR)
-WORLD_MODEL_PATH = _real.meterless_world_model_path if REAL_WORLD_MODEL else str(STUB_DIR / "worldmodel.js")
+WORLD_MODEL_PATH = _real.meterless_world_model_path if REAL_WORLD_MODEL else str(STUB_DIR / "worldmodel_test_double.js")
 engine_settings = {"meterless_engine_dir": ENGINE_DIR, "meterless_world_model_path": WORLD_MODEL_PATH}
 
 requires_node = pytest.mark.skipif(not shutil.which("node"), reason="Node is not installed (engines and test doubles are Node programs)")
