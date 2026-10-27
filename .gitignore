@@ -91,3 +91,6 @@ coverage.xml
 # Large generated media (the .pptx is committed)
 
 submission/media/video_frames/
+CLAUDE.md
+
+ui_screenshots/
