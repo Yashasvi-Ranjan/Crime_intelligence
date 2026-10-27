@@ -7,12 +7,19 @@ plain-language question; a **Planner, Finder, Skeptic and Reporter** search five
 Meterless Nightshift, a **deterministic verifier** re-checks every ID, quotation and attribute they cite, and the answer is a set of
 *leads, not verdicts* - which can be "no supportable link". All data is synthetic.
 
-**Try it with only Docker (no credentials, no network):**
+| | |
+|---|---|
+| **Website** | https://crime-intelligence-six.vercel.app/ (see [Live website](#live-website): live Zetaris and Nemotron while the developer's backend is up, otherwise a clearly labelled offline demo) |
+| **Docker image** | [`yashasvir171/oah-submission`](https://hub.docker.com/r/yashasvir171/oah-submission) on Docker Hub (`linux/amd64` and `linux/arm64`) |
+| **Demo video, slides, documents** | [`submission/`](submission/README.md) |
+
+**Try it with only Docker (no credentials, no network, no clone needed for the image):**
 ```bash
-docker build -t oah-submission .
-docker run --rm -p 8000:8000 -e SAMPLE_MODE=true oah-submission
+docker run --rm -p 8000:8000 -e SAMPLE_MODE=true yashasvir171/oah-submission:latest
+# in a second terminal (input_examples/ is in this repo):
 curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @input_examples/example_1.json
 ```
+To build the image yourself instead: `docker build -t oah-submission .` and use `oah-submission` in place of the Docker Hub name.
 Details, live mode, engines and the judge checklist: [Run with Docker](#run-with-docker). Submission documents (project text, sponsor technology,
 pre-existing components, responsible AI, judge access, slide deck, demo video): [`submission/`](submission/README.md).
 
@@ -208,6 +215,22 @@ This file is strictly for **offline evaluation** to measure precision, recall, a
 
 ---
 
+## Live website
+
+The website is a static React build on Vercel. It has no backend of its own and needs no secrets in Vercel:
+
+```
+Browser -> Vercel (static site) -> /api/... rewritten to a Cloudflare tunnel -> Docker container on the developer's machine
+                                                                              -> Zetaris + Nightshift (Nemotron) + mounted Meterless engines (all private)
+```
+
+- **Live mode (default).** While the backend is up, investigations use live Zetaris SQL and live Nemotron models; `GET /api/engine/health` and `GET /api/health/zetaris` show the real state.
+- **Offline fallback.** If the backend is unreachable (tunnel, Docker or the host is down), the page retries against `/offline-api`, a Vercel function that runs the same API in sample mode (bundled synthetic data, recorded Nemotron responses replayed and labelled).
+  An amber banner says so, and the page recovers by itself when the live backend returns. Only the example questions replay recorded Nemotron answers; others use the labelled, weaker code-only fallback.
+- **"Demo content"** (off by default) returns pre-built scenarios without running any agent.
+- **Limits.** Live runs take about 70 to 120 s, close to the tunnel's timeout, so an occasional long run can be cut off; the tunnel URL of a quick tunnel changes on restart (`vercel.json` must then be updated); there is no access control on the live path.
+  The site depends on the developer's machine being on. Judges should rely on the Docker path above for a deterministic result.
+
 ## Run with Docker
 
 Everything below runs from a fresh clone. Config lives in **one place: `<repo root>/.env`** (copied from `.env.example`; gitignored and
@@ -217,7 +240,7 @@ excluded from every image). It is optional: with no `.env` the stack starts and 
 git clone <your-repo-url> && cd <your-repo>
 cp .env.example .env            # fill in your Zetaris and Nightshift settings (live mode only)
 
-docker build -t oah-submission .
+docker build -t oah-submission .            # or skip this and use yashasvir171/oah-submission:latest from Docker Hub
 docker run --rm -p 8000:8000 --env-file .env oah-submission        # API on :8000
 
 # in a second terminal
@@ -362,17 +385,17 @@ The integration layer (`backend/app/services/zetaris_adapter.py`) isolates all Z
 
 To switch from `local_fallback` to live Zetaris execution:
 
-1. Copy `backend/.env.example` to `backend/.env`:
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-2. Configure your Zetaris connection parameters:
+1. Copy the template to the repo root: `cp .env.example .env`
+2. Set your Zetaris connection (variable names as in `.env.example`):
    ```env
    ZETARIS_ENABLED=true
-   ZETARIS_BASE_URL=https://<your-zetaris-ndp-host>:<port>
-   ZETARIS_AUTH_MODE=token
-   ZETARIS_TOKEN=<your-bearer-token>
-   ZETARIS_DATABASE=default
+   ZETARIS_BASE_URL=http://localhost:8888
+   ZETARIS_AUTH_URL=http://localhost:8889
+   ZETARIS_USERNAME=<user>
+   ZETARIS_PASSWORD=<password>      # or ZETARIS_API_TOKEN=<token>
+   # Fully qualified table names are used as-is (leave ZETARIS_NAMESPACE empty); a bare name is prefixed with the namespace.
+   ZETARIS_TABLE_POLICE_INCIDENTS=crime_police_db.police_incidents
+   # ... likewise NEWSPAPER / WITNESS / CCTV / FORENSIC (find them with: SHOW TABLES IN <catalog>)
    ```
 3. Restart the FastAPI backend. Test connectivity via `GET /api/health/zetaris` or the **Zetaris Layer** tab in the dashboard.
 
@@ -480,12 +503,12 @@ Models only see a bounded, compacted subset (<= 14 incidents, <= 8 records per s
 Zetaris outages raise explicit errors (HTTP 502/503) when nothing was retrieved yet, or produce a resumable `interrupted` partial result.
 Live mode never falls back to sample or local data.
 
-## 13. Configuration reference (`backend/.env`, see `.env.example`)
+## 13. Configuration reference (`<repo root>/.env`, copied from `.env.example`; a legacy `backend/.env` is still read)
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `ZETARIS_*` | see `.env.example` | Zetaris connection and table names |
-| `NIGHTSHIFT_BASE_URL`, `NIGHTSHIFT_API_KEY`, `NIGHTSHIFT_APP_NAME` | `http://127.0.0.1:8088/v1`, auto-read proxy token | Nightshift endpoint/auth |
+| `NIGHTSHIFT_BASE_URL`, `NIGHTSHIFT_API_KEY`, `NIGHTSHIFT_API_KEY_FILE`, `NIGHTSHIFT_APP_NAME` | `http://127.0.0.1:8088/v1` (`host.docker.internal` in Docker), token from the key, else the file, else Nightshift's proxy-token (host runs only) | Nightshift endpoint/auth |
 | `NIGHTSHIFT_MODEL` | `nvidia/nemotron-3.5-lightning-30b-a3b` | Default text model and fallback |
 | `NIGHTSHIFT_MODEL_PLANNER` / `_FINDER` / `_REPORTER` | blank = Lightning | Per-role chat model |
 | `NIGHTSHIFT_MODEL_SKEPTIC` | `nvidia/nemotron-3-ultra-550b-a55b` | Skeptic model (falls back to Lightning if unlisted/failing) |
@@ -493,9 +516,11 @@ Live mode never falls back to sample or local data.
 | `NIGHTSHIFT_MODEL_FALLBACK`, `NIGHTSHIFT_SKEPTIC_TIMEOUT_SECONDS` | blank (= `NIGHTSHIFT_MODEL`), 180 | |
 | `WORKFLOW_MAX_ITERATIONS` / `_MAX_MODEL_CALLS` / `_TIME_BUDGET_SECONDS` | 3 / 24 / 900 | Hard bounds (model-call budget is checked before each agent call; one agent call may use up to 3 requests for repair/fallback) |
 | `WORKFLOW_RETRIEVAL_LIMIT`, `WORKFLOW_EVIDENCE_LIMIT_PER_SOURCE` | 10 / 8 | SQL result bounds |
-| `METERLESS_ENGINE_DIR`, `METERLESS_WORLD_MODEL_PATH`, `METERLESS_WORLD_DIR` | Nightshift.app paths | Engine locations |
+| `METERLESS_ENGINE_DIR`, `METERLESS_WORLD_MODEL_PATH`, `METERLESS_WORLD_DIR` | Nightshift.app paths | Engine locations (in Docker: mount the host dir read-only at `/opt/meterless/engine`) |
+| `METERLESS_ENGINE_BACKEND` | `auto` | `auto` (mounted if present, else the vendored open references for H-MEM/Markovian), `mounted`, or `reference` |
 | `HMEM_ENABLED`, `HMEM_SCOPE`, `STATE_DIR` | true, `crime-intel`, `../.state` | Persistent memory scope and state dir (gitignored) |
-| `SAMPLE_MODE` | false | Explicit offline sample mode |
+| `SAMPLE_MODE` | false | Explicit offline sample mode (real agent loop, local data, replayed model responses) |
+| `CORS_ALLOWED_ORIGINS` | localhost origins | Comma-separated browser origins allowed to call the API directly |
 
 ## 14. Run, test, verify
 
