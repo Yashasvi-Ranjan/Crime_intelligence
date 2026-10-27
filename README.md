@@ -49,22 +49,54 @@ These datasets are designed to be ingested into **Zetaris NDP File Store** and q
 ## 1. Project Directory Structure
 
 ```text
-cross-station-crime-intelligence/
+cross_station_crime_intelligence/
+├── run.py                              # entry point: starts the API on $PORT, or `--once FILE` posts one input to /run
+├── Dockerfile                          # API image (python:3.11-slim + Node 20, non-root, HEALTHCHECK /health)
+├── Dockerfile.web / Dockerfile.web.dockerignore   # dashboard image (Vite build behind nginx on :3001)
+├── docker-compose.yml                  # api (:8000) + web (:3001); logs/ and .state/ as volumes
+├── docker-compose.engine.yml           # optional: mount the host Meterless engine directory read-only
+├── docker-compose.token-file.yml       # optional: Nightshift token from a mounted file
+├── .env.example                        # THE one config template (copy to .env; gitignored)
+├── .dockerignore, .gitignore
+├── requirements.txt                    # pinned Python dependencies
+├── metadata.json                       # project / track / sponsor technology / entry point
+├── vercel.json                         # website: /api -> tunnel to the live backend, /offline-api -> offline fallback
+├── api/index.py                        # Vercel function serving the OFFLINE fallback (forced sample mode)
+├── .github/workflows/ci.yml            # pytest, docker build, judge path (SAMPLE_MODE), offline (--network none), secret scan
+│
+├── backend/                            # FastAPI application
+│   ├── app/
+│   │   ├── main.py, config.py, schemas.py
+│   │   ├── routers/                    # run.py (POST /run, GET /health), investigations.py, incidents.py, sources.py, health.py
+│   │   └── services/
+│   │       ├── investigation_workflow.py   # the bounded Planner -> Finder -> verifier -> Skeptic -> Reporter loop
+│   │       ├── agents.py, evidence_verifier.py, model_registry.py, nightshift_client.py
+│   │       ├── zetaris_adapter.py, zetaris_investigation_service.py, local_data_loader.py
+│   │       ├── meterless_engines.py, meterless_service.py, meta_sentinels.py, trace_logger.py, run_service.py
+│   │       ├── sample_scenarios.py     # pre-built DEMO content only (demo_content=true)
+│   │       ├── sample_mode/            # offline mode: local retrieval, fixture replay, code-only fallback, resilient wrappers
+│   │       └── meterless_world/        # Node runners for the engines; reference/ = our adapters for the open H-MEM/Markovian
+│   └── tests/                          # unit, mocked, engine (skip when unavailable) and live (RUN_LIVE_TESTS=1) tests
+│
+├── frontend/                           # React 18 + Vite + TypeScript dashboard
+│   ├── src/ (pages/, components/, services/api.ts, types/)   # api.ts retries /offline-api when the live backend is down
+│   └── nginx.conf.template             # proxy for the web image
+│
 ├── data/
-│   ├── generated/
-│   │   ├── police_incidents.json      # 3,000 records
-│   │   ├── newspaper_reports.json     # 1,500 records
-│   │   ├── witness_reports.json       # 2,000 records
-│   │   ├── cctv_reports.json          # 2,000 records
-│   │   └── forensic_reports.json      # 1,500 records
-│   └── evaluation/
-│       └── ground_truth.json          # Offline planted relationships benchmark
+│   ├── generated/                      # the five synthetic tables (3,000 / 1,500 / 2,000 / 2,000 / 1,500 records)
+│   ├── evaluation/ground_truth.json    # offline planted relationships (never loaded by the application)
+│   └── sample/model_fixtures/          # recorded Nemotron responses replayed by sample mode (sha256 of role, model, prompt)
+│
+├── input_examples/ , output_examples/  # the three judge examples and their recorded outputs (scripts/judge_compare.py)
 ├── scripts/
-│   └── generate_synthetic_data.py     # Deterministic data generation script
-├── tests/
-│   └── test_synthetic_data.py         # Pytest verification and schema validation
-├── requirements.txt
-└── README.md
+│   ├── generate_synthetic_data.py      # deterministic data generator
+│   ├── record_fixtures.py              # record fixtures from live Zetaris + Nightshift runs; regenerate output_examples/
+│   ├── judge_compare.py, trace_check.py, secret_scan.sh, build_reference_engines.sh, evaluate_agents.py
+├── tests/                              # synthetic-data, adversarial and end-to-end suites
+├── third_party/meterless/              # Apache-2.0 H-MEM + Markovian reference sources (unmodified, commit 1742dec), LICENSE, NOTICE.md
+├── submission/                         # hackathon deliverables: documents, slide deck, demo video, tools/build_media.py
+├── evaluation/results.json             # scripted-stand-in evaluation (a pipeline test, not a model benchmark)
+└── logs/ , .state/                     # generated at run time (gitignored): traces, run state, H-MEM store
 ```
 
 ---
