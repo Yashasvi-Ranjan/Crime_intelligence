@@ -89,5 +89,5 @@ venv/
 coverage.xml
 
 # Large generated media (the .pptx is committed)
-submission/media/*.mp4
+
 submission/media/video_frames/
