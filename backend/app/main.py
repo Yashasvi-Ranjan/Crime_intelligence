@@ -51,6 +51,12 @@ app.include_router(investigations.router)
 app.include_router(run.router)
 
 
+@app.get("/")
+@app.head("/")
+async def root():
+    return {"status": "online", "version": __version__, "docs": "/api/docs"}
+
+
 @app.on_event("startup")
 async def on_startup():
     logger.info("Cross-Station Crime Intelligence backend starting up")
